@@ -6,3 +6,4 @@
 #    Running bash jobs from python and returning output
 #    File text cleanup and parsing
 #    And quite a bit more…
+# Serge Dmitrieff -- http://biophysics.fr
