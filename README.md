@@ -10,10 +10,8 @@ This repository contains generic but useful python utilities
 # splot.py :    
  A command line plot maker. 
  Examples : 
- splot.py position.txt \n
- splot.py position.txt color=red position2.txt \n
- splot.py position.txt color=red style=- averages.txt x=1 y=2 dy=3 ylabel='$z$ in nm'
+ splot.py position.txt  
+ splot.py position.txt color=red position2.txt  
+ splot.py position.txt color=red style=- averages.txt x=1 y=2 dy=3 ylabel='$z$ in nm'  
 
- 
-    
 # Serge Dmitrieff -- http://biophysics.fr
