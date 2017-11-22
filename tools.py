@@ -3,28 +3,39 @@ import math
 from numpy import *
 import subprocess
 import os.path
+import sys
 
-# Returns k modulo n and factor c
+
 def modulo(k,n):
 	c=0
 	while k>=n:
 		k=k-n
 		c=c+1
 	return k,c
-	
-# Make file excutable
+# General tools Tools for
 def make_exec(fname):
 	return run("chmod +x "+fname)
 
-#Runs a nix command and returns the stdout
+#Runs a unic command and returns the stdout
 def unpy(job):
 	proc=subprocess.Popen([job],stdout=subprocess.PIPE)
 	return proc.stdout.readlines() 
 
-#Runs pwd and returns output
+#pwd
 def pwd():
 	lines=unpy('pwd')
 	return clean_line(lines[0])
+
+#create job list from index a to index b
+#fname/index/ename is absolute adress of the executable
+def bjarray(jname,fname,ename,a,b):
+	fname=conc(fname,'\$LSB_JOBINDEX',ename)
+	return r'bsub -J "%s[%s-%s]" %s -o /g/nedelec/dmitrief/clustero/output' %(jname,a,b,fname)
+
+# create job lists, to improve
+def bjobs(jname,fname,ename,jvals):
+	return bjarray(jname,fname,ename,min(jvals),max(jvals))
+	
 
 #Removes extension from file 
 def remove_ext(fname):
@@ -40,7 +51,6 @@ def archive(fname):
 	job="tar -czf %s.tgz %s && rm -R %s" %(remove_ext(clean_name(fname)),fname,fname)
 	run(job)
 	return
-	
 # Remove / at the end of folder names
 def clean_name(fname):
 	l=len(fname)
@@ -84,6 +94,7 @@ def conc(*names):
 
 # Remove end-of-line (\n) for a string
 def clean_line(line):
+	#while line.find("\n")>-1:
 	line=line.rstrip("\n")
 	return line
 
@@ -169,12 +180,31 @@ def getlines(fname):
 	f.close()
 	return lines
 	
-# Extract space separatated value array from list of lines
+def getheader(fname):
+	lines=clean_lines(getlines(fname))
+	CC=["#","%"]
+	line=""
+	for c in CC:
+		if lines[0].find(c)>=0:
+			line=lines[0];
+	return (line)
+	
+def splitheader(fname):
+	head=getheader(fname)
+	if head:
+		return head.split(' ')
+	else:
+		return []
+	
+# Extract space separatated value array from file
 def getdata_lines(lines):
 	lines=clean_lines(remove_comments(lines))
 	#print lines
 	nl=len(lines)
-	nc=len(nums(lines[0]))
+	i=0
+	#while ~len(nums(lines[i])) and i<(nl-1):
+	#	i=i+1
+	nc=len(nums(lines[i]))
 	ar=zeros((nl,nc))
 	n=0;
 	for i,line in enumerate(lines):
@@ -186,24 +216,32 @@ def getdata_lines(lines):
 			n=n+1
 	return ar[0:n,:],n,nc
 
-# Extract space separatated value array from file
 def getdata(fname):
 	lines=getlines(fname)
 	return getdata_lines(lines)
 
-# Saves data from array to file
+# Extract space separatated value array from file
+def readnumsinlines(fname):
+	lines=clean_lines(remove_comments(getlines(fname)))
+	br=[]
+	for line in lines:
+		nus=nums(line)
+		if len(nus):
+			br=append(br,nus[0])
+	return br,len(br)
+
+# Saves data from array
 def savedata(*args):
 	nargs=len(args)
 	if nargs==0:
 		return
 	data=args[0]
+	fname="default.txt"
+	header="#"
 	if nargs>1:
 		fname=args[1]
 		if nargs==3:
 			header=args[2]
-	else:
-		fname="default.txt"
-		header="#"
 	fi=open(fname,'w')
 	fi.write("%s \n" %(clean_line(header)))
 	sha=shape(data)
@@ -214,8 +252,7 @@ def savedata(*args):
 		fi.write("".join(str(b)+"\n" for b in data))
 	fi.close()
 	return
-
-# Save data from lines to file
+	
 def savelines(lines,fname):
 	f=open(fname,"w")
 	for line in lines:
