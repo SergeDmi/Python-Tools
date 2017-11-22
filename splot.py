@@ -9,6 +9,9 @@ from tools import *
 		
 class Glob:
 	def __init__(self, args):
+		narg=len(args)
+		if nargs<2:
+			self.usage()
 		self.out='plot'
 		self.xlabel='x'
 		self.ylabel='y'
@@ -40,11 +43,13 @@ class Glob:
 			elif arg.startswith('ymax='):
 				self.xmax=float(arg[5:])
 			elif arg.startswith('key='):
-				self.key=arg[4:]	
+				self.key=arg[4:]
+			elif arg.startswith('--help'):	
+				self.usage()
 			elif arg.find('=')<0:
 				files.append(i)		
+				
 		self.graph=graph.graphxy(width=self.width,height=self.height,key=graph.key.key(pos="%s" %(self.key), dist=0.1),x=axis.linear(title=r"%s" %(self.xlabel),min=self.xmin,max=self.xmax),y=axis.linear(title=r"%s" %(self.ylabel),min=self.ymin,max=self.ymax))		
-		narg=len(args)
 		files.append(narg)
 		nf=len(files)-1
 		self.graphs=[Graph(args[files[i]:files[i+1]]) for i in range(nf)]
@@ -57,8 +62,18 @@ class Glob:
 		else:
 			self.graph.plot([graph.data.points([(x,graf.data[i,1],graf.data[i,2]) for i, x in enumerate(graf.data[:,0])], x=1, y=2,dy=3,title=graf.legend)],graf.style)
 	def save_plot(self):
-		self.graph.writePDFfile(self.out)		
-		self.graph.writeEPSfile(self.out)		
+		if self.graphs:
+			self.graph.writePDFfile(self.out)		
+			self.graph.writeEPSfile(self.out)	
+
+	def usage(self):
+		disp('splot is a simple command line plotting tool based on PyX (PyX is awesome !)')
+		disp('---------------------------- Warning : you should use PyX for more options')
+		disp('Examples :')
+		disp('splot.py positions.txt')
+		disp('splot.py positions.txt positions2.txt')
+		disp('splot.py positions.txt legend=None color=red averages.txt dy=2 style=x xlabel=''$t$ in minutes'' ylabel=''$\bar{z}$''')
+		quit
 			
 class Graph(Glob):
 	count=0
@@ -176,9 +191,7 @@ class Style(Graph):
 if __name__ == "__main__":
 	nargs=len(sys.argv);
 	args=sys.argv[1:];
-	if nargs<1:
-		disp("Not enough arguments : should provide filename")
-		
+
 	glob=Glob(args)
 	glob.make_plot()
 	glob.save_plot()
