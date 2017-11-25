@@ -142,12 +142,12 @@ class Graph(Glob):
 	count=0
 	numr=0
 	def __init__(self, args):
-		self.numr+=1
+		Graph.numr+=1
 		self.x=0
 		self.y=1
 		self.mode='v'
 		self.file=args[0]
-		self.legend="file %s" %self.numr
+		self.legend="file %s" %Graph.numr
 		self.data=[]
 		self.dY=[]	
 		self.dy=[]	
@@ -232,7 +232,15 @@ class Style(Graph):
 				elif col=='medium':						
 					self.colour=color.gray(0.5)					
 				elif col=='dark':
-					self.colour=color.gray(0.25)					
+					self.colour=color.gray(0.25)	
+				else:
+					if not col.startswith('color.'):
+						col='color.%s' %(col)
+					try:
+						self.colour=eval(col)
+					except:
+						disp('We did not understand color %s' %arg[6:])
+							
 			elif arg.startswith('size='):
 				self.size=float(arg[5:])
 				
