@@ -12,6 +12,6 @@ This repository contains generic but useful python utilities
  Examples :  
  splot.py position.txt  
  splot.py position.txt color=red position2.txt  
- splot.py position.txt color=red style=- averages.txt x=1 y=2 dy=3 ylabel='$z$ in nm'  
+ splot.py averages.txt y=A[:,1]-A[:,2] dy='A[:,3]/sqrt(A[:,4])' ylabel='$z$ in nm' color=cmyk.Green
 
 # Serge Dmitrieff -- http://biophysics.fr
