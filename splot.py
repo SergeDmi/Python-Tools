@@ -1,12 +1,75 @@
 #!/usr/local/bin/python
 # -*- coding: utf-8 -*-
-#import random,math
+#
+# Copyright Serge Dmitrieff 
+# www.biophysics.fr
+
 from pyx import *
 from numpy import *
 from pyx.graph import axis
 from tools import *
 
+
+"""
+# SYNOPSIS
+
+   splot is a shorthand command-line tool draw graphs using PyX. PyX is good.
+   
+# DESCRIPTION
+   
+   splot plots a graph from a text file (should I add excel support ?)
+   it is meant to be fast and dirty (but uses PyX to be beautiful)
+   
+# SYNTAX
+   
+   python splot.py TEXT_FILE [OPTIONS] [ADDITIONAL_TEMPLATE_FILES] [ADDITIONAL_OPTIONS]
+
+# OPTIONS
+	
+	splot has two kinds of options : global (for the whole figure) and local (for a particular file)
+	All options should be written as option_name=option_value
+	
+	Global options :
+		xlabel		: label of x axis
+		ylabel		: label of y axis
+		width		: width of figure
+		height		: height of figure
+		xmin		: min x value
+		xmax		: max x value
+		ymin		: min y value
+		ymax		: max y value
+		key			: position of figure legend
 		
+	Local options :
+		x			: index of column or row to be used as x axis values (e.g. x=0 for the first column)
+						also can specify an operation : x=A[:,0]*A[:,1]
+		y			: index of column or row to be used as y axis values (e.g. x=0 for the first column)
+						also can specify an operation : y=A[:,1]*A[:,2]/A[:,3]
+		dy			: index of column or row to be used as dy values (e.g. x=0 for the first column)
+						also can specify an operation : dy=A[:,2]/sqrt(A[:,3])
+		mode		: h for horizontal (rows), v for vertical (column) (default)
+		
+		color		: color of lines or symbol ; now suports red green blue and black dark medium light (gray)
+		
+		style		: style of plot : - or _ for a line, -- for dashed, .- for dashdotted
+									o for circles       x for crosses
+		size		: size of symbol used							
+									
+		line		: thickness of line, from 0 to 5 
+													
+# EXAMPLES :
+			
+			splot.py file.txt
+						plots the second column of file.txt as a function of the first column
+			splot.py file.txt color=red file2.txt
+						plots in red the second column of file.txt as a function of the first column
+						plots the second column of file2.txt as a function of the first column in the same graph
+			splot.py file.txt 'y=sqrt(A[:,1]^2+A[:,2]^2)' dy=3
+						A[:,1] and A[:,2] are the second and third columns of file.txt
+						the deviation on is the fourth column of file.txt
+						
+"""
+
 class Glob:
 	def __init__(self, args):
 		narg=len(args)
@@ -57,10 +120,10 @@ class Glob:
 		for graf in self.graphs:
 			self.plot(graf)	
 	def plot(self,graf):
-		if not graf.dy:
-			self.graph.plot([graph.data.points([(x,graf.data[i,1]) for i, x in enumerate(graf.data[:,0])], x=1, y=2,title=graf.legend)],graf.style)
+		if not len(graf.dY):
+			self.graph.plot([graph.data.points([(x,graf.Y[i]) for i, x in enumerate(graf.X[:])], x=1, y=2,title=graf.legend)],graf.style)
 		else:
-			self.graph.plot([graph.data.points([(x,graf.data[i,1],graf.data[i,2]) for i, x in enumerate(graf.data[:,0])], x=1, y=2,dy=3,title=graf.legend)],graf.style)
+			self.graph.plot([graph.data.points([(x,graf.Y[i],graf.dY[i]) for i, x in enumerate(graf.X[:])], x=1, y=2,dy=3,title=graf.legend)],graf.style)
 	def save_plot(self):
 		if self.graphs:
 			self.graph.writePDFfile(self.out)		
@@ -86,12 +149,12 @@ class Graph(Glob):
 		self.file=args[0]
 		self.legend="file %s" %self.numr
 		self.data=[]
-		self.style=Style(args).style
-		self.dy=[]		
-		(a_exp,a,b)=getdata(self.file)
+		self.dY=[]	
+		self.dy=[]	
+		(A,a,b)=getdata(self.file)
 		labels=splitheader(self.file)
 		
-		self.data=a_exp
+		#self.data=A
 		
 		for arg in args:
 			if arg.startswith('legend='):
@@ -101,19 +164,50 @@ class Graph(Glob):
 				else:
 					self.legend=r"%s" %legend
 			elif arg.startswith('x='):
-				self.x=int(arg[2:])	
+				self.x=(arg[2:])	
 			elif arg.startswith('y='):
-				self.y=int(arg[2:])
+				self.y=(arg[2:])
 			elif arg.startswith('mode='):
 				self.mode=arg[5:]
 			elif arg.startswith('dy='):
-				self.dy=int(arg[3:])	
-		if self.mode=='h':
-			self.data=self.data.T
-		if not self.dy:
-			self.data=self.data[:,[self.x,self.y]]
-		else:
-			self.data=self.data[:,[self.x,self.y,self.dy]]
+				self.dy=(arg[3:])	
+				
+		self.X=self.set_from_input(A,self.x,'x')
+		self.Y=self.set_from_input(A,self.y,'y')
+		self.dY=self.set_from_input(A,self.dy,'dy')				
+										
+		lX=len(self.X)
+		lY=len(self.Y)
+		ldY=len(self.dY)
+		if lX>lY:
+			self.X=self.X[0:lY]
+			lX=lY
+		elif lY>lX:
+			self.Y=self.Y[0:lX]
+			lY=lX
+		if len(self.dY):	
+			while ldY<lX:
+				self.dY.append(0)
+				ldY+=1
+				
+		self.style=Style(args).style
+				
+	def set_from_input(self,A,input,coord):
+		try :			
+			i=int(input)
+			if self.mode=='h':
+				return A[i,:]				
+			else:
+				return A[:,i]
+		except:
+			if input:
+				try:
+					return eval(input)
+				except:
+					print('We could note evaluate %s from %s' %(coord,input))
+				return []
+			else:
+				return []
 		
 class Style(Graph):
 	def __init__(self, args):
@@ -122,7 +216,7 @@ class Style(Graph):
 		self.size=0.04+0.01*float(count %6)
 		self.line=style.linewidth.thin
 		self.style=[]
-		self.dy=[]
+		self.dy=0
 		
 		for arg in args:
 			if arg.startswith('color='):
@@ -158,7 +252,7 @@ class Style(Graph):
 					self.line=style.linewidth.THICK
 					
 			elif arg.startswith('dy='):
-				self.dy=int(arg[3:])
+				self.dy=1
 				
 		for arg in args:	
 			if arg.startswith('style='):		
@@ -167,7 +261,7 @@ class Style(Graph):
 					self.style=[graph.style.line([style.linestyle.solid,self.line,self.colour])]
 				elif stil=='--':
 					self.style=[graph.style.line([style.linestyle.dashed,self.line,self.colour])]
-				elif stil=='.-':
+				elif stil=='.-' or stil=='-.' or stil==',-' or stil=='-,':
 					self.style=[graph.style.line([style.linestyle.dashdotted,self.line,self.colour])]
 				elif stil=='x':
 					if not self.dy:
