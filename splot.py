@@ -250,6 +250,13 @@ class Graph(Glob):
 		(A,a,b)=getdata(self.file)
 		labels=splitheader(self.file)
 		
+		# Dirty tricks for maximum compatibility
+		if min(a,b)==1:
+			self.x='auto'
+			self.y=0	
+		if a==1:
+			self.mode='h'
+		
 		for arg in args:
 			if arg.startswith('legend=') or arg.startswith('title='):
 				if arg.startswith('legend='):
@@ -278,11 +285,13 @@ class Graph(Glob):
 				siz=arg[5:]
 				if siz.isdigit() or siz.find('A[')>=0:
 					self.S=self.set_from_input(A,siz,'size')	
+		
 				
 		self.X=self.set_from_input(A,self.x,'x')
 		self.Y=self.set_from_input(A,self.y,'y')
 		self.dX=self.set_from_input(A,self.dx,'dx')
 		self.dY=self.set_from_input(A,self.dy,'dy')
+
 		
 		if not len(self.C):
 			self.C=self.X
@@ -323,9 +332,9 @@ class Graph(Glob):
 				# Automatic axis value : 1 to length of array
 				if input.startswith('aut'):
 					if self.mode=='h':
-						return array(range(len(A[i,:])))
+						return array(range(len(A[0,:])))
 					else:
-						return array(range(len(A[:,i])))
+						return array(range(len(A[:,0])))
 				# Interpreting axis value
 				try:
 					return eval(input)
