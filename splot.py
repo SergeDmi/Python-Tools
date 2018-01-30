@@ -311,6 +311,7 @@ class Graph(Glob):
 		self.style=Style(args).style
 				
 	def set_from_input(self,A,input,coord):
+		# We first check if axis defined by a row/column number
 		try :			
 			i=int(input)
 			if self.mode=='h':
@@ -319,6 +320,13 @@ class Graph(Glob):
 				return A[:,i]
 		except:
 			if input:
+				# Automatic axis value : 1 to length of array
+				if input.startswith('aut'):
+					if self.mode=='h':
+						return array(range(len(A[i,:])))
+					else:
+						return array(range(len(A[:,i])))
+				# Interpreting axis value
 				try:
 					return eval(input)
 				except:
