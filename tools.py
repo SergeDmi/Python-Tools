@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
+#!/usr/bin/env python
 import math
 from numpy import *
 import subprocess
 import os.path
 import sys
+import os
 
 
 def modulo(k,n):
@@ -19,12 +21,19 @@ def make_exec(fname):
 #Runs a unic command and returns the stdout
 def unpy(job):
 	proc=subprocess.Popen([job],stdout=subprocess.PIPE)
-	return proc.stdout.readlines() 
+	return proc.stdout.readlines()
 
 #pwd
 def pwd():
 	lines=unpy('pwd')
 	return clean_line(lines[0])
+
+# folder
+def last_pwd():
+	fold=pwd()
+	fold=fold.rstrip('/')
+	words=fold.split('/')
+	return words[-1]
 
 #create job list from index a to index b
 #fname/index/ename is absolute adress of the executable
@@ -35,9 +44,9 @@ def bjarray(jname,fname,ename,a,b):
 # create job lists, to improve
 def bjobs(jname,fname,ename,jvals):
 	return bjarray(jname,fname,ename,min(jvals),max(jvals))
-	
 
-#Removes extension from file 
+
+#Removes extension from file
 def remove_ext(fname):
 	words=fname.split(".")
 	l=len(words)
@@ -45,12 +54,20 @@ def remove_ext(fname):
 		return words[0]
 	else:
 		return "".join(word+"." for word in words[0:l-1])
-		
+
 # Archive a folder with tar
 def archive(fname):
 	job="tar -czf %s.tgz %s && rm -R %s" %(remove_ext(clean_name(fname)),fname,fname)
 	run(job)
 	return
+# Cleanup a word ...
+# @TODO ; to be improved !!!!
+def word_cleanup(word):
+	word =word.replace(",","")
+	word =word.replace(" ","")
+	word =word.replace(")","")
+	return word
+
 # Remove / at the end of folder names
 def clean_name(fname):
 	l=len(fname)
@@ -82,8 +99,8 @@ def remove_comments(lines):
 				j=j+1
 				#print "uncorrected"
 	return lines
-		
-		
+
+
 # Concatenate folder names, being carefull of the "/" at the end
 def conc(*names):
 	l=len(names)
@@ -103,17 +120,17 @@ def clean_lines(lines):
 	for i,line in enumerate(lines):
 		lines[i]=clean_line(line)
 	return lines
-	
+
 #runs a bash line
 def run(job):
 	subprocess.call([job],shell=True)
-	
+
 #create a folder with a name name
 def mkdir(name):
 	if ~(os.path.isdir(name)):
 		job="%s%s" % ("mkdir ",name)
 		run(job)
-	return 
+	return
 
 #copies files to the folder fn
 def copy_files(fn,files):
@@ -144,11 +161,11 @@ def create_array(minA,maxA,stepA):
 # Check if string a can be converted to float
 def isnum(a):
 	try:
-		float(a) 
+		float(a)
 	except ValueError:
 		return False
 	return True
-	
+
 # Converts line of space separated value to vector
 def nums(line):
 	words=line.split()
@@ -159,27 +176,64 @@ def nums(line):
 				re.append(float(w))
 	return re
 	#return map(float,line.split())
-	
-# Check if word exists in file	
+
+# Check if word exists in file
 def isword_file(fname,word):
 	lines=getlines(fname)
 	return isword_lines(lines,word)
-	
-	
+
+
+def make_file_list(part_fname,outro):
+	liste=[]
+	l=len(part_fname)
+	for f in os.listdir('.'):
+		ix=f.find(part_fname)
+		if ix>=0:
+			bli=f.find(outro)
+			if bli>=0:
+				numero=f[ix+l:bli]
+			else:
+				numero=f[ix+l]
+			try:
+				liste.append([int(numero),f])
+			except:
+				print('Could not understand the number %s in file %s' %(numero,f))
+	#we order the list by time stamp
+	return liste
+
+def make_ordered_file_list(part_fname,outro):
+	liste=make_file_list(part_fname,outro)
+	liste.sort(key=lambda tup: tup[0])
+	return liste
+
+def make_prop_dict(fname,key):
+	lines=getlines(fname)
+	props={}
+	for line in lines:
+		words=line.split()
+		ixes=[i for i,word in enumerate(words) if word.find(key)>=0]
+		for i in ixes:
+			try:
+				props[words[i+1]]=words[i+2]
+			except:
+				print('Could not understand property %s from configuration file %s' %(words[i],fname))
+	#for line in lines1:
+	return props
+
 # Check if word exist in lines
 def isword_lines(lines,word):
 	for li in lines:
 		if li.find(word)>-1:
 			return 1
 	return 0
-	
+
 #def get lines from file
 def getlines(fname):
 	f=open(fname,'r')
 	lines=f.readlines()
 	f.close()
 	return lines
-	
+
 def getheader(fname):
 	lines=clean_lines(getlines(fname))
 	CC=["#","%"]
@@ -188,14 +242,14 @@ def getheader(fname):
 		if lines[0].find(c)>=0:
 			line=lines[0];
 	return (line)
-	
+
 def splitheader(fname):
 	head=getheader(fname)
 	if head:
 		return head.split(' ')
 	else:
 		return []
-	
+
 # Extract space separatated value array from file
 def getdata_lines(lines):
 	lines=clean_lines(remove_comments(lines))
@@ -217,8 +271,12 @@ def getdata_lines(lines):
 	return ar[0:n,:],n,nc
 
 def getdata(fname):
-	lines=getlines(fname)
-	return getdata_lines(lines)
+	try:
+		lines=getlines(fname)
+		return getdata_lines(lines)
+	except:
+		print('Could not load from file %s' %fname)
+		return [],-1,-1
 
 # Extract space separatated value array from file
 def readnumsinlines(fname):
@@ -252,7 +310,7 @@ def savedata(*args):
 		fi.write("".join(str(b)+"\n" for b in data))
 	fi.close()
 	return
-	
+
 def savelines(lines,fname):
 	f=open(fname,"w")
 	for line in lines:
