@@ -6,6 +6,7 @@
 #
 # Copyright Serge Dmitrieff
 # www.biophysics.fr
+# See : http://biophysics.fr/2018/07/31/python-command-line-tool-for-ply-files/
 
 # @TODO : different scales on different directions
 # @TODO : support for complex mesh (non triangular)
