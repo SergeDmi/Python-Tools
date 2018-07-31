@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
+# Designed around Python plyfile :
+# https://github.com/dranjan/python-plyfile/
+#
 # Copyright Serge Dmitrieff
 # www.biophysics.fr
 
