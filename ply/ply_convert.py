@@ -48,7 +48,7 @@
                         converts a ply file file.ply to a mesh file file.mesh
 
 
-            ply_convert.py file.mesh normals=1 out=file.ply
+            ply_convert.py file.mesh -normals out=file.ply
 
                         converts a mesh file to a ply file, and compue the normal at each point
 
@@ -67,6 +67,7 @@ try:
     from plyfile import PlyData, PlyElement
     import sys
     from sklearn.decomposition import PCA
+    from numpy.lib.recfunctions import append_fields
 except:
     raise ValueError('Necessary Python modules could not be loaded')
 try:
@@ -203,21 +204,31 @@ def recompute_normals(plydata):
         vec=cross(vertices[ixes[2],0:3]-vertices[ixes[0],0:3],vertices[ixes[1],0:3]-vertices[ixes[0],0:3])
         adds[ixes,0:3]+=ones((3,1))*vec
     adds/=linalg.norm(adds,axis=1,keepdims=1)*ones((1,3))
-    #vertices[:,3:6]=adds
-    plydata['vertex'].data['nx']=adds[:,0]
-    plydata['vertex'].data['ny']=adds[:,1]
-    plydata['vertex'].data['nz']=adds[:,2]
+    try:
+        plydata['vertex'].data['nx']=adds[:,0]
+        plydata['vertex'].data['ny']=adds[:,1]
+        plydata['vertex'].data['nz']=adds[:,2]
+    except:
+        # Maybe the normals were not created initially
+        plydata['vertex'].data=append_fields(plydata['vertex'].data,'nx',adds[:,0])
+        plydata['vertex'].data=append_fields(plydata['vertex'].data,'ny',adds[:,1])
+        plydata['vertex'].data=append_fields(plydata['vertex'].data,'nz',adds[:,2])
     return plydata
 
 def add_thickness(plydata,thickness):
-    vertices=array([[x for x in b] for b in plydata['vertex'].data])
     try:
-        vertices[:,0:3]+=vertices[:,3:6]*thickness
-        plydata['vertex'].data['x']=vertices[:,0]
-        plydata['vertex'].data['y']=vertices[:,1]
-        plydata['vertex'].data['z']=vertices[:,2]
+        plydata['vertex'].data['x']+=thickness*plydata['vertex'].data['nx']
+        plydata['vertex'].data['y']+=thickness*plydata['vertex'].data['ny']
+        plydata['vertex'].data['z']+=thickness*plydata['vertex'].data['nz']
     except:
-        raise ValueError("Issue in adding thickness : Could not translate points by normal*thickness")
+        try:
+            print('Warning : Recomputing normals')
+            plydata=recompute_normals(plydata)
+            plydata['vertex'].data['x']+=thickness*plydata['vertex'].data['nx']
+            plydata['vertex'].data['y']+=thickness*plydata['vertex'].data['ny']
+            plydata['vertex'].data['z']+=thickness*plydata['vertex'].data['nz']
+        except:
+            raise ValueError("Issue in adding thickness : Could not translate points by normal*thickness")
     return plydata
 
 def align_mesh(plydata):
