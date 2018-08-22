@@ -1,12 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Designed around Python plyfile :
-# https://github.com/dranjan/python-plyfile/
-#
 # Copyright Serge Dmitrieff
 # www.biophysics.fr
-# See : http://biophysics.fr/2018/07/31/python-command-line-tool-for-ply-files/
 
 # @TODO : different scales on different directions
 # @TODO : support for complex mesh (non triangular)
@@ -22,6 +18,7 @@
     ply_convert reads a mesh from a file (.mesh or .ply), performs simple operations, and saves it (to .mesh or .ply)
     uses the module plyfile : https://github.com/dranjan/python-plyfile/
     Requires the module tools : https://github.com/SergeDmi/Utilities/blob/master/bin/tools.py
+    More : https://biophysics.fr
 
 # SYNTAX
 
@@ -37,10 +34,13 @@
         scale=          : scale to be applied to points
         length=         : length of object on dimension of maximal variance
         thickness=      : adds to each point a vector thickness*normal
+        batch=          : apply to all files of a certain type ; overrides INPUT_FILE
+        path=           : path in which to look for files for batch operation
         -center         : center the data around [0,0,0]
         -align          : aligns data to dimension x
         -normals        : computes normals from faces
         -verbose        : verbose output
+        -fixuint        : fixes format to meshlab-friendly
 
 # EXAMPLES :
 
@@ -49,9 +49,10 @@
                         converts a ply file file.ply to a mesh file file.mesh
 
 
-            ply_convert.py file.mesh -normals out=file.ply
+            ply_convert.py file.mesh normals=1 out=file.ply
 
                         converts a mesh file to a ply file, and compue the normal at each point
+
 
             ply_convert.py file.ply -center -align -normals length=7 -verbose thickness=0.15
                                 verbose=1 out=thickened.mesh out=thickened.ply
@@ -60,6 +61,13 @@
                         after centering, aligning, computing normals, scaling the object to a length of 7,
                         and adding an extra thickness of 0.15
 
+
+            ply_convert.py batch=.ply path='/home/user/simulations/' out='.ply' -fixuint
+
+                        rewrites all the ply files in folder path after fixing the variable type of Vertices
+                        Note : useful because tinply (<3) doesn't agree with meshlab (<3) for some reason
+
+
 """
 
 ####### Python modules
@@ -67,15 +75,15 @@ try:
     from numpy import *
     from plyfile import PlyData, PlyElement
     import sys
+    from os import listdir
     from sklearn.decomposition import PCA
-    from numpy.lib.recfunctions import append_fields
 except:
     raise ValueError('Necessary Python modules could not be loaded')
 try:
-    from tools import *
+    from import_tools import *
 except:
-    print('Warning : Tools could not be loaded. Get it from https://github.com/SergeDmi/Utilities/blob/master/bin/tools.py')
-    print('Warning : cannot load .mesh files ')
+    print('Warning : import_tools could not be loaded. Get it from https://github.com/SergeDmi/Utilities/blob/master/bin/import_tools.py')
+    print('Warning : will not be able to load .mesh files ')
 
 
 # __main__ calls to this function
@@ -96,6 +104,51 @@ def do_mesh_conversion(args):
     plydata=load_from_file(fname_in)
     plydata=process_plydata(plydata,args)
     return write_ply_to_file(plydata,args)
+
+##  Batch conversion of mesh files
+def do_batch_conversion(args):
+    # First we check output
+    sout=""
+    outs=[args.pop(i) for i,arg in enumerate(args) if arg.startswith('out=')]
+    if len(outs)>0:
+        sout=outs[0][4:]
+        if not sout.startswith('.'):
+            raise ValueError('Output argument should be a file format in batch mode')
+        if len(outs)>1:
+            print('Warning : several output specified, keeping %s ' %sout)
+    else:
+        print('Warning : replacing files')
+
+    # Then we check input
+    batch=[arg[6:] for arg in args if arg.startswith('batch=')]
+    if len(batch)>1:
+        raise ValueError('Currently only a single batch job is supported !')
+    batch=batch[0]
+    if not batch.startswith('.'):
+        raise ValueError('batch= argument should be a file format, e.g. batch=.ply')
+
+    # Do we have a path ? If not, path is here.
+    pathes=[arg[5:] for arg in args if arg.startswith('path=')]
+    if len(pathes)>0:
+        path=pathes[0]
+    else:
+        path='.'
+
+    # Now listing all files in path that match batch suffix
+    files=[fname for fname in listdir(path) if fname.endswith(batch)]
+    for file in files:
+        if len(sout)==0:
+            out=file
+        else:
+            out="%s%s" %(file.split(batch)[0],sout)
+        # this is proper way to copy.
+        newargs=args[:]
+        newargs.append("out=%s" %out )
+        newargs.insert(0,file)
+        do_mesh_conversion(newargs)
+
+    # Done
+    return len(files)
 
 
 def create_plydata(items,dict_values):
@@ -205,31 +258,21 @@ def recompute_normals(plydata):
         vec=cross(vertices[ixes[2],0:3]-vertices[ixes[0],0:3],vertices[ixes[1],0:3]-vertices[ixes[0],0:3])
         adds[ixes,0:3]+=ones((3,1))*vec
     adds/=linalg.norm(adds,axis=1,keepdims=1)*ones((1,3))
-    try:
-        plydata['vertex'].data['nx']=adds[:,0]
-        plydata['vertex'].data['ny']=adds[:,1]
-        plydata['vertex'].data['nz']=adds[:,2]
-    except:
-        # Maybe the normals were not created initially
-        plydata['vertex'].data=append_fields(plydata['vertex'].data,'nx',adds[:,0])
-        plydata['vertex'].data=append_fields(plydata['vertex'].data,'ny',adds[:,1])
-        plydata['vertex'].data=append_fields(plydata['vertex'].data,'nz',adds[:,2])
+    #vertices[:,3:6]=adds
+    plydata['vertex'].data['nx']=adds[:,0]
+    plydata['vertex'].data['ny']=adds[:,1]
+    plydata['vertex'].data['nz']=adds[:,2]
     return plydata
 
 def add_thickness(plydata,thickness):
+    vertices=array([[x for x in b] for b in plydata['vertex'].data])
     try:
-        plydata['vertex'].data['x']+=thickness*plydata['vertex'].data['nx']
-        plydata['vertex'].data['y']+=thickness*plydata['vertex'].data['ny']
-        plydata['vertex'].data['z']+=thickness*plydata['vertex'].data['nz']
+        vertices[:,0:3]+=vertices[:,3:6]*thickness
+        plydata['vertex'].data['x']=vertices[:,0]
+        plydata['vertex'].data['y']=vertices[:,1]
+        plydata['vertex'].data['z']=vertices[:,2]
     except:
-        try:
-            print('Warning : Recomputing normals')
-            plydata=recompute_normals(plydata)
-            plydata['vertex'].data['x']+=thickness*plydata['vertex'].data['nx']
-            plydata['vertex'].data['y']+=thickness*plydata['vertex'].data['ny']
-            plydata['vertex'].data['z']+=thickness*plydata['vertex'].data['nz']
-        except:
-            raise ValueError("Issue in adding thickness : Could not translate points by normal*thickness")
+        raise ValueError("Issue in adding thickness : Could not translate points by normal*thickness")
     return plydata
 
 def align_mesh(plydata):
@@ -342,4 +385,9 @@ def write_mesh_file(plydata,fname_out):
 
 if __name__ == "__main__":
     args=sys.argv[1:]
-    do_mesh_conversion(args)
+    # Checking which kind of job we're doing : batch or single
+    bb=array([1 for arg in args if arg.startswith('batch=')])
+    if sum(bb)>0:
+        do_batch_conversion(args)
+    else:
+        do_mesh_conversion(args)
