@@ -36,6 +36,7 @@
         thickness=      : adds to each point a vector thickness*normal
         batch=          : apply to all files of a certain type ; overrides INPUT_FILE
         path=           : path in which to look for files for batch operation
+        label=          : label of mesh, added when saving mesh files
         -center         : center the data around [0,0,0]
         -align          : aligns data to dimension x
         -normals        : computes normals from faces
@@ -176,6 +177,7 @@ def create_plydata(items,dict_values):
 def load_mesh(fname_in):
     klist=['Vertices','Triangles']
     print('Warning : .mesh file reading is still experimental')
+    print('Warning : Labels have to be added in command line : label=X')
     print('Warning : now supporting only keys : %s' %(' '.join([k for k in klist])))
     lines=getlines(fname_in)
     keys=['Dimension','Vertices','Edges','Triangles','Tetrahedr','Quadrilaterals','Geometry','CrackedEdges','End']
@@ -357,7 +359,7 @@ def write_ply_to_file(plydata,args):
         if arg.startswith("out="):
             arg=arg[4:]
             if arg.endswith(".mesh"):
-                write_mesh_file(plydata,arg)
+                write_mesh_file(plydata,arg,args)
             if arg.endswith(".ply"):
                 write_ply_file(plydata,arg)
 
@@ -367,7 +369,11 @@ def write_ply_file(plydata,fname_out):
     plydata.write(fname_out)
 
 
-def write_mesh_file(plydata,fname_out):
+def write_mesh_file(plydata,fname_out,args):
+    label="2"
+    for arg in args:
+        if arg.startswith("label="):
+            label=arg[6:]
     nv=plydata['vertex'].count
     nf=plydata['face'].count
     out=open(fname_out,'w')
@@ -378,7 +384,7 @@ def write_mesh_file(plydata,fname_out):
     out.write("Vertices \n       %s \n" %nv)
     [out.write(" %s %s %s   0\n" %( x[0],x[1],x[2])) for x in plydata['vertex'].data ]
     out.write("Triangles \n         %s \n" %nf)
-    [out.write("         %s         %s         %s         2\n" %(x[0][0]+1,x[0][1]+1,x[0][2]+1)) for x in plydata['face'].data ]
+    [out.write("         %s         %s         %s         %s\n" %(x[0][0]+1,x[0][1]+1,x[0][2]+1,label)) for x in plydata['face'].data ]
     out.write('End \n')
     out.close()
     return 0
