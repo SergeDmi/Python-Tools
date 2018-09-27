@@ -258,7 +258,7 @@ def recompute_normals(plydata):
     for face in plydata['face'].data:
         ixes=face[0][:]
         vec=cross(vertices[ixes[2],0:3]-vertices[ixes[0],0:3],vertices[ixes[1],0:3]-vertices[ixes[0],0:3])
-        adds[ixes,0:3]+=ones((3,1))*vec
+        adds[ixes,0:3]-=ones((3,1))*vec
     adds/=linalg.norm(adds,axis=1,keepdims=1)*ones((1,3))
     #vertices[:,3:6]=adds
     plydata['vertex'].data['nx']=adds[:,0]
