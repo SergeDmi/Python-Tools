@@ -6,6 +6,7 @@
 
 # @TODO : different scales on different directions
 # @TODO : support for complex mesh (non triangular)
+# @TODO : embed in a class !!!!!
 
 
 """
@@ -158,7 +159,7 @@ def create_plydata(items,dict_values):
     # @WARNING : Still limited to Vertices and triangles
     if dict_values['Dimension']!=3:
         raise ValueError('Currently not supporting non-2D vertices')
-    translations={"Vertices":"vertex", "Triangles":"face", "Tetrahedra" : "blocks"}
+    translations={"Vertices":"vertex", "Triangles":"face", "Tetrahedra" : "tetrahedra"}
     elements=[]
     keys=items.keys()
     #print(keys
@@ -173,8 +174,8 @@ def create_plydata(items,dict_values):
             elif name=="face":
                 face=array([([T[0],T[1],T[2]],) for T in Values],dtype=[('vertex_index','i4',(3,))])
                 elements.append(PlyElement.describe(face,name))
-            elif name=="block":
-                face=array([([T[0],T[1],T[2]],) for T in Values],dtype=[('block_vertex_index','i4',(4,))])
+            elif name=="tetrahedra":
+                face=array([([T[0],T[1],T[2]],) for T in Values],dtype=[('tetrahedra_index','i4',(4,))])
                 elements.append(PlyElement.describe(face,name))
                 #print(face)
     return PlyData(elements)
@@ -264,14 +265,17 @@ def keep_submesh(items,choice):
 
     item=array([triangle for triangle in triangles if triangle[3]==label])
 
-    ixes=unique(item[:,0:3])
-    ixes=ixes.astype(int)
-    #Now we should keep only vertices corresponding to a chose item
-    vertices=items['Vertices']
-    vertices=vertices[ixes]
-    items['Vertices']=vertices
-    item=recompute_indices(item,ixes)
-    items['Triangles']=item
+    if 0:
+        ixes=unique(item[:,0:3])
+        ixes=ixes.astype(int)
+        #Now we should keep only vertices corresponding to a chose item
+        vertices=items['Vertices']
+        vertices=vertices[ixes]
+        items['Vertices']=vertices
+        item=recompute_indices(item,ixes)
+        items['Triangles']=item
+    else:
+        items['Triangles']=item
 
     return items
 
