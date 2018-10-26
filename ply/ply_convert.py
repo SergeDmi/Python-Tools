@@ -37,10 +37,12 @@
         batch=          : apply to all files of a certain type ; overrides INPUT_FILE
         path=           : path in which to look for files for batch operation
         label=          : label of mesh, added when saving mesh files
+        orientation=    : orientation of normals (+1 : towards outside, -1 : towards inside)
         -center         : center the data around [0,0,0]
         -align          : aligns data to dimension x
         -normals        : computes normals from faces
         -verbose        : verbose output
+        -fixnorms       : makes sure normals are inwards (equivalent to option orientation=-1)
         -fixuint        : fixes format to meshlab-friendly
 
 # EXAMPLES :
@@ -102,7 +104,7 @@ def do_mesh_conversion(args):
             args=[]
 
     # Loading the input
-    plydata=load_from_file(fname_in)
+    plydata=load_from_file(fname_in,args)
     plydata=process_plydata(plydata,args)
     return write_ply_to_file(plydata,args)
 
@@ -156,7 +158,7 @@ def create_plydata(items,dict_values):
     # @WARNING : Still limited to Vertices and triangles
     if dict_values['Dimension']!=3:
         raise ValueError('Currently not supporting non-2D vertices')
-    translations={"Vertices":"vertex", "Triangles":"face"}
+    translations={"Vertices":"vertex", "Triangles":"face", "Tetrahedra" : "blocks"}
     elements=[]
     keys=items.keys()
     #print(keys
@@ -169,42 +171,48 @@ def create_plydata(items,dict_values):
                 elements.append(PlyElement.describe(vertex,name))
                 #print(vertex)
             elif name=="face":
-                face=array([([T[0],T[1],T[2]],) for T in Values],dtype=[('vertex_indices','i4',(3,))])
+                face=array([([T[0],T[1],T[2]],) for T in Values],dtype=[('vertex_index','i4',(3,))])
+                elements.append(PlyElement.describe(face,name))
+            elif name=="block":
+                face=array([([T[0],T[1],T[2]],) for T in Values],dtype=[('block_vertex_index','i4',(4,))])
                 elements.append(PlyElement.describe(face,name))
                 #print(face)
     return PlyData(elements)
 
-def load_mesh(fname_in):
-    klist=['Vertices','Triangles']
+def load_mesh(fname_in,args):
+    klist=['Vertices','Triangles','Tetrahedra']
     print('Warning : .mesh file reading is still experimental')
     print('Warning : Labels have to be added in command line : label=X')
     print('Warning : now supporting only keys : %s' %(' '.join([k for k in klist])))
     lines=getlines(fname_in)
-    keys=['Dimension','Vertices','Edges','Triangles','Tetrahedr','Quadrilaterals','Geometry','CrackedEdges','End']
+    keys=['Dimension','Vertices','Edges','Triangles','Tetrahedra','Quadrilaterals','Geometry','CrackedEdges','End']
     dict_lines={}
     dict_lines_nb={}
-    dict_values={}
+    dict_values={'Dimension' : 3}
     check_for_number=False
     key_checked=''
+    dict_lines['End']=len(lines)
     # First we parse all lines to get a map of the file organization
     for i,line in enumerate(lines):
         # We check for a number if possible
         # We check for all the keys
         if key_checked=="End":
+            dict_lines[key]=i
             break
         if check_for_number:
-            words=line.split(' ')
+            words=clean_word_list(line.split(' '))
             try:
                 dict_values[key_checked]=int(words[-1])
                 dict_lines_nb[key]=i
                 check_for_number=False
+                print('Expecting %s elements of type %s' %(dict_values[key_checked],key_checked))
             except:
                 raise ValueError('Could not find number for key %s' %key_checked)
         else:
             for key in keys:
                 if line.find(key)>=0:
                     dict_lines[key]=i
-                    words=line.split(' ')
+                    words=clean_word_list(line.split(' '))
                     try:
                         dict_values[key]=int(words[-1])
                         dict_lines[key]=i
@@ -213,12 +221,14 @@ def load_mesh(fname_in):
                         check_for_number=True
                         key_checked=key
                     break
+
     # Creating Vertices & Triangles
     items={}
     for k in klist:
         first_line=dict_lines_nb[k]+1
         last_line=min([dict_lines.setdefault(key,0) for key in keys if dict_lines.setdefault(key,0)>first_line])
         (item,nl,nc)=getdata_lines(lines[first_line:last_line])
+        # Mesh have an index starting at 1 while ply start at 0, or something like that
         if k=="Triangles":
             item[:,0:dict_values['Dimension']]-=1
         if nl!=dict_values[k]:
@@ -226,15 +236,63 @@ def load_mesh(fname_in):
         else:
             items[k]=item
 
+    select=False
+    for arg in args:
+        if arg.startswith('submesh='):
+            select=True
+            choice=arg[8:]
+
+    if select:
+        items=keep_submesh(items,choice)
+        for k in klist:
+            dict_values[k]=len(items[k])
+
+
     # Ok should be done now
     plydata=create_plydata(items,dict_values)
     return plydata
 
-def load_from_file(fname_in):
+def keep_submesh(items,choice):
+    # Keeping a submesh from a .mesh file
+    # for now only support by label
+    # @TODO : support inside, outside
+    triangles=items['Triangles']
+    try:
+        label=int(choice)
+    except:
+        raise ValueError('Could not understand submesh from %s. Expecting a label number' % choice)
+
+    item=array([triangle for triangle in triangles if triangle[3]==label])
+
+    ixes=unique(item[:,0:3])
+    ixes=ixes.astype(int)
+    #Now we should keep only vertices corresponding to a chose item
+    vertices=items['Vertices']
+    vertices=vertices[ixes]
+    items['Vertices']=vertices
+    item=recompute_indices(item,ixes)
+    items['Triangles']=item
+
+    return items
+
+def recompute_indices(item,ixes):
+    ixmin=amin(ixes)
+    ixmax=amax(ixes)
+    count=ixmax-ixmin+1
+    if count==len(ixes):
+        item[:,0:3]-=ixmin
+    else:
+        raise ValueError('Non-contiguous blocks not yet implemented')
+
+    return item
+
+
+
+def load_from_file(fname_in,args):
     if fname_in.endswith('.ply'):
         plydata=load_ply(fname_in)
     elif fname_in.endswith('.mesh') or fname_in.endswith('.msh'):
-        plydata=load_mesh(fname_in)
+        plydata=load_mesh(fname_in,args)
     else:
         raise ValueError('Could not load a mesh from file %s' %fname_in)
     return plydata
@@ -258,12 +316,46 @@ def recompute_normals(plydata):
     for face in plydata['face'].data:
         ixes=face[0][:]
         vec=cross(vertices[ixes[2],0:3]-vertices[ixes[0],0:3],vertices[ixes[1],0:3]-vertices[ixes[0],0:3])
-        adds[ixes,0:3]-=ones((3,1))*vec
+        adds[ixes,0:3]+=ones((3,1))*vec
     adds/=linalg.norm(adds,axis=1,keepdims=1)*ones((1,3))
     #vertices[:,3:6]=adds
     plydata['vertex'].data['nx']=adds[:,0]
     plydata['vertex'].data['ny']=adds[:,1]
     plydata['vertex'].data['nz']=adds[:,2]
+    return plydata
+
+def fix_face_normals(plydata,*args):
+    # We check if normals are directed in the right direction
+    # For some reason, the right direction seem to be the inside
+    # @TODO : check what is the recommended orientation
+    if len(args)==0:
+        orientation=-1
+    else:
+        try:
+            orientation=float(args[0])
+        except:
+            raise ValueError('Errpr : could not understand orientation from %s' % orientation)
+    plydata=recompute_normals(plydata)
+    vertices=array([[x for x in b] for b in plydata['vertex'].data])
+    pts=vertices[:,0:3]
+    for i in range(3):
+        pts[:,i]-=mean(vertices[:,i])
+    norms=vertices[:,3:6]
+    sum_o=sum(norms*pts)
+    if (sum_o*orientation)<0.0:
+        print('Warning : inverted normals ; fixing it.')
+        plydata=invert_faces(plydata)
+        plydata=recompute_normals(plydata)
+    return plydata
+
+def invert_faces(plydata):
+    vertices=array([[x for x in b] for b in plydata['vertex'].data])
+    s=shape(vertices)
+    for i,face in enumerate(plydata['face'].data):
+        ixes=face[0][:]
+        ixes[2],ixes[1]=ixes[1],ixes[2]
+        for j,ix in enumerate(ixes):
+            plydata['face'].data[i][0][j]=ix
     return plydata
 
 def add_thickness(plydata,thickness):
@@ -305,18 +397,28 @@ def load_ply(fname_in):
     try:
         plydata = PlyData.read(fname_in)
     except:
-        raise ValueError('Could not read file %s' %fname)
+        raise ValueError('Could not read file %s' %fname_in)
 
     return plydata
 
 def change_face_dtype_to_int(plydata):
     # This fixes an issue of meshlab being sensitive to seeing uint for faces
     # Not necessary
-    #for i in range(plydata['face'].count):
-    #    plydata['face'].data[i][0].dtype=dtype('int32')
+    for i in range(plydata['face'].count):
+        plydata['face'].data[i][0].dtype=dtype('int32')
     # Necessary
     plydata['face'].properties[0].len_dtype='i4'
     plydata['face'].properties[0].val_dtype='i4'
+    return plydata
+
+def check_indices(plydata):
+    nv=plydata['vertex'].count
+    faces=array([[x[0][0],x[0][1],x[0][2]] for x in plydata['face'].data])
+    ixes=unique(faces[:,0:3])
+    if amin(ixes)>0:
+        print('Warning : indices starting at %s > 0' %int(amin(ixes)) )
+    if len(ixes) != nv:
+        print('Warning : %s vertices but %s referenced in faces' %(int(nv),int(len(ixes))))
     return plydata
 
 def process_plydata(plydata,args):
@@ -339,8 +441,15 @@ def process_plydata(plydata,args):
         if arg.startswith("-align"):
             plydata=align_mesh(plydata)
 
-        if arg.startswith("-normals"):
+        if arg.startswith("-normal"):
             plydata=recompute_normals(plydata)
+
+        if arg.startswith("-fixnorms") or arg.startswith("-fixnormals"):
+            plydata=fix_face_normals(plydata)
+
+        if arg.startswith("orientation="):
+            orientation=arg[12:]
+            plydata=fix_face_normals(plydata,orientation)
 
         if arg.startswith("thickness="):
             thickness=float(arg[10:])
@@ -355,6 +464,7 @@ def process_plydata(plydata,args):
     return plydata
 
 def write_ply_to_file(plydata,args):
+    check_indices(plydata)
     for arg in args:
         if arg.startswith("out="):
             arg=arg[4:]
@@ -370,7 +480,7 @@ def write_ply_file(plydata,fname_out):
 
 
 def write_mesh_file(plydata,fname_out,args):
-    label="2"
+    label="1"
     for arg in args:
         if arg.startswith("label="):
             label=arg[6:]
@@ -384,6 +494,7 @@ def write_mesh_file(plydata,fname_out,args):
     out.write("Vertices \n       %s \n" %nv)
     [out.write(" %s %s %s   0\n" %( x[0],x[1],x[2])) for x in plydata['vertex'].data ]
     out.write("Triangles \n         %s \n" %nf)
+    # Remember that .mesh files start counting indices at 1 rather than 0 for ply files
     [out.write("         %s         %s         %s         %s\n" %(x[0][0]+1,x[0][1]+1,x[0][2]+1,label)) for x in plydata['face'].data ]
     out.write('End \n')
     out.close()
