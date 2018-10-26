@@ -175,7 +175,7 @@ def create_plydata(items,dict_values):
                 face=array([([T[0],T[1],T[2]],) for T in Values],dtype=[('vertex_index','i4',(3,))])
                 elements.append(PlyElement.describe(face,name))
             elif name=="tetrahedra":
-                face=array([([T[0],T[1],T[2]],) for T in Values],dtype=[('tetrahedra_index','i4',(4,))])
+                face=array([([T[0],T[1],T[2],T[4]],) for T in Values],dtype=[('vertex_index','i4',(4,))])
                 elements.append(PlyElement.describe(face,name))
                 #print(face)
     return PlyData(elements)
@@ -408,11 +408,15 @@ def load_ply(fname_in):
 def change_face_dtype_to_int(plydata):
     # This fixes an issue of meshlab being sensitive to seeing uint for faces
     # Not necessary
-    for i in range(plydata['face'].count):
-        plydata['face'].data[i][0].dtype=dtype('int32')
-    # Necessary
-    plydata['face'].properties[0].len_dtype='i4'
-    plydata['face'].properties[0].val_dtype='i4'
+    for face_type in ['face','tetrahedra']:
+        try:
+            for i in range(plydata[face_type].count):
+                plydata[face_type].data[i][0].dtype=dtype('int32')
+            # Necessary
+            plydata[face_type].properties[0].len_dtype='i4'
+            plydata[face_type].properties[0].val_dtype='i4'
+        except:
+            print('Could not fixuint for all types')
     return plydata
 
 def check_indices(plydata):
