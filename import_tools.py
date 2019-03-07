@@ -7,7 +7,12 @@ import os.path
 import sys
 import os
 
+# @TODO : replace all the concatenate with os.join()
+# @TODO : better cleanup and stuff
 
+
+__exclude_key__=["__EXCLUDE_KEY__"]
+__COMMENTS__=["#","%"]
 def modulo(k,n):
 	c=0
 	while k>=n:
@@ -20,8 +25,23 @@ def make_exec(fname):
 
 #Runs a unic command and returns the stdout
 def unpy(job):
-	proc=subprocess.Popen([job],stdout=subprocess.PIPE)
+	if not type(job)==list:
+		job=[job]
+	proc=subprocess.Popen(job,stdout=subprocess.PIPE)
 	return proc.stdout.readlines()
+
+
+def switch_words_in_lines(lines,dict):
+	return [switch_words(line,dict) for line in lines]
+
+def switch_words(line,dict):
+	#print(line)
+	for key,value in dict.items():
+		if line.find(key)>=0:
+			words=line.split(key)
+			return ''.join([words[0],value,words[1]])
+	return line
+
 
 #pwd
 def pwd():
@@ -78,7 +98,7 @@ def clean_name(fname):
 
 # Remove commented lines / line sections
 def remove_comments(lines):
-	CC=["#","%"]
+	CC=__COMMENTS__
 	for c in CC:
 		l=len(lines)
 		j=0
@@ -101,6 +121,25 @@ def remove_comments(lines):
 	return lines
 
 
+# generates arguments and keyword arguments from arguments (e.g. sys.argv[1:])
+def make_args_and_kwargs(arguments):
+	args=[]
+	if len(arguments)>0:
+		kwingredients=[]
+		for arg in arguments[1:]:
+			jcvd=arg.split('=')
+			n=len(jcvd)
+			if n==1:
+				args.append(arg)
+			else:
+				if n>2:
+					jcvd=[jcvd[0],''.join(jcvd[1:])]
+				kwingredients.append(jcvd)
+		kwargs=dict(kwingredients)
+	else:
+		kwargs={}
+	return args,kwargs
+
 # Concatenate folder names, being carefull of the "/" at the end
 def conc(*names):
 	l=len(names)
@@ -110,6 +149,11 @@ def conc(*names):
 		return names[0]
 
 # Remove end-of-line (\n) for a string
+def clean_word_list(words):
+	tags=['','\n']
+	return [word for word in words if word not in tags]
+
+
 def clean_line(line):
 	#while line.find("\n")>-1:
 	line=line.rstrip("\n")
@@ -141,7 +185,7 @@ def copy_files(fn,files):
 	return
 
 #writes lines in a file in a folder
-def write_file(folder_name,file_name,lines):
+def write_file(file_name,lines):
 	fname=conc(folder_name,file_name)
 	f=open(fname,'w')
 	for line in clean_lines(lines):
@@ -201,6 +245,32 @@ def make_file_list(part_fname,outro):
 	#we order the list by time stamp
 	return liste
 
+
+def make_recursive_file_list(folder='.',include=[''],ext='',exclude=__exclude_key__,**kwargs):
+	liste=[]
+	dict=kwargs
+	if not type(include)==list:
+		include=[include]
+	if not type(exclude)==list:
+		exclude=[exclude]
+
+
+	for f in os.listdir(folder):
+		f=os.path.join(folder,f)
+		if os.path.isdir(f):
+			dict['folder']=f
+			dict['ext']=ext
+			dict['include']=include
+			dict['exclude']=exclude
+			liste+=make_recursive_file_list(**dict)
+		#elif f.find(include)>=0 and f.endswith(ext) and f.find(exclude)<0:
+		elif f.endswith(ext):
+			is_included=[f.find(inc)>=0 for inc in include]
+			is_not_excluded=[f.find(exc)<0 for exc in exclude]
+			if all(is_included) and all(is_not_excluded):
+				liste+=[f]
+	return liste
+
 def make_ordered_file_list(part_fname,outro):
 	liste=make_file_list(part_fname,outro)
 	liste.sort(key=lambda tup: tup[0])
@@ -236,17 +306,33 @@ def getlines(fname):
 
 def getheader(fname):
 	lines=clean_lines(getlines(fname))
-	CC=["#","%"]
-	line=""
-	for c in CC:
-		if lines[0].find(c)>=0:
-			line=lines[0];
-	return (line)
+	CC=__COMMENTS__
+	head_line=""
+	for line in lines:
+		for c in CC:
+			if line.find(c)>=0:
+				head_line=line
+	return head_line
+
+def make_nice_headers(heads):
+	CC=__COMMENTS__
+	return [clean_head(head) for head in heads if head not in CC]
+
+def clean_head(head):
+	if head:
+		CC=__COMMENTS__
+		for c in CC:
+			f=head.find(c)
+			if f>-1:
+				head=head[f+len(c):]
+	return head
 
 def splitheader(fname):
-	head=getheader(fname)
-	if head:
-		return head.split(' ')
+	heads=getheader(fname)
+	if heads:
+		heads=heads.split(' ')
+
+		return make_nice_headers(heads)
 	else:
 		return []
 
