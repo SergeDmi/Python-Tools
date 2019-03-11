@@ -6,8 +6,7 @@
 
 # @TODO : different scales on different directions
 # @TODO : support for complex mesh (non triangular)
-# @TODO : embed in a class !!!!!
-
+# @TODO : Document and clarify submesh
 
 """
 # SYNOPSIS
@@ -17,8 +16,9 @@
 # DESCRIPTION
 
     ply_convert reads a mesh from a file (.mesh or .ply), performs simple operations, and saves it (to .mesh or .ply)
-    uses the module plyfile : https://github.com/dranjan/python-plyfile/
-    Requires the module tools : https://github.com/SergeDmi/Utilities/blob/master/bin/tools.py
+    Requires module plyfile : https://github.com/dranjan/python-plyfile/
+    Requires modules sys,os,numpy,sklearn
+    Uses the module import_tools : https://github.com/SergeDmi/Utilities/blob/master/bin/import_tools.py
     More : https://biophysics.fr
 
 # SYNTAX
@@ -32,7 +32,7 @@
 
     Supported options :
         out=            : name of output file
-        scale=          : scale to be applied to points
+        scale=          : scale to be applied to points (float or 3x1 vector)
         length=         : length of object on dimension of maximal variance
         thickness=      : adds to each point a vector thickness*normal
         batch=          : apply to all files of a certain type ; overrides INPUT_FILE
@@ -55,15 +55,15 @@
 
             ply_convert.py file.mesh normals=1 out=file.ply
 
-                        converts a mesh file to a ply file, and compue the normal at each point
+                        converts a mesh file to a ply file, and computes the normal at each point
 
 
-            ply_convert.py file.ply -center -align -normals length=7 -verbose thickness=0.15
+            ply_convert.py file.ply -center -align -normals length=7 -verbose thickness=0.15 scale='1.0 1.0 2.0'
                                 verbose=1 out=thickened.mesh out=thickened.ply
 
                         converts a ply file to a ply and a mesh file
                         after centering, aligning, computing normals, scaling the object to a length of 7,
-                        and adding an extra thickness of 0.15
+                        and adding an extra thickness of 0.15, then scaling the z axis with a factor 2
 
 
             ply_convert.py batch=.ply path='/home/user/simulations/' out='.ply' -fixuint
@@ -73,14 +73,16 @@
 
 
 """
-
-####### Python modules
+# ------------------------------------------------------------------------
+## Python modules                                                   ------
+# ------------------------------------------------------------------------
 try:
     from numpy import *
     from plyfile import PlyData, PlyElement
     import sys
-    from os import listdir
+    from os import listdir,path
     from sklearn.decomposition import PCA
+    from collections.abc import Iterable
 except:
     raise ValueError('Necessary Python modules could not be loaded')
 try:
@@ -89,70 +91,287 @@ except:
     print('Warning : import_tools could not be loaded. Get it from https://github.com/SergeDmi/Utilities/blob/master/bin/import_tools.py')
     print('Warning : will not be able to load .mesh files ')
 
+# ------------------------------------------------------------------------
+## ---- DAT MESH CLASS  doin work                                   ------
+# ------------------------------------------------------------------------
+class Mesh:
+    """
+    Mesh class containing arguments and mesh elements
+    Creates a mesh from a file name and list of argument
+    Contains methods to manipulate the mesh
+    Contain a method to read arguments and do the required operatipns
+    """
+    # Mesh elements are of the class PlyElement from module plyfile
+    # We could also directly have the data in Plydata
+    # but it does appear more flexible this way
 
-# __main__ calls to this function
-def do_mesh_conversion(args):
-    # @WARNING : still in development
-    #               Most things are not properly verified
-    nargs=len(args)
-    if nargs<2:
-        raise ValueError('Not enough input arguments')
-    else:
-        fname_in=args[0]
-        if nargs>1:
-            args=args[1:]
+    # creator loads files but does not populate elements
+    # This is done in self.initialize()
+    def __init__(self,fname_in,args):
+        """
+        Creates the MESH
+
+        Parameters
+        ----------
+        arg1 : str
+            file name to load from
+        arg2 : list
+            list of arguments
+        """
+        
+        plydata=load_from_file(fname_in,args)
+        self.arguments=[arg for arg in args]
+        self.in_elements=[elem for elem in plydata.elements]
+        self.elements=[]
+
+    # Populates self.elements from self.in_elements
+    def initialize(self):
+        self.verify_elements()
+
+    # write the elements to a ply or mesh file
+    def write_to_file(self):
+        plydata=PlyData(self.elements)
+        return write_ply_to_file(plydata,self.arguments)
+
+    # We can get an element by its name (e.g. 'vertex' 'face')
+    def get_element_by_name(self,name):
+        for ix,elem in enumerate(self.elements):
+            if elem.name==name:
+                return ix,elem
+
+    # We need the ply files to have some simularity :
+    #   normals should be at least existent, if not computed
+    #   faces should be called vertex_index, not vertex_indices
+    def verify_elements(self):
+        count=-1
+        for elem in self.in_elements:
+            count+=1
+            # First if we deal with faces, we make sure the name is correct
+            if elem.name=='face':
+                # we convert vertex_indices into vertex_index
+                for prop in elem.properties:
+                    if prop.name.startswith('vertex_'):
+                        face=array([([T[0][0],T[0][1],T[0][2]],) for T in elem],dtype=[('vertex_index','i4',(3,))])
+                        elem=PlyElement.describe(face,elem.name)
+            elif elem.name=='vertex':
+                # we check if normals are defined, otherwise we have to create them
+                if not '-normals' in self.arguments:
+                    self.arguments.append('-normals')
+                if len(elem[0])<6:
+                    face=array([(l[0],l[1],l[2],0.0,0.0,0.0) for l in elem],dtype=[('x','f4'),('y','f4'),('z','f4'),('nx','f4'),('ny','f4'),('nz','f4')])
+                    elem=PlyElement.describe(face,elem.name)
+            self.elements.append(elem)
+
+    # Here we read arguments and do what we gotta do
+    def do_mesh_processing(self):
+        # see function declaration for what arguments do
+        for arg in self.arguments:
+
+            if arg.startswith("scale="):
+                try:
+                    scale=float(arg[6:])
+                    self.scale_mesh(scale)
+                except:
+                    try:
+                        scale=nums(arg[6:])
+                        self.scale_mesh(scale)
+                    except:
+                        raise ValueError('Could not read from argument scale')
+
+            if arg.startswith("-center"):
+                self.center_mesh()
+
+            if arg.startswith("length="):
+                length=float(arg[7:])
+                self.set_mesh_length(length)
+
+            if arg.startswith("-align"):
+                self.align_mesh()
+
+            if arg.startswith("-normal"):
+                self.recompute_normals()
+
+            if arg.startswith("-fixnorm"):
+                self.fix_face_normals()
+
+            if arg.startswith("orientation="):
+                orientation=arg[12:]
+                self.fix_face_normals(orientation)
+
+            if arg.startswith("thickness="):
+                thickness=float(arg[10:])
+                self.add_thickness(thickness)
+
+            if arg.startswith("-verbose"):
+                print_ply_info(plydata)
+
+            if arg.startswith("-fixuint"):
+                self.change_face_dtype_to_int()
+
+        return
+
+    # We center the mesh around 0
+    def center_mesh(self):
+        elem=self.get_element_by_name('vertex')[1]
+        elem.data['x']-=1.0*mean(elem.data['x'])
+        elem.data['y']-=1.0*mean(elem.data['y'])
+        elem.data['z']-=1.0*mean(elem.data['z'])
+        return
+
+    # We scale the mesh by a factor
+    def scale_mesh(self,scale):
+        elem=self.get_element_by_name('vertex')[1]
+        if isinstance(scale,Iterable):
+            elem.data['x']*=scale[0]
+            elem.data['y']*=scale[1]
+            elem.data['z']*=scale[2]
         else:
-            args=[]
+            elem.data['x']*=scale
+            elem.data['y']*=scale
+            elem.data['z']*=scale
+        return
 
-    # Loading the input
-    plydata=load_from_file(fname_in,args)
-    plydata=process_plydata(plydata,args)
-    return write_ply_to_file(plydata,args)
+    # Recomputing normals
+    def recompute_normals(self):
+        vertex=self.get_element_by_name('vertex')[1]
+        faces =self.get_element_by_name('face')[1]
+        vertices=array([[x for x in b] for b in vertex.data])
+        s=shape(vertices)
+        adds=zeros((s[0],3))
+        for face in faces.data:
+            ixes=face[0][:]
+            vec=cross(vertices[ixes[2],0:3]-vertices[ixes[0],0:3],vertices[ixes[1],0:3]-vertices[ixes[0],0:3])
+            adds[ixes,0:3]+=ones((3,1))*vec
+        adds/=linalg.norm(adds,axis=1,keepdims=1)*ones((1,3))
 
-##  Batch conversion of mesh files
-def do_batch_conversion(args):
-    # First we check output
-    sout=""
-    outs=[args.pop(i) for i,arg in enumerate(args) if arg.startswith('out=')]
-    if len(outs)>0:
-        sout=outs[0][4:]
-        if not sout.startswith('.'):
-            raise ValueError('Output argument should be a file format in batch mode')
-        if len(outs)>1:
-            print('Warning : several output specified, keeping %s ' %sout)
-    else:
-        print('Warning : replacing files')
+        vertex.data['nx']=adds[:,0]
+        vertex.data['ny']=adds[:,1]
+        vertex.data['nz']=adds[:,2]
+        return
 
-    # Then we check input
-    batch=[arg[6:] for arg in args if arg.startswith('batch=')]
-    if len(batch)>1:
-        raise ValueError('Currently only a single batch job is supported !')
-    batch=batch[0]
-    if not batch.startswith('.'):
-        raise ValueError('batch= argument should be a file format, e.g. batch=.ply')
-
-    # Do we have a path ? If not, path is here.
-    pathes=[arg[5:] for arg in args if arg.startswith('path=')]
-    if len(pathes)>0:
-        path=pathes[0]
-    else:
-        path='.'
-
-    # Now listing all files in path that match batch suffix
-    files=[fname for fname in listdir(path) if fname.endswith(batch)]
-    for file in files:
-        if len(sout)==0:
-            out=file
+    def fix_face_normals(self,*args):
+        # We check if normals are directed in the right direction
+        # For some reason, the right direction seem to be the inside
+        # @TODO : check what is the recommended orientation
+        if len(args)==0:
+            orientation=+1
         else:
-            out="%s%s" %(file.split(batch)[0],sout)
-        # this is proper way to copy.
-        newargs=args[:]
-        newargs.append("out=%s" %out )
-        newargs.insert(0,file)
-        do_mesh_conversion(newargs)
+            try:
+                orientation=float(args[0])
+            except:
+                raise ValueError('Errpr : could not understand orientation from %s' % orientation)
+        self.recompute_normals()
+        vertex=self.get_element_by_name('vertex')[1]
 
-    # Done
-    return len(files)
+        vertices=array([[x for x in b] for b in vertex.data])
+        pts=vertices[:,0:3]
+        for i in range(3):
+            pts[:,i]-=mean(vertices[:,i])
+        norms=vertices[:,3:6]
+        sum_o=sum(norms*pts)
+        if (sum_o*orientation)<0.0:
+            print('Warning : inverted normals ; fixing it.')
+            self.invert_faces()
+            self.recompute_normals()
+        return
+
+    def invert_faces(self):
+        # Inverting faces from facing outwards to facing inwards
+        vertex=self.get_element_by_name('vertex')[1]
+        faces =self.get_element_by_name('face')[1]
+        vertices=array([[x for x in b] for b in vertex.data])
+        s=shape(vertices)
+        # we just reorder the vertices in a face
+        for i,face in enumerate(faces.data):
+            ixes=face[0][:]
+            ixes[2],ixes[1]=ixes[1],ixes[2]
+            for j,ix in enumerate(ixes):
+                faces.data[i][0][j]=ix
+        return
+
+    def add_thickness(self,thickness):
+        # We add a thickness : point = point + thickness*normal
+        vertex=self.get_element_by_name('vertex')[1]
+        vertices=array([[x for x in b] for b in vertex.data])
+        try:
+            vertices[:,0:3]+=vertices[:,3:6]*thickness
+            vertex.data['x']=vertices[:,0]
+            vertex.data['y']=vertices[:,1]
+            vertex.data['z']=vertices[:,2]
+        except:
+            raise ValueError("Issue in adding thickness : Could not translate points by normal*thickness")
+        return
+
+    def align_mesh(self):
+        # We align the mesh to the x axis
+        vertex=self.get_element_by_name('vertex')[1]
+        vertices=array([[b[i] for i in range(3)] for b in vertex.data])
+        pca = PCA(n_components=3)
+        vertices=pca.fit_transform(vertices)
+        vertex.data['x']=vertices[:,0]
+        vertex.data['y']=vertices[:,1]
+        vertex.data['z']=vertices[:,2]
+        return
+
+    def set_mesh_length(self,length):
+        # First we align the data with the x axis
+        vertex=self.get_element_by_name('vertex')[1]
+        vertices=array([[b[i] for i in range(3)] for b in vertex.data])
+        pca = PCA(n_components=3)
+        vertices=pca.fit_transform(vertices)
+        # then we find the scale
+        scale=length/(max(vertices[:,0])-min(vertices[:,0]))
+        self.scale_mesh(scale)
+        return
+
+    def print_ply_info(self):
+        vertex=self.get_element_by_name('vertex')[1]
+        vertices=array([[b[i] for i in range(3)] for b in vertex.data])
+        for i in range(3):
+            print("lengths on axis %s : %s" %(i,(max(vertices[:,i])-min(vertices[:,i]))))
+        return
+
+
+    def change_face_dtype_to_int(self):
+        # This fixes an issue of meshlab being sensitive to seeing uint for faces
+        # Not necessary
+        for face_type in ['face','tetrahedra']:
+            try:
+                elem=self.get_element_by_name(face_type)[1]
+                for i in range(elem.count):
+                    elem.data[i][0].dtype=dtype('int32')
+                # Necessary
+                elem.properties[0].len_dtype='i4'
+                elem.properties[0].val_dtype='i4'
+            except:
+                print('Could not fixuint for all types')
+        return
+
+# ------------------------------------------------********
+## END OF CLASS MESH                                ****
+# ------------------------------------------------********
+
+# --------------------------------------------------------
+## General use functions
+# --------------------------------------------------------
+# Not in the class mesh because they have a wider use
+
+def check_indices(plydata):
+    nv=plydata['vertex'].count
+    faces=array([[x[0][0],x[0][1],x[0][2]] for x in plydata['face'].data])
+    ixes=unique(faces[:,0:3])
+    if amin(ixes)>0:
+        print('Warning : indices starting at %s > 0' %int(amin(ixes)) )
+    if len(ixes) != nv:
+        print('Warning : %s vertices but %s referenced in faces' %(int(nv),int(len(ixes))))
+    return plydata
+
+def load_ply(fname_in):
+    try:
+        plydata = PlyData.read(fname_in)
+    except:
+        raise ValueError('Could not read file %s' %fname_in)
+    return plydata
 
 
 def create_plydata(items,dict_values):
@@ -162,34 +381,36 @@ def create_plydata(items,dict_values):
     translations={"Vertices":"vertex", "Triangles":"face", "Tetrahedra" : "tetrahedra"}
     elements=[]
     keys=items.keys()
-    #print(keys
+
     for key in keys:
         if dict_values[key]>0:
             Values=items[key]
             name=translations.setdefault(key,"")
             if name=="vertex":
-                vertex=array([(V[0],V[1],V[2],0,0,0) for V in Values],dtype=[('x','f4'),('y','f4'),('z','f4'),('nx','f4'),('ny','f4'),('nz','f4')])
-                elements.append(PlyElement.describe(vertex,name))
+                face=array([(V[0],V[1],V[2],0,0,0) for V in Values],dtype=[('x','f4'),('y','f4'),('z','f4'),('nx','f4'),('ny','f4'),('nz','f4')])
+                elements.append(PlyElement.describe(face,name))
                 #print(vertex)
             elif name=="face":
                 face=array([([T[0],T[1],T[2]],) for T in Values],dtype=[('vertex_index','i4',(3,))])
                 elements.append(PlyElement.describe(face,name))
             elif name=="tetrahedra":
-                face=array([([T[0],T[1],T[2],T[4]],) for T in Values],dtype=[('vertex_index','i4',(4,))])
+                face=array([([T[0],T[1],T[2],T[3]],) for T in Values],dtype=[('vertex_index','i4',(4,))])
                 elements.append(PlyElement.describe(face,name))
-                #print(face)
+
     return PlyData(elements)
 
 def load_mesh(fname_in,args):
+    # Loading from a .mesh file
+    # Ok this is a very custom script, it would be better to use a module
     klist=['Vertices','Triangles','Tetrahedra']
     print('Warning : .mesh file reading is still experimental')
     print('Warning : Labels have to be added in command line : label=X')
     print('Warning : now supporting only keys : %s' %(' '.join([k for k in klist])))
-    lines=getlines(fname_in)
+    lines=clean_lines(getlines(fname_in))
     keys=['Dimension','Vertices','Edges','Triangles','Tetrahedra','Quadrilaterals','Geometry','CrackedEdges','End']
     dict_lines={}
     dict_lines_nb={}
-    dict_values={'Dimension' : 3}
+    dict_values={'Dimension' : 3,'Tetrahedra' : 0, 'Triangles ' : 0}
     check_for_number=False
     key_checked=''
     dict_lines['End']=len(lines)
@@ -206,7 +427,7 @@ def load_mesh(fname_in,args):
                 dict_values[key_checked]=int(words[-1])
                 dict_lines_nb[key]=i
                 check_for_number=False
-                print('Expecting %s elements of type %s' %(dict_values[key_checked],key_checked))
+                #print('Expecting %s elements of type %s' %(dict_values[key_checked],key_checked))
             except:
                 raise ValueError('Could not find number for key %s' %key_checked)
         else:
@@ -226,28 +447,30 @@ def load_mesh(fname_in,args):
     # Creating Vertices & Triangles
     items={}
     for k in klist:
-        first_line=dict_lines_nb[k]+1
-        last_line=min([dict_lines.setdefault(key,0) for key in keys if dict_lines.setdefault(key,0)>first_line])
-        (item,nl,nc)=getdata_lines(lines[first_line:last_line])
-        # Mesh have an index starting at 1 while ply start at 0, or something like that
-        if k=="Triangles":
-            item[:,0:dict_values['Dimension']]-=1
-        if nl!=dict_values[k]:
-            raise ValueError('Mismatch between expected number %s and number of lines %s for key %s' %(dict_values[k],nl,k))
-        else:
+        if dict_values[k]>0:
+            first_line=dict_lines_nb[k]+1
+            last_line=min([dict_lines.setdefault(key,0) for key in keys if dict_lines.setdefault(key,0)>first_line])
+            (item,nl,nc)=getdata_lines(lines[first_line:last_line])
+            # Mesh have an index starting at 1 while ply start at 0, or something like that
+            if k =="Triangles":
+                item[:,0:3]-=1
+            if k =="Tetrahedra":
+                item[:,0:4]-=1
+            if nl!=dict_values[k]:
+                print('Warning between expected number %s and number of lines %s for key %s' %(dict_values[k],nl,k))
+                dict_values[k]=nl
             items[k]=item
 
+    # We can also select a submesh for thick meshes
     select=False
     for arg in args:
         if arg.startswith('submesh='):
             select=True
             choice=arg[8:]
-
     if select:
         items=keep_submesh(items,choice)
         for k in klist:
             dict_values[k]=len(items[k])
-
 
     # Ok should be done now
     plydata=create_plydata(items,dict_values)
@@ -290,8 +513,6 @@ def recompute_indices(item,ixes):
 
     return item
 
-
-
 def load_from_file(fname_in,args):
     if fname_in.endswith('.ply'):
         plydata=load_ply(fname_in)
@@ -299,176 +520,6 @@ def load_from_file(fname_in,args):
         plydata=load_mesh(fname_in,args)
     else:
         raise ValueError('Could not load a mesh from file %s' %fname_in)
-    return plydata
-
-def center_mesh(plydata):
-    plydata['vertex'].data['x']-=1.0*mean(plydata['vertex'].data['x'])
-    plydata['vertex'].data['y']-=1.0*mean(plydata['vertex'].data['y'])
-    plydata['vertex'].data['z']-=1.0*mean(plydata['vertex'].data['z'])
-    return plydata
-
-def scale_mesh(plydata,scale):
-    plydata['vertex'].data['x']*=scale
-    plydata['vertex'].data['y']*=scale
-    plydata['vertex'].data['z']*=scale
-    return plydata
-
-def recompute_normals(plydata):
-    vertices=array([[x for x in b] for b in plydata['vertex'].data])
-    s=shape(vertices)
-    adds=zeros((s[0],3))
-    for face in plydata['face'].data:
-        ixes=face[0][:]
-        vec=cross(vertices[ixes[2],0:3]-vertices[ixes[0],0:3],vertices[ixes[1],0:3]-vertices[ixes[0],0:3])
-        adds[ixes,0:3]+=ones((3,1))*vec
-    adds/=linalg.norm(adds,axis=1,keepdims=1)*ones((1,3))
-    #vertices[:,3:6]=adds
-    plydata['vertex'].data['nx']=adds[:,0]
-    plydata['vertex'].data['ny']=adds[:,1]
-    plydata['vertex'].data['nz']=adds[:,2]
-    return plydata
-
-def fix_face_normals(plydata,*args):
-    # We check if normals are directed in the right direction
-    # For some reason, the right direction seem to be the inside
-    # @TODO : check what is the recommended orientation
-    if len(args)==0:
-        orientation=-1
-    else:
-        try:
-            orientation=float(args[0])
-        except:
-            raise ValueError('Errpr : could not understand orientation from %s' % orientation)
-    plydata=recompute_normals(plydata)
-    vertices=array([[x for x in b] for b in plydata['vertex'].data])
-    pts=vertices[:,0:3]
-    for i in range(3):
-        pts[:,i]-=mean(vertices[:,i])
-    norms=vertices[:,3:6]
-    sum_o=sum(norms*pts)
-    if (sum_o*orientation)<0.0:
-        print('Warning : inverted normals ; fixing it.')
-        plydata=invert_faces(plydata)
-        plydata=recompute_normals(plydata)
-    return plydata
-
-def invert_faces(plydata):
-    vertices=array([[x for x in b] for b in plydata['vertex'].data])
-    s=shape(vertices)
-    for i,face in enumerate(plydata['face'].data):
-        ixes=face[0][:]
-        ixes[2],ixes[1]=ixes[1],ixes[2]
-        for j,ix in enumerate(ixes):
-            plydata['face'].data[i][0][j]=ix
-    return plydata
-
-def add_thickness(plydata,thickness):
-    vertices=array([[x for x in b] for b in plydata['vertex'].data])
-    try:
-        vertices[:,0:3]+=vertices[:,3:6]*thickness
-        plydata['vertex'].data['x']=vertices[:,0]
-        plydata['vertex'].data['y']=vertices[:,1]
-        plydata['vertex'].data['z']=vertices[:,2]
-    except:
-        raise ValueError("Issue in adding thickness : Could not translate points by normal*thickness")
-    return plydata
-
-def align_mesh(plydata):
-    pca = PCA(n_components=3)
-    vertices=array([[b[i] for i in range(3)] for b in plydata['vertex'].data])
-    vertices=pca.fit_transform(vertices)
-    plydata['vertex'].data['x']=vertices[:,0]
-    plydata['vertex'].data['y']=vertices[:,1]
-    plydata['vertex'].data['z']=vertices[:,2]
-    return plydata
-
-def set_mesh_length(plydata,length):
-    # First we align the data with the x axis
-    pca = PCA(n_components=3)
-    vertices=array([[b[i] for i in range(3)] for b in plydata['vertex'].data])
-    vertices=pca.fit_transform(vertices)
-    # then we find the scale
-    scale=length/(max(vertices[:,0])-min(vertices[:,0]))
-    return scale_mesh(plydata,scale)
-
-def print_ply_info(plydata):
-    vertices=array([[b[i] for i in range(3)] for b in plydata['vertex'].data])
-    for i in range(3):
-        print("lengths on axis %s : %s" %(i,(max(vertices[:,i])-min(vertices[:,i]))))
-    return 0
-
-def load_ply(fname_in):
-    try:
-        plydata = PlyData.read(fname_in)
-    except:
-        raise ValueError('Could not read file %s' %fname_in)
-
-    return plydata
-
-def change_face_dtype_to_int(plydata):
-    # This fixes an issue of meshlab being sensitive to seeing uint for faces
-    # Not necessary
-    for face_type in ['face','tetrahedra']:
-        try:
-            for i in range(plydata[face_type].count):
-                plydata[face_type].data[i][0].dtype=dtype('int32')
-            # Necessary
-            plydata[face_type].properties[0].len_dtype='i4'
-            plydata[face_type].properties[0].val_dtype='i4'
-        except:
-            print('Could not fixuint for all types')
-    return plydata
-
-def check_indices(plydata):
-    nv=plydata['vertex'].count
-    faces=array([[x[0][0],x[0][1],x[0][2]] for x in plydata['face'].data])
-    ixes=unique(faces[:,0:3])
-    if amin(ixes)>0:
-        print('Warning : indices starting at %s > 0' %int(amin(ixes)) )
-    if len(ixes) != nv:
-        print('Warning : %s vertices but %s referenced in faces' %(int(nv),int(len(ixes))))
-    return plydata
-
-def process_plydata(plydata,args):
-    for arg in args:
-        # Centering the data around 0
-        if arg.startswith("scale="):
-            try:
-                scale=float(arg[6:])
-                plydata=scale_mesh(plydata,scale)
-            except:
-                raise ValueError('Could not read from argument scale')
-
-        if arg.startswith("-center"):
-            plydata=center_mesh(plydata)
-
-        if arg.startswith("length="):
-            length=float(arg[7:])
-            plydata=set_mesh_length(plydata,length)
-
-        if arg.startswith("-align"):
-            plydata=align_mesh(plydata)
-
-        if arg.startswith("-normal"):
-            plydata=recompute_normals(plydata)
-
-        if arg.startswith("-fixnorms") or arg.startswith("-fixnormals"):
-            plydata=fix_face_normals(plydata)
-
-        if arg.startswith("orientation="):
-            orientation=arg[12:]
-            plydata=fix_face_normals(plydata,orientation)
-
-        if arg.startswith("thickness="):
-            thickness=float(arg[10:])
-            plydata=add_thickness(plydata,thickness)
-
-        if arg.startswith("-verbose"):
-            print_ply_info(plydata)
-
-        if arg.startswith("-fixuint"):
-            plyadata=change_face_dtype_to_int(plydata)
-
     return plydata
 
 def write_ply_to_file(plydata,args):
@@ -480,7 +531,6 @@ def write_ply_to_file(plydata,args):
                 write_mesh_file(plydata,arg,args)
             if arg.endswith(".ply"):
                 write_ply_file(plydata,arg)
-
     return 0
 
 def write_ply_file(plydata,fname_out):
@@ -504,13 +554,88 @@ def write_mesh_file(plydata,fname_out,args):
     out.write("Triangles \n         %s \n" %nf)
     # Remember that .mesh files start counting indices at 1 rather than 0 for ply files
     [out.write("         %s         %s         %s         %s\n" %(x[0][0]+1,x[0][1]+1,x[0][2]+1,label)) for x in plydata['face'].data ]
+    if 'tetrahedra' in plydata:
+        out.write("Tetrahedra \n         %s \n" %nf)
+        # Remember that .mesh files start counting indices at 1 rather than 0 for ply files
+        [out.write("         %s         %s         %s         %s \n" %(x[0][0]+1,x[0][1]+1,x[0][2]+1,x[0][3]+1)) for x in plydata['tetrahedra'].data ]
     out.write('End \n')
     out.close()
     return 0
 
+# --------------------------------------------------------
+## Specific functions doing tha job for main
+# --------------------------------------------------------
+
+# __main__ or do_batch_conversion calls to this function
+def do_mesh_conversion(args):
+    # @WARNING : still in development
+    #               Most things are not properly verified
+    nargs=len(args)
+    if nargs<2:
+        raise ValueError('Not enough input arguments')
+    else:
+        fname_in=args[0]
+        if nargs>1:
+            args=args[1:]
+        else:
+            args=[]
+
+    # Loading the input
+    mesh=Mesh(fname_in,args)
+    mesh.initialize()
+    mesh.do_mesh_processing()
+    return mesh.write_to_file()
+
+##  Batch conversion of mesh files
+def do_batch_conversion(args):
+    # First we check output
+    sout=""
+    outs=[args.pop(i) for i,arg in enumerate(args) if arg.startswith('out=')]
+    if len(outs)>0:
+        sout=outs[0][4:]
+        if not sout.startswith('.'):
+            raise ValueError('Output argument should be a file format in batch mode')
+        if len(outs)>1:
+            print('Warning : several output specified, keeping %s ' %sout)
+    else:
+        print('Warning : replacing files')
+
+    # Then we check input
+    batch=[arg[6:] for arg in args if arg.startswith('batch=')]
+    if len(batch)>1:
+        raise ValueError('Currently only a single batch job is supported !')
+    batch=batch[0]
+    if not batch.startswith('.'):
+        raise ValueError('batch= argument should be a file format, e.g. batch=.ply')
+
+    # Do we have a path ? If not, path is here.
+    pathes=[arg[5:] for arg in args if arg.startswith('path=')]
+    if len(pathes)>0:
+        pathe=pathes[0]
+    else:
+        pathe='.'
+
+    # Now listing all files in path that match batch suffix
+    files=[fname for fname in listdir(pathe) if fname.endswith(batch)]
+    for file in files:
+        if len(sout)==0:
+            out=file
+        else:
+            out="%s%s" %(file.split(batch)[0],sout)
+        # this is proper way to copy.
+        newargs=args[:]
+        newargs.append("out=%s" %out )
+        newargs.insert(0,path.join(pathe,file))
+        do_mesh_conversion(newargs)
+
+    # Done
+    return len(files)
+
+
+
 if __name__ == "__main__":
     args=sys.argv[1:]
-    # Checking which kind of job we're doing : batch or single
+    # Checking which kind of job we're doing : batch XOR single
     bb=array([1 for arg in args if arg.startswith('batch=')])
     if sum(bb)>0:
         do_batch_conversion(args)
