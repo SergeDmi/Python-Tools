@@ -203,7 +203,7 @@ class Glob:
         self.kdist=0.1
         self.xlog=0
         self.ylog=0
-        self.autolabels=0
+        self.autolabel=0
         keyz=''
         future_plots=[]
         current_args=[]
@@ -237,9 +237,10 @@ class Glob:
                 self.kdist=arg[6:]
             elif arg.startswith('legend=') or arg.startswith('title'):
                 self.key=graph.key.key(pos="tl", dist=self.kdist)
+                current_args.append(arg)
             elif arg.startswith('--help'):
                 self.usage()
-            elif arg.startswith('-xautolabel'):
+            elif arg.startswith('-autol'):
                 self.autolabel=1
             elif arg.startswith('-xlog'):
                 self.xlog=1
@@ -297,7 +298,7 @@ class Glob:
         # We create the graphs
         self.graphs=[Graph(toplot) for toplot in future_plots]
 
-        if self.autolabels:
+        if self.autolabel:
             for graf in self.graphs:
                 if graf.xlabel:
                     if not self.xlabel:
@@ -344,10 +345,13 @@ class Glob:
             self.plot(graf)
 
     def plot(self,graf):
-        if graf.is_function==0:
-            self.graph.plot([graph.data.points([(x,graf.Y[i],graf.dX[i],graf.dY[i],graf.S[i],graf.C[i]) for i, x in enumerate(graf.X[:])], x=1, y=2,dx=3,dy=4,size=5,color=6,title=graf.legend)],graf.style)
-        else:
+        if graf.is_function==1:
             self.graph.plot(graph.data.function(graf.function_string,points=graf.n_points),graf.style)
+        elif graf.is_histogram==1:
+            self.graph.plot([graph.data.points([(x,graf.Y[i]) for i, x in enumerate(graf.X[:])], x=1, y=2,title=graf.legend)],graf.style)
+        else:
+            self.graph.plot([graph.data.points([(x,graf.Y[i],graf.dX[i],graf.dY[i],graf.S[i],graf.C[i]) for i, x in enumerate(graf.X[:])], x=1, y=2,dx=3,dy=4,size=5,color=6,title=graf.legend)],graf.style)
+
 
     def save_plot(self):
         if self.graphs:
@@ -389,6 +393,7 @@ class Graph(Glob):
         self.dx=[]
         self.dy=[]
         self.is_function=0
+        self.is_histogram=0
         self.xlabel=None
         self.ylabel=None
         self.labels=[]
@@ -404,6 +409,7 @@ class Graph(Glob):
             # This is if we are dealing with (hopefuly) numeric data
             (A,a,b)=getdata(self.file)
             self.labels=splitheader(self.file)
+            #print(self.labels)
 
             # Dirty tricks for maximum compatibility
             if min(a,b)==1:
@@ -416,8 +422,6 @@ class Graph(Glob):
             self.is_function=1
             self.function_string=self.file[9:]
 
-
-
         # using local options
         for arg in args:
             if arg.startswith('legend=') or arg.startswith('title='):
@@ -429,6 +433,8 @@ class Graph(Glob):
                     self.legend=None
                 else:
                     self.legend=r"%s" %legend
+            elif arg.startswith('-hist'):
+                self.is_histogram=1
             elif arg.startswith('x='):
                 self.x=(arg[2:])
             elif arg.startswith('y='):
@@ -618,8 +624,11 @@ class Style(Graph):
         self.style=[]
         self.dxy=[]
         self.goodstyle=goodstyle(args,count)
+        self.is_histogram=0
 
         for arg in args:
+            if arg.startswith('-hist'):
+                self.is_histogram=1
             if arg.startswith('dy=') or arg.startswith('dx='):
                 if self.goodstyle.setcolor:
                     self.dxy=[self.goodstyle.linew,self.goodstyle.setcolor]
@@ -637,6 +646,9 @@ class Style(Graph):
                 self.style=[graph.style.line([self.goodstyle.linest,self.goodstyle.linew,self.goodstyle.setcolor]),graph.style.errorbar(False)]
             else:
                 self.style=[graph.style.line([self.goodstyle.linest,self.goodstyle.linew,self.goodstyle.setcolor]),graph.style.errorbar(errorbarattrs=self.dxy)]
+
+        if self.is_histogram:
+            self.style=[graph.style.histogram()]
 
 class goodstyle(Style):
     # A class containing the style attributes to pass to python PyX
