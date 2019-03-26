@@ -504,7 +504,7 @@ class Graph(Splotter):
             elif arg.startswith('-hist'):
                 self.is_histogram=1
             elif arg.startswith('x='):
-                x=(arg[2:])
+                self.x=(arg[2:])
             elif arg.startswith('y='):
                 self.y=(arg[2:])
             elif arg.startswith('mode='):
