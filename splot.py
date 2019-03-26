@@ -40,7 +40,7 @@ from import_tools import *
         xmax          : max x value
         ymin          : min y value
         ymax          : max y value
-        key           : position of figure legend
+        key           : position of figure legend (tr,br,tl,bl)
         out           : name of output file
         -ylog         : y axis is logarithmic
         -xlog         : x axis is logarithmic
@@ -50,11 +50,12 @@ from import_tools import *
 
     Local options :
         x        : index of column or row to be used as x axis values (e.g. x=0 for the first column)
-                        also can specify an operation : x=A[:,0]*A[:,1]
+                        also can specify an operation : x='A[:,0]*A[:,1]'
+                        also can specify a label read from file header : x=first_column_label
         y        : index of column or row to be used as y axis values (e.g. x=0 for the first column)
-                        also can specify an operation : y=A[:,1]*A[:,2]/A[:,3]
+                        also can specify an operation : y='A[:,1]*A[:,2]/A[:,3]'
         dy       : index of column or row to be used as dy values (e.g. x=0 for the first column)
-                        also can specify an operation : dy=A[:,2]/sqrt(A[:,3])
+                        also can specify an operation : dy='A[:,2]/sqrt(A[:,3])'
         mode     : h for horizontal (rows), v for vertical (column) (default)
 
         color    : color of lines or symbol ; can be either red, green, blue, dark, medium, light, black
@@ -108,12 +109,12 @@ from import_tools import *
 # USE SPLOT from python :
             # Single plot :
             import splot
-            plot=Splotter(data=A,args=arguments)           # A is a data array, arguments is a list of argument
+            plot=splot.Splotter('-xlog',key='tr',data=A)           # A is a data array, arguments is a list of argument
             plot.make_and_save()                           # e.g. : arguments=['color=red','-xlog']
             # Several plots :
-            plot=Splotter(args=['-autolabels'])
-            plot.add_plot(data=A,args=['color=blue'])
-            plot.add_plot(data=B,args=['color=red'])
+            plot=splot.Splotter('-autolabel',key='tl')
+            plot.add_plot(data=A,color='blue')
+            plot.add_plot(data=B,color=red)
             plot.make_and_save()
 
 """
@@ -177,10 +178,18 @@ __SPLIT_MARK__ = '--split_mark--'
 class Toplot:
     # Toplot is a class containing the options for plotting
     #   it also contains a method to split into two
-    def __init__(self, args=[],data=[],fname="",**kwargs):
+    # here we need to support a keyword argument having to values, until we split
+    # therefore we don't convert everything to *args,**kwargs for now
+    def __init__(self,*args,arguments=[],data=[],fname="",**kwargs):
         self.fname=fname
         self.data=data
-        self.args=[arg for arg in args]
+        self.args=[arg for arg in arguments]
+        for arg in args:
+            self.args.append(arg)
+            #print(arg)
+        for key, value in kwargs.items():
+            self.args.append('%s=%s' %(key,value))
+            #print('%s=%s' %(key,value))
 
     def check_split(self):
         na=len(self.args)
@@ -201,7 +210,7 @@ class Toplot:
 class Splotter:
     # Splot is the global plotter class
     # It mostly sorts arguments and prepares global plot options
-    def __init__(self,args=[],data=[],**kwargs):
+    def __init__(self,*args,arguments=[],data=[],**kwargs):
         ## First we initialize class members
         #if not args and not data:
         #    self.usage()
@@ -221,22 +230,34 @@ class Splotter:
         self.autolabel=0
         self.future_plots=[]
         data=array(data)
-        current_args=self.read_args(args=args)
-        if data.any():
-            self.add_plot(data=data,args=current_args)
+        # Now we add extra arguments ; this is a bit weird but the simplest option to use both command line and python import
+        for arg in args:
+            arguments.append(arg)
+        for key, value in kwargs.items():
+            arguments.append('%s=%s' %(key,value))
+        # Now we read arguments
+        current_args=self.read_args(arguments=arguments)
+        # and if we have data to plot we add it to future plots
+        if data.size>0:
+            self.add_plot(data=data,arguments=current_args)
 
-    def add_plot(self,**kwargs):
-        self.future_plots.append(Toplot(**kwargs))
+    # Just a wrapper
+    def add_plot(self,*args,**kwargs):
+        self.future_plots.append(Toplot(*args,**kwargs))
 
-    def read_args(self,args=[],**kwargs):
+    def read_args(self,*args,arguments=[],**kwargs):
         ## Now we read arguments
+        for arg in args:
+            arguments.append(arg)
+        for key, value in kwargs.items():
+            arguments.append('%s=%s' %(key,value))
         keyz=''
         current_args=[]
         keep=0
         has_name=0
         fname=''
         # we iterate through arguments and assign them to global or local options
-        for arg in args:
+        for arg in arguments:
             # Global options
             if arg.startswith('out='):
                 self.out=arg[4:]
@@ -287,7 +308,7 @@ class Splotter:
             elif arg.startswith('function='):
                 # If there is already a name for a future plot, we append the former to be created
                 if has_name:
-                    self.future_plots.append(Toplot(fname=fname,args=current_args))
+                    self.future_plots.append(Toplot(fname=fname,arguments=current_args))
                     if keep==0:
                         current_args=[]
                 else:
@@ -302,7 +323,7 @@ class Splotter:
             else:
                 # If there is already a name for a future plot
                 if has_name:
-                    self.future_plots.append(Toplot(fname=fname,args=current_args))
+                    self.future_plots.append(Toplot(fname=fname,arguments=current_args))
                     if keep==0:
                         current_args=[]
                 else:
@@ -310,7 +331,7 @@ class Splotter:
                 fname=arg
         # We still need add the last file to future_plots
         if has_name:
-            self.future_plots.append(Toplot(fname=fname,args=current_args))
+            self.future_plots.append(Toplot(fname=fname,arguments=current_args))
             has_name=0
         # also we check key position
         try:
@@ -327,7 +348,7 @@ class Splotter:
 
     def make_plot(self):
         # we check if the plots must be split by and / andif
-        for toplot in self.future_plots:
+        for i,toplot in enumerate(self.future_plots):
             [is_split,new_plot]=toplot.check_split()
             if is_split:
                 self.future_plots.append(new_plot)
@@ -377,7 +398,7 @@ class Splotter:
 
     def plot(self,graf):
         if graf.is_function==1:
-            self.graph.plot(graph.data.function(graf.function_string,points=graf.n_points),graf.style)
+            self.graph.plot(graph.data.function(graf.function_string,points=graf.n_points,title=graf.legend),graf.style)
         elif graf.is_histogram==1:
             self.graph.plot([graph.data.points([(x,graf.Y[i]) for i, x in enumerate(graf.X[:])], x=1, y=2,title=graf.legend)],graf.style)
         else:
@@ -408,7 +429,7 @@ class Graph(Splotter):
     numr=-1
     def __init__(self, toplot):
         args=toplot.args
-        self.file=toplot.fname
+        self.fname=toplot.fname
         self.data=array(toplot.data)
         Graph.numr+=1
         self.x=0
@@ -437,18 +458,24 @@ class Graph(Splotter):
         self.n_points=200
         self.label_dict={}
 
-        if self.file.startswith('function='):
+        for arg in args:
+            if arg.startswith('function='):
+                self.is_function=1
+                self.function_string=arg[9:]
+                #print(self.function_string)
+
+        if self.fname.startswith('function='):
             self.is_function=1
-            self.function_string=self.file[9:]
-        elif self.data.any():
+            self.function_string=self.fname[9:]
+        elif self.data.size>0:
             A=self.data
-        else:
+        elif not self.is_function:
             # This is if we are dealing with (hopefuly) numeric data
-            (A,a,b)=getdata(self.file)
-            self.labels=splitheader(self.file)
+            (A,a,b)=getdata(self.fname)
+            self.labels=splitheader(self.fname)
             for i,label in enumerate(self.labels):
                 self.label_dict[label]=i
-            #print(self.labels)
+
             # Dirty tricks for maximum compatibility
             if min(a,b)==1:
                 self.x='auto'
@@ -496,7 +523,6 @@ class Graph(Splotter):
 
         if not self.is_function:
             # This is if we are dealing with (hopefuly) numeric data
-
             #if (len(self.range) or len(self.cond)):
             if len(self.range):
                 A=self.set_A_range(A)
@@ -562,6 +588,7 @@ class Graph(Splotter):
 
     # set a label for coordinate x or y
     def set_label(self,label,coord):
+        print(label)
         if coord=='x':
             self.xlabel=label
         elif coord=='y':
@@ -588,17 +615,20 @@ class Graph(Splotter):
         except:
             if input:
                 # Automatic axis value : 1 to length of array
-                if input.startswith('aut'):
-                    if self.mode=='h':
-                        return array(range(len(A[0,:])))
-                    else:
-                        return array(range(len(A[:,0])))
-                # Interpreting axis value
                 try:
-                    return eval(input)
+                    if input.startswith('aut'):
+                        if self.mode=='h':
+                            return array(range(len(A[0,:])))
+                        else:
+                            return array(range(len(A[:,0])))
+                # Interpreting axis value
+                    try:
+                        return eval(input)
+                    except:
+                        print('We could note evaluate %s from %s' %(coord,input))
+                    return []
                 except:
                     print('We could note evaluate %s from %s' %(coord,input))
-                return []
             else:
                 return []
 
@@ -838,6 +868,6 @@ if __name__ == "__main__":
     nargs=len(sys.argv);
     args=sys.argv[1:];
 
-    splot=Splotter(args=args)
+    splot=Splotter(arguments=args)
     splot.make_plot()
     splot.save_plot()
