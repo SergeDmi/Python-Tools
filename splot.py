@@ -46,6 +46,7 @@ from import_tools import *
         -xlog         : x axis is logarithmic
         -keep         : keep options for subsequent plots, until -discard
         -discard      : discard options for next plot
+        -autolabels   : tries to automatically find labels from data file
 
     Local options :
         x        : index of column or row to be used as x axis values (e.g. x=0 for the first column)
@@ -103,6 +104,18 @@ from import_tools import *
                         plots data from only the first to 4th line of file.txt
             splot.py data.txt x=1 y=2 and y=3
                         plots the third and fourth column as a function of the second
+
+# USE SPLOT from python :
+            # Single plot :
+            import splot
+            plot=Splotter(data=A,args=arguments)           # A is a data array, arguments is a list of argument
+            plot.make_and_save()                           # e.g. : arguments=['color=red','-xlog']
+            # Several plots :
+            plot=Splotter(args=['-autolabels'])
+            plot.add_plot(data=A,args=['color=blue'])
+            plot.add_plot(data=B,args=['color=red'])
+            plot.make_and_save()
+
 """
 
 # Basic set of colours
@@ -185,8 +198,8 @@ class Toplot:
             return [0,1]
 
 
-class Glob:
-    # Glob is the global plotter class
+class Splotter:
+    # Splot is the global plotter class
     # It mostly sorts arguments and prepares global plot options
     def __init__(self,args=[],data=[],**kwargs):
         ## First we initialize class members
@@ -308,6 +321,10 @@ class Glob:
         # we return current arguments
         return current_args
 
+    def make_and_save(self):
+        self.make_plot()
+        self.save_plot()
+
     def make_plot(self):
         # we check if the plots must be split by and / andif
         for toplot in self.future_plots:
@@ -386,7 +403,7 @@ class Glob:
         disp('splot.py file.txt y=A[:,1]^2+A[:,2]^2 dy=3 color=1')
         quit
 
-class Graph(Glob):
+class Graph(Splotter):
     # Graph is a class containing a single line/set of points and their style, created from class Toplot
     numr=-1
     def __init__(self, toplot):
@@ -821,6 +838,6 @@ if __name__ == "__main__":
     nargs=len(sys.argv);
     args=sys.argv[1:];
 
-    glob=Glob(args=args)
-    glob.make_plot()
-    glob.save_plot()
+    splot=Splotter(args=args)
+    splot.make_plot()
+    splot.save_plot()
