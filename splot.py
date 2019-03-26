@@ -10,7 +10,7 @@ from numpy import *
 from pyx.graph import axis
 from import_tools import *
 
-
+# @TODO :Graph called by **kwargs rather than by toplot ; eg Graph(**toplot.__dict__)
 
 """
 # SYNOPSIS
@@ -164,9 +164,11 @@ __SPLIT_MARK__ = '--split_mark--'
 class Toplot:
     # Toplot is a class containing the options for plotting
     #   it also contains a method to split into two
-    def __init__(self, fname, args):
-        self.file_name=fname
+    def __init__(self, args=[],data=[],fname="",**kwargs):
+        self.fname=fname
+        self.data=data
         self.args=[arg for arg in args]
+
     def check_split(self):
         na=len(self.args)
         do_split=0
@@ -178,7 +180,7 @@ class Toplot:
             future_args=self.args
             self.args=self.args[0:n_split]
             future_args.pop(n_split)
-            return [1,Toplot(self.file_name,future_args)]
+            return [1,Toplot(**self.__dict__)]
         else:
             return [0,1]
 
@@ -186,10 +188,10 @@ class Toplot:
 class Glob:
     # Glob is the global plotter class
     # It mostly sorts arguments and prepares global plot options
-    def __init__(self, args):
-        narg=len(args)
-        if nargs<2:
-            self.usage()
+    def __init__(self,args=[],data=[],**kwargs):
+        ## First we initialize class members
+        #if not args and not data:
+        #    self.usage()
         self.out='plot'
         self.xlabel=None
         self.ylabel=None
@@ -204,12 +206,22 @@ class Glob:
         self.xlog=0
         self.ylog=0
         self.autolabel=0
+        self.future_plots=[]
+        data=array(data)
+        current_args=self.read_args(args=args)
+        if data.any():
+            self.add_plot(data=data,args=current_args)
+
+    def add_plot(self,**kwargs):
+        self.future_plots.append(Toplot(**kwargs))
+
+    def read_args(self,args=[],**kwargs):
+        ## Now we read arguments
         keyz=''
-        future_plots=[]
         current_args=[]
         keep=0
         has_name=0
-
+        fname=''
         # we iterate through arguments and assign them to global or local options
         for arg in args:
             # Global options
@@ -262,7 +274,7 @@ class Glob:
             elif arg.startswith('function='):
                 # If there is already a name for a future plot, we append the former to be created
                 if has_name:
-                    future_plots.append(Toplot(fname,current_args))
+                    self.future_plots.append(Toplot(fname=fname,args=current_args))
                     if keep==0:
                         current_args=[]
                 else:
@@ -277,26 +289,35 @@ class Glob:
             else:
                 # If there is already a name for a future plot
                 if has_name:
-                    future_plots.append(Toplot(fname,current_args))
+                    self.future_plots.append(Toplot(fname=fname,args=current_args))
                     if keep==0:
                         current_args=[]
                 else:
                     has_name=1
                 fname=arg
-
-        # We still need add the last file to futureèplots
+        # We still need add the last file to future_plots
         if has_name:
-            future_plots.append(Toplot(fname,current_args))
+            self.future_plots.append(Toplot(fname=fname,args=current_args))
             has_name=0
+        # also we check key position
+        try:
+            self.key=graph.key.key(pos="%s" %(keyz), dist=float(self.kdist))
+        except:
+            if keyz=='None':
+                self.key=None
+        # we return current arguments
+        return current_args
 
+    def make_plot(self):
         # we check if the plots must be split by and / andif
-        for toplot in future_plots:
+        for toplot in self.future_plots:
             [is_split,new_plot]=toplot.check_split()
             if is_split:
-                future_plots.append(new_plot)
+                self.future_plots.append(new_plot)
 
+        ## Now we create the graphs
         # We create the graphs
-        self.graphs=[Graph(toplot) for toplot in future_plots]
+        self.graphs=[Graph(toplot) for toplot in self.future_plots]
 
         if self.autolabel:
             for graf in self.graphs:
@@ -320,12 +341,6 @@ class Glob:
             except:
                 self.ylabel=None
 
-        try:
-            self.key=graph.key.key(pos="%s" %(keyz), dist=float(self.kdist))
-        except:
-            if keyz=='None':
-                self.key=None
-
         if self.xlog:
             xaxis=axis.log(title=self.xlabel,min=self.xmin,max=self.xmax);
         else:
@@ -339,8 +354,7 @@ class Glob:
                 x=xaxis,
                 y=yaxis )
 
-
-    def make_plot(self):
+        ## Here we do the plotting itlsef
         for graf in self.graphs:
             self.plot(graf)
 
@@ -377,13 +391,14 @@ class Graph(Glob):
     numr=-1
     def __init__(self, toplot):
         args=toplot.args
-        self.file=toplot.file_name
+        self.file=toplot.fname
+        self.data=array(toplot.data)
         Graph.numr+=1
         self.x=0
         self.y=1
         self.mode='v'
         self.legend="file %s" %Graph.numr
-        self.data=[]
+        #self.data=[]
         self.dX=[]
         self.dY=[]
         self.X=[]
@@ -403,14 +418,20 @@ class Graph(Glob):
         self.cond=[]
         self.range=[]
         self.n_points=200
+        self.label_dict={}
 
-
-        if not self.file.startswith('function='):
+        if self.file.startswith('function='):
+            self.is_function=1
+            self.function_string=self.file[9:]
+        elif self.data.any():
+            A=self.data
+        else:
             # This is if we are dealing with (hopefuly) numeric data
             (A,a,b)=getdata(self.file)
             self.labels=splitheader(self.file)
+            for i,label in enumerate(self.labels):
+                self.label_dict[label]=i
             #print(self.labels)
-
             # Dirty tricks for maximum compatibility
             if min(a,b)==1:
                 self.x='auto'
@@ -418,9 +439,6 @@ class Graph(Glob):
             if a==1:
                 self.mode='h'
 
-        else:
-            self.is_function=1
-            self.function_string=self.file[9:]
 
         # using local options
         for arg in args:
@@ -537,6 +555,8 @@ class Graph(Glob):
         # We first check if axis defined by a row/column number
         X=self.X
         Y=self.Y
+        if input in self.labels:
+            input=self.label_dict[input]
         try :
             i=int(input)
             if self.mode=='h':
@@ -801,6 +821,6 @@ if __name__ == "__main__":
     nargs=len(sys.argv);
     args=sys.argv[1:];
 
-    glob=Glob(args)
+    glob=Glob(args=args)
     glob.make_plot()
     glob.save_plot()
