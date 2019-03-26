@@ -52,6 +52,7 @@ from import_tools import *
         x        : index of column or row to be used as x axis values (e.g. x=0 for the first column)
                         also can specify an operation : x='A[:,0]*A[:,1]'
                         also can specify a label read from file header : x=first_column_label
+                        can also be automatic, i.e. index : x=auto
         y        : index of column or row to be used as y axis values (e.g. x=0 for the first column)
                         also can specify an operation : y='A[:,1]*A[:,2]/A[:,3]'
         dy       : index of column or row to be used as dy values (e.g. x=0 for the first column)
@@ -62,9 +63,14 @@ from import_tools import *
                         or color.cmyk.*  or color.rgb.*
                         or an operation, e.g. color=A[:,2]
 
+        and      : add another graph (possibly with different options)
+
         style    : style of plot : - or _ for a line, -- for dashed, .- for dashdotted
                                     o for circles  x , * for crosses  + for plus   > , <     for triangles
-        if       : condition to keep the rows or columns
+
+        if / cond : condition to keep the rows or columns
+
+        andif     :  add another graph with different conditions
 
         range    : range of rows / columns to plot
 
@@ -462,7 +468,7 @@ class Graph(Splotter):
             if arg.startswith('function='):
                 self.is_function=1
                 self.function_string=arg[9:]
-                #print(self.function_string)
+                print(self.function_string)
 
         if self.fname.startswith('function='):
             self.is_function=1
@@ -498,7 +504,7 @@ class Graph(Splotter):
             elif arg.startswith('-hist'):
                 self.is_histogram=1
             elif arg.startswith('x='):
-                self.x=(arg[2:])
+                x=(arg[2:])
             elif arg.startswith('y='):
                 self.y=(arg[2:])
             elif arg.startswith('mode='):
@@ -511,6 +517,10 @@ class Graph(Splotter):
                 self.cond=(arg[3:])
             elif arg.startswith('andif='):
                 self.cond=(arg[6:])
+            elif arg.startswith('cond='):
+                self.cond=(arg[5:])
+            elif arg.startswith('andcond='):
+                self.cond=(arg[8:])
             elif arg.startswith('range='):
                 self.range=(arg[6:])
             elif arg.startswith('npoints='):
@@ -588,7 +598,6 @@ class Graph(Splotter):
 
     # set a label for coordinate x or y
     def set_label(self,label,coord):
-        print(label)
         if coord=='x':
             self.xlabel=label
         elif coord=='y':
