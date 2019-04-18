@@ -10,7 +10,7 @@ from numpy import *
 from pyx.graph import axis
 from import_tools import *
 
-# @TODO :Graph called by **kwargs rather than by toplot ; eg Graph(**toplot.__dict__)
+# @TODO : no need to translate arguments to string in toplot because global arguments are unique -> we should kill
 
 """
 # SYNOPSIS
@@ -179,6 +179,20 @@ grad_dict={
     'jet'        :     color.gradient.Jet,
     }
 
+kw_dict={
+    'function'          : 'function_string',
+    'title'             : 'legend',
+    'andcond'           : 'cond',
+    'if'                : 'cond',
+    'andif'             : 'cond',
+    'color'             : 'col',
+    'size'              : 'siz',
+    'style'             : 'stil',
+    'npoints'           : 'n_points',
+    'npts'              : 'n_points'
+
+}
+
 __SPLIT_MARK__ = '--split_mark--'
 
 class Toplot:
@@ -186,31 +200,58 @@ class Toplot:
     #   it also contains a method to split into two
     # here we need to support a keyword argument having to values, until we split
     # therefore we don't convert everything to *args,**kwargs for now
+    # @TODO : toplot should have a kwarg member ! -> No need to translate
     def __init__(self,*args,arguments=[],data=[],fname="",**kwargs):
         self.fname=fname
         self.data=data
-        self.args=[arg for arg in arguments]
+        self.arguments=[arg for arg in arguments]
         for arg in args:
-            self.args.append(arg)
-            #print(arg)
+            self.arguments.append(arg)
         for key, value in kwargs.items():
-            self.args.append('%s=%s' %(key,value))
-            #print('%s=%s' %(key,value))
+            self.arguments.append('%s=%s' %(key,value))
 
     def check_split(self):
-        na=len(self.args)
+        na=len(self.arguments)
         do_split=0
-        for i,arg in enumerate(self.args):
+        for i,arg in enumerate(self.arguments):
             if arg==__SPLIT_MARK__:
                 do_split=1
                 n_split=i
         if do_split:
-            future_args=self.args
-            self.args=self.args[0:n_split]
+            #print('splitting with %s' %self.arguments)
+            future_args=self.arguments
+            self.arguments=self.arguments[0:n_split]
             future_args.pop(n_split)
-            return [1,Toplot(**self.__dict__)]
+            new_dict={**self.__dict__}
+            new_dict['arguments']=future_args
+            #print('new object with : %s ' %(new_dict))
+            return [1,Toplot(**new_dict)]
         else:
             return [0,1]
+
+    def unpack_arguments(self):
+        # We convert our stupid list of arguments as a list of strnigs to a better arg / kwargs format
+        args=self.arguments
+        kwargs={}
+        keys=kw_dict.keys()
+        for arg in list(args):
+            if arg.find('=')>0:
+                args.remove(arg)
+                largs=arg.split('=')
+                # We fix weird /illegal syntax
+                if largs[0] in keys:
+                    largs[0]=kw_dict[largs[0]]
+                try:
+                    val='='.join(largs[1:])
+                    kwargs[largs[0]]=val
+                except:
+                    raise ValueError('Could not process argument %s' %arg)
+        # let's not forget filename and/or data
+        kwargs['fname']=self.fname
+        kwargs['data']=self.data
+        return args,kwargs
+
+
 
 
 class Splotter:
@@ -235,6 +276,7 @@ class Splotter:
         self.ylog=0
         self.autolabel=0
         self.future_plots=[]
+        self.graphs=[]
         data=array(data)
         # Now we add extra arguments ; this is a bit weird but the simplest option to use both command line and python import
         for arg in args:
@@ -285,6 +327,8 @@ class Splotter:
                 self.ymax=float(arg[5:])
             elif arg.startswith('key='):
                 keyz=arg[4:]
+            elif arg.startswith('-key') or arg.startswith('-legend'):
+                keyz='tl'
             elif arg.startswith('kdist='):
                 self.kdist=arg[6:]
             elif arg.startswith('legend=') or arg.startswith('title'):
@@ -320,7 +364,7 @@ class Splotter:
                 else:
                     has_name=1
                 current_args.append(arg)
-                fname=arg
+                fname=''
             elif arg.startswith('-') or arg.find('=')>=0:
                 current_args.append(arg)
             # If it's not an option, it's definitey a filename
@@ -357,11 +401,19 @@ class Splotter:
         for i,toplot in enumerate(self.future_plots):
             [is_split,new_plot]=toplot.check_split()
             if is_split:
+                #print('splitting  ******************************')
                 self.future_plots.append(new_plot)
 
         ## Now we create the graphs
         # We create the graphs
-        self.graphs=[Graph(toplot) for toplot in self.future_plots]
+        #self.graphs=[Graph(toplot) for toplot in self.future_plots]
+        for i,toplot in enumerate(self.future_plots):
+            (args,kwargs)=toplot.unpack_arguments()
+            kwargs['numr']=i
+            self.graphs.append(Graph(*args,**kwargs))
+
+            #print(i)
+        #self.graphs=[Graph(toplot) for toplot in self.future_plots]
 
         if self.autolabel:
             for graf in self.graphs:
@@ -387,10 +439,17 @@ class Splotter:
 
         if self.xlog:
             xaxis=axis.log(title=self.xlabel,min=self.xmin,max=self.xmax);
+            for graf in self.graphs:
+                if sum(graf.X<=0):
+                    raise ValueError('Could not plot log with non-positive X values')
         else:
             xaxis=axis.linear(title=self.xlabel,min=self.xmin,max=self.xmax)
+
         if self.ylog:
             yaxis=axis.log(title=self.ylabel,min=self.ymin,max=self.ymax)
+            for graf in self.graphs:
+                if sum(graf.Y<=0):
+                    raise ValueError('Could not plot log with non-positive X values')
         else:
             yaxis=axis.linear(title=self.ylabel,min=self.ymin,max=self.ymax)
 
@@ -432,50 +491,36 @@ class Splotter:
 
 class Graph(Splotter):
     # Graph is a class containing a single line/set of points and their style, created from class Toplot
-    numr=-1
-    def __init__(self, toplot):
-        args=toplot.args
-        self.fname=toplot.fname
-        self.data=array(toplot.data)
-        Graph.numr+=1
-        self.x=0
-        self.y=1
-        self.mode='v'
-        self.legend="file %s" %Graph.numr
-        #self.data=[]
-        self.dX=[]
-        self.dY=[]
-        self.X=[]
-        self.Y=[]
-        self.S=[]
-        self.C=[]
-        self.dx=[]
-        self.dy=[]
+    def __init__(self,*args,
+                x=0,y=1,dx=[],dy=[],col='',siz='',
+                cond=[],range=[],
+                function_string='',legend='',
+                fname='',data=[],numr=0,mode='v',
+                n_points='200',
+                **kwargs):
+
+        self.fname=fname ; self.function_string=function_string
+        self.data=array(data)
+        self.numr=numr
+        self.mode=mode ; self.numr=numr
+        self.dX=[] ; self.dY=[]
+        self.X=[] ; self.Y=[] ; self.S=[] ; self.C=[]
         self.is_function=0
         self.is_histogram=0
-        self.xlabel=None
-        self.ylabel=None
+        self.xlabel=None ; self.ylabel=None
         self.labels=[]
-        #self.col=[]
-        col=''
-        siz=''
-        self.cond=[]
-        self.range=[]
-        self.n_points=200
+        self.range=range
+        self.set_n_points(n_points)
         self.label_dict={}
 
-        for arg in args:
-            if arg.startswith('function='):
-                self.is_function=1
-                self.function_string=arg[9:]
-                print(self.function_string)
+        self.make_auto_legend(legend)
 
-        if self.fname.startswith('function='):
+        if self.function_string:
             self.is_function=1
-            self.function_string=self.fname[9:]
+
         elif self.data.size>0:
             A=self.data
-        elif not self.is_function:
+        else:
             # This is if we are dealing with (hopefuly) numeric data
             (A,a,b)=getdata(self.fname)
             self.labels=splitheader(self.fname)
@@ -489,69 +534,33 @@ class Graph(Splotter):
             if a==1:
                 self.mode='h'
 
-
         # using local options
         for arg in args:
-            if arg.startswith('legend=') or arg.startswith('title='):
-                if arg.startswith('legend='):
-                    legend=arg[7:]
-                else:
-                    legend=arg[6:]
-                if legend=='None' or legend=='none':
-                    self.legend=None
-                else:
-                    self.legend=r"%s" %legend
-            elif arg.startswith('-hist'):
+            if arg.startswith('-hist'):
                 self.is_histogram=1
-            elif arg.startswith('x='):
-                self.x=(arg[2:])
-            elif arg.startswith('y='):
-                self.y=(arg[2:])
-            elif arg.startswith('mode='):
-                self.mode=arg[5:]
-            elif arg.startswith('dx='):
-                self.dx=(arg[3:])
-            elif arg.startswith('dy='):
-                self.dy=(arg[3:])
-            elif arg.startswith('if='):
-                self.cond=(arg[3:])
-            elif arg.startswith('andif='):
-                self.cond=(arg[6:])
-            elif arg.startswith('cond='):
-                self.cond=(arg[5:])
-            elif arg.startswith('andcond='):
-                self.cond=(arg[8:])
-            elif arg.startswith('range='):
-                self.range=(arg[6:])
-            elif arg.startswith('npoints='):
-                self.n_points=self.set_n_points(arg[8:])
-            elif arg.startswith('color='):
-                col=arg[6:]
-            elif arg.startswith('size='):
-                siz=arg[5:]
 
 
         if not self.is_function:
             # This is if we are dealing with (hopefuly) numeric data
-            #if (len(self.range) or len(self.cond)):
-            if len(self.range):
-                A=self.set_A_range(A)
+            #if (len(self.range) or len(cond)):
+            if len(range):
+                A=self.set_A_range(A,range)
 
             # We perform a first extraction of X and Y to be able to evalyate conditions on X,Y
-            self.X=self.set_from_input(A,self.x,'x')
-            self.Y=self.set_from_input(A,self.y,'y')
-            self.dX=self.set_from_input(A,self.dx,'dx')
-            self.dY=self.set_from_input(A,self.dy,'dy')
+            self.X=self.set_from_input(A,x,'x')
+            self.Y=self.set_from_input(A,y,'y')
+            self.dX=self.set_from_input(A,dx,'dx')
+            self.dY=self.set_from_input(A,dy,'dy')
 
-            #if (len(self.range) or len(self.cond)):
-            if len(self.cond):
-                A=self.set_A_condition(A)
+            #if (len(self.range) or len(cond)):
+            if len(cond):
+                A=self.set_A_condition(A,cond)
 
             # Now we perform the definitive extraction of X,Y once A has been filtered
-            self.X=self.set_from_input(A,self.x,'x')
-            self.Y=self.set_from_input(A,self.y,'y')
-            self.dX=self.set_from_input(A,self.dx,'dx')
-            self.dY=self.set_from_input(A,self.dy,'dy')
+            self.X=self.set_from_input(A,x,'x')
+            self.Y=self.set_from_input(A,y,'y')
+            self.dX=self.set_from_input(A,dx,'dx')
+            self.dY=self.set_from_input(A,dy,'dy')
 
             # Now we assign colors and size if need be
             if siz.isdigit() or siz.find('A[')>=0:
@@ -586,15 +595,31 @@ class Graph(Splotter):
                 self.S=(self.S-min(self.S))+0.001
 
         # and now we can make the style !
-        self.style=Style(args).style
+        kwargs['col']=col ; kwargs['siz']=siz ; kwargs['is_function']=self.is_function
+        kwargs['num']=self.numr ; kwargs['dx']=dx ; kwargs['dy']=dy
+
+        self.style=Style(*args,**kwargs).style
+
+    def make_auto_legend(self,legend):
+        if legend=='None' or legend=='none':
+            self.legend=None
+        elif legend:
+            self.legend=r"%s" %legend
+        else:
+            if self.function_string:
+                self.legend=self.function_string
+            elif self.fname:
+                lenf=len(self.fname)
+                if lenf<=16:
+                    self.legend=self.fname
+
 
     def set_n_points(self,arg):
-        res=0
+        self.n_points=200
         try:
-            res=int(arg)
+            self.n_points=int(arg)
         except:
             raise ValueError('Did not understand npoints from input %s'  %arg)
-        return res
 
     # set a label for coordinate x or y
     def set_label(self,label,coord):
@@ -641,15 +666,14 @@ class Graph(Splotter):
             else:
                 return []
 
-    def set_A_range(self,A):
+    def set_A_range(self,A,in_range):
         # first we need to make data horizontal for the range operation
-
         if self.mode=='h':
             B=A.transpose()
         else:
             B=A.copy()
-        if len(self.range)>0:
-            srange=self.range.split(":")
+        if len(in_range)>0:
+            srange=in_range.split(":")
             lr=len(srange)
             try :
                 iii=array([int(s) for s in srange])
@@ -672,17 +696,17 @@ class Graph(Splotter):
         return A
 
 
-    def set_A_condition(self,A):
+    def set_A_condition(self,A,cond):
         if self.mode=='h':
             B=A.transpose()
         else:
             B=A.copy()
 
-        if len(self.cond)>0:
+        if len(cond)>0:
             X=self.X
             Y=self.Y
             try:
-                kept=eval(self.cond)
+                kept=eval(cond)
                 if self.mode=='h':
                     B=B[kept]
                     A=B.transpose()
@@ -695,27 +719,38 @@ class Graph(Splotter):
 
 class Style(Graph):
     # A class containing the style to make a graph
-    def __init__(self, args):
-        count=Graph.numr
+    def __init__(self, *args,numr=0,
+                dx=[],dy=[],
+                **kwargs):
+
         self.style=[]
         self.dxy=[]
-        self.goodstyle=goodstyle(args,count)
+        self.goodstyle=goodstyle(*args,**kwargs)
         self.is_histogram=0
 
         for arg in args:
             if arg.startswith('-hist'):
                 self.is_histogram=1
-            if arg.startswith('dy=') or arg.startswith('dx='):
-                if self.goodstyle.setcolor:
-                    self.dxy=[self.goodstyle.linew,self.goodstyle.setcolor]
-                else:
-                    self.dxy=[self.goodstyle.linew,colours[0]]
+        #print(self.goodstyle.setcolor)
+        if len(dx)>0 or len(dy)>0:
+            if self.goodstyle.setcolor:
+                self.dxy=[self.goodstyle.linew,self.goodstyle.setcolor]
+            else:
+                self.dxy=[self.goodstyle.linew,colours[0]]
+        #print(self.dxy)        #print('not goodstyle.setcolor')
+        #    if arg.startswith('dy=') or arg.startswith('dx='):
+        #        if self.goodstyle.setcolor:
+        #            self.dxy=[self.goodstyle.linew,self.goodstyle.setcolor]
+        #        else:
+        #            self.dxy=[self.goodstyle.linew,colours[0]]
 
         if self.goodstyle.kind=='symbol':
+            symbol_dict={**vars(self.goodstyle)}
+            symbol_dict['numr']=numr
             if not len(self.dxy):
-                self.style=[changesymbol(**vars(self.goodstyle)),graph.style.errorbar(False)]
+                self.style=[changesymbol(**symbol_dict),graph.style.errorbar(False)]
             else:
-                self.style=[changesymbol(**vars(self.goodstyle)),graph.style.errorbar(errorbarattrs=self.dxy)]
+                self.style=[changesymbol(**symbol_dict),graph.style.errorbar(errorbarattrs=self.dxy)]
 
         elif self.goodstyle.kind=='line':
             if not len(self.dxy):
@@ -726,103 +761,102 @@ class Style(Graph):
         if self.is_histogram:
             self.style=[graph.style.histogram()]
 
+
 class goodstyle(Style):
     # A class containing the style attributes to pass to python PyX
-    def __init__(self,args,count):
+    def __init__(self,*args,
+                numr=0,
+                col='',siz='',line='',stil='',gradient='',
+                is_function=0,
+                **kwargs):
         self.kind='symbol'
-        self.setcolor=colours[int(ceil(count/4)) %4]
-        self.symbol=symbols[count %4]
+        self.setcolor=colours[int(ceil(numr/4)) %4]
+        self.symbol=symbols[numr %4]
         self.setsize=0.5
         self.linew=style.linewidth.thin
-        self.linest=linests[count %4]
+        self.linest=linests[numr %4]
         self.gradient=color.gradient.Rainbow;
-        is_function=0
+
         # By default, function should be a line
-        for arg in args:
-            if arg.startswith('function='):
-                self.kind='line'
-                is_function=1
+        #for arg in args:
+        if is_function:
+            self.kind='line'
 
-        for arg in args:
-            if arg.startswith('color='):
-                col=arg[6:]
-                try :
-                    # We first try to set it from the dictionary
-                    self.setcolor=col_dict[col]
-                except :
-                    if col.isdigit() or col.find('A[')>=0:
-                        # Color should be set from the data
-                        self.setcolor=False
-                    else:
-                        # color might have been passed as a proper color
-                        if not col.startswith('color.'):
-                            # shorthand notation is tolerated
-                            col='color.%s' %(col)
-                        try:
-                            # trying if color is a defined PyX color
-                            self.setcolor=eval(col)
-                        except:
-                            print('Warning : could not understand color from %s' %col)
-
-            if arg.startswith('gradient=') or arg.startswith('grad='):
-                grad=arg.split('=')[1]
-                try :
-                    # We first try to set it from the dictionary
-                    self.gradient=grad_dict[grad]
-                except :
-                    if not grad.startswith('color.gradient'):
+        if col:
+            try :
+                # We first try to set it from the dictionary
+                self.setcolor=col_dict[col]
+            except :
+                if col.isdigit() or col.find('A[')>=0:
+                    # Color should be set from the data
+                    self.setcolor=False
+                else:
+                    # color might have been passed as a proper color
+                    if not col.startswith('color.'):
                         # shorthand notation is tolerated
-                        if grad.startswith('gradient'):
-                            grad='color.%s' %(grad)
-                        else:
-                            grad='color.gradient.%s' %(grad)
+                        col='color.%s' %(col)
                     try:
                         # trying if color is a defined PyX color
-                        self.gradient=eval(grad)
+                        self.setcolor=eval(col)
                     except:
-                        print('Warning : could not understand gradient from %s' %grad)
+                        print('Warning : could not understand color from %s' %col)
 
-            elif arg.startswith('size='):
-                siz=arg[5:]
-                if siz.find('A[')>=0:
-                    # Size depends on data
-                    self.setsize=-1
-                else:
-                    try:
-                        sizi=float(siz)
-                        if siz.find('.')<0:
-                            # size is a data column
-                            self.setsize=-1
-                        else:
-                            # size is a numerical value
-                            self.setsize=sizi
-                    except:
-                        print('Warning : could not understand size from %s' %siz)
+        if gradient:
+            try :
+                # We first try to set it from the dictionary
+                self.gradient=grad_dict[gradient]
+            except :
+                if not grad.startswith('color.gradient'):
+                    # shorthand notation is tolerated
+                    if grad.startswith('gradient'):
+                        grad='color.%s' %(gradient)
+                    else:
+                        grad='color.gradient.%s' %(gradient)
+                try:
+                    # trying if color is a defined PyX color
+                    self.gradient=eval(gradient)
+                except:
+                    print('Warning : could not understand gradient from %s' %gradient)
 
-            elif arg.startswith('line='):
+        if siz:
+            if siz.find('A[')>=0:
+                # Size depends on data
+                self.setsize=-1
+            else:
+                try:
+                    sizi=float(siz)
+                    if siz.find('.')<0:
+                        # size is a data column
+                        self.setsize=-1
+                    else:
+                        # size is a numerical value
+                        self.setsize=sizi
+                except:
+                    print('Warning : could not understand size from %s' %siz)
+
+        if line:
+            self.kind='line'
+            try:
+                self.linew=linw_dict[line]
+            except:
+                print('Warning : could not understand line width from %s' %line)
+
+        if stil:
+
+            try:
+                self.linest=linst_dict[stil]
                 self.kind='line'
-                lin=arg[5:]
+            except:
                 try:
-                    self.linew=linw_dict[lin]
+                    self.symbol=symst_dict[stil]
+                    self.kind='symbol'
                 except:
-                    print('Warning : could not understand line width from %s' %lin)
-
-            elif arg.startswith('style='):
-                stil=arg[6:]
-                try:
-                    self.linest=linst_dict[stil]
-                    self.kind='line'
-                except:
-                    try:
-                        self.symbol=symst_dict[stil]
-                        self.kind='symbol'
-                    except:
-                        print('Warning : could not understand style from %s' %stil)
+                    print('Warning : could not understand style from %s' %stil)
 
         if self.kind=='line':
             # For now splot does not support gradient line coloring
             if not self.setcolor:
-                self.setcolor=colours[int(ceil(count/4)) %4]
+                self.setcolor=colours[int(ceil(numr/4)) %4]
 
         if is_function==1:
             if self.kind=='symbol':
@@ -830,12 +864,13 @@ class goodstyle(Style):
 
 class changesymbol(graph.style.symbol):
     # A flexible symbol class derived from PyX's very own changesymbol class
-    def __init__(self, sizecolumnname="size", colorcolumnname="color",
+    def __init__(self,
+                       sizecolumnname="size", colorcolumnname="color",
                        gradient=color.gradient.Rainbow,
                        symbol=graph.style.symbol.triangle,
                        symbolattrs=[deco.filled, deco.stroked],
                        setsize=0.5,kind='symbol',linew=False,linest=False,
-                       setcolor=color.gray(0.0),
+                       setcolor=color.gray(0.0),numr=0,
                        **kwargs):
         # add some configuration parameters and modify some other
         self.sizecolumnname = sizecolumnname
@@ -878,5 +913,4 @@ if __name__ == "__main__":
     args=sys.argv[1:];
 
     splot=Splotter(arguments=args)
-    splot.make_plot()
-    splot.save_plot()
+    splot.make_and_save()
