@@ -6,13 +6,31 @@ import subprocess
 import os.path
 import sys
 import os
+import warnings
 
+try:
+	import pandas as pd
+except:
+	print('Warning : Could not import pandas module')
+	print('Importing csv and xls will not work')
 # @TODO : replace all the concatenate with os.join()
 # @TODO : better cleanup and stuff
 
 
 __exclude_key__=["__EXCLUDE_KEY__"]
 __COMMENTS__=["#","%"]
+
+def custom_warn(msg):
+	warnings.formatwarning = custom_formatwarning
+	warnings.warn(msg)
+
+def custom_formatwarning(msg, *args, **kwargs):
+    # ignore everything except the message
+    return ('WARNING : ' + str(msg) + '\n')
+
+def empty_out_data():
+	return {'data' : [],'labels' : [],'size_x' : 0, 'size_y' : 0, 'body' : [], 'header' : []}
+
 def modulo(k,n):
 	c=0
 	while k>=n:
@@ -314,6 +332,29 @@ def getheader(fname):
 				head_line=line
 	return head_line
 
+def decompose_file(fname):
+	lines=clean_lines(getlines(fname))
+	CC=__COMMENTS__
+	head_lines=[]
+	body_lines=[]
+
+	for line in lines:
+		is_header=0
+		for c in CC:
+			if line.find(c)>=0:
+				head_lines.append(line)
+				is_header=1
+		if not is_header:
+			body_lines.append(line)
+
+	return body_lines,head_lines
+
+def get_data_and_header(fname):
+	(body,header)=decompose_file(fname)
+	head=header[-1]
+	data=getdata_lines(body)
+	return data,head
+
 def make_nice_headers(heads):
 	CC=__COMMENTS__
 	return [clean_head(head) for head in heads if head not in CC]
@@ -335,6 +376,49 @@ def splitheader(fname):
 		return make_nice_headers(heads)
 	else:
 		return []
+
+def split_header(heads):
+	if heads:
+		heads=heads[-1]
+		heads=heads.split(' ')
+		return make_nice_headers(heads)
+	else:
+		return []
+
+def data_import_wrapper(fname):
+	if fname.endswith('.txt'):
+		return txt_import_wrapper(fname)
+	elif fname.endswith('.csv'):
+		return csv_import_wrapper(fname)
+	elif fname.endswith('.xls') or fname.endswith('.xlsx'):
+		return xls_import_wrapper(fname)
+	else:
+		try:
+			return txt_import_wrapper(fname)
+		except:
+			raise ValueError('Unsupported format for file %s'  %fname)
+			return empty_out_data()
+
+def txt_import_wrapper(fname):
+	(body_lines,head_lines)=decompose_file(fname)
+	(data,sx,sy)=getdata_lines(body_lines)
+	return {'data' : data , 'labels' : split_header(head_lines), 'size_x' : sx , 'size_y' : sy , 'body' : body_lines , 'header' : head_lines}
+
+def csv_import_wrapper(fname):
+	frames=pd.read_csv(fname)
+	return import_from_frames(frames)
+
+def xls_import_wrapper(fname):
+	custom_warn('Excel support very limited')
+	frames=pd.read_excel(fname)
+	return import_from_frames(frames)
+
+def import_from_frames(frames):
+	cols=frames.columns.values
+	labels=[word for word in cols]
+	data=frames.values
+	sx,sy=data.shape
+	return {'data' : data , 'labels' : labels, 'size_x' : sx , 'size_y' : sy , 'body' : [] , 'header' : [] }
 
 # Extract space separatated value array from file
 def getdata_lines(lines):
