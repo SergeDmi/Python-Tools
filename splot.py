@@ -8,9 +8,15 @@
 from pyx import *
 from numpy import *
 from pyx.graph import axis
-from import_tools import *
+import sys
 
-# @TODO : no need to translate arguments to string in toplot because global arguments are unique -> we should kill
+try:
+    import import_tools as imp
+except:
+    print('You can download import_tools from :')
+    print('https://github.com/SergeDmi/Python-Tools')
+    raise ValueError('Module import_tools required for splot')
+
 
 """
 # SYNOPSIS
@@ -522,16 +528,18 @@ class Graph(Splotter):
             A=self.data
         else:
             # This is if we are dealing with (hopefuly) numeric data
-            (A,a,b)=getdata(self.fname)
-            self.labels=splitheader(self.fname)
+            in_data=imp.data_import_wrapper(self.fname)
+            A=in_data['data']
+            self.labels=in_data['labels']
+
             for i,label in enumerate(self.labels):
                 self.label_dict[label]=i
 
             # Dirty tricks for maximum compatibility
-            if min(a,b)==1:
+            if min(in_data['size_x'],in_data['size_y'])==1:
                 self.x='auto'
                 self.y=0
-            if a==1:
+            if in_data['size_x']==1:
                 self.mode='h'
 
         # using local options
@@ -596,8 +604,7 @@ class Graph(Splotter):
 
         # and now we can make the style !
         kwargs['col']=col ; kwargs['siz']=siz ; kwargs['is_function']=self.is_function
-        kwargs['num']=self.numr ; kwargs['dx']=dx ; kwargs['dy']=dy
-
+        kwargs['numr']=self.numr ; kwargs['dx']=dx ; kwargs['dy']=dy
         self.style=Style(*args,**kwargs).style
 
     def make_auto_legend(self,legend):
@@ -725,6 +732,8 @@ class Style(Graph):
 
         self.style=[]
         self.dxy=[]
+        if numr:
+            kwargs['numr']=numr
         self.goodstyle=goodstyle(*args,**kwargs)
         self.is_histogram=0
 
@@ -769,6 +778,7 @@ class goodstyle(Style):
                 col='',siz='',line='',stil='',gradient='',
                 is_function=0,
                 **kwargs):
+
         self.kind='symbol'
         self.setcolor=colours[int(ceil(numr/4)) %4]
         self.symbol=symbols[numr %4]
@@ -799,7 +809,7 @@ class goodstyle(Style):
                         # trying if color is a defined PyX color
                         self.setcolor=eval(col)
                     except:
-                        print('Warning : could not understand color from %s' %col)
+                        imp.custom_warn('Could not understand color from %s' %col)
 
         if gradient:
             try :
@@ -816,7 +826,7 @@ class goodstyle(Style):
                     # trying if color is a defined PyX color
                     self.gradient=eval(gradient)
                 except:
-                    print('Warning : could not understand gradient from %s' %gradient)
+                    imp.custom_warn('Could not understand gradient from %s' %gradient)
 
         if siz:
             if siz.find('A[')>=0:
@@ -832,14 +842,14 @@ class goodstyle(Style):
                         # size is a numerical value
                         self.setsize=sizi
                 except:
-                    print('Warning : could not understand size from %s' %siz)
+                    imp.custom_warn('Could not understand size from %s' %siz)
 
         if line:
             self.kind='line'
             try:
                 self.linew=linw_dict[line]
             except:
-                print('Warning : could not understand line width from %s' %line)
+                imp.custom_warn('Could not understand line width from %s' %line)
 
         if stil:
 
@@ -851,7 +861,7 @@ class goodstyle(Style):
                     self.symbol=symst_dict[stil]
                     self.kind='symbol'
                 except:
-                    print('Warning : could not understand style from %s' %stil)
+                    imp.custom_warn('Could not understand style from %s' %stil)
 
         if self.kind=='line':
             # For now splot does not support gradient line coloring
