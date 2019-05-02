@@ -1,7 +1,8 @@
 # Python-Tools
 This repository contains generic but useful python utilities
  
-# import_tools.py :
+# sio_tools.py :
+  Simple I/O utilities used by other projects
   Reading/writing array from/to file
   Running bash jobs from python and returning output
   File text cleanup and parsing
