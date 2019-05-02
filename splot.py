@@ -11,11 +11,11 @@ from pyx.graph import axis
 import sys
 
 try:
-    import import_tools as imp
+    import sio_tools as sio
 except:
-    print('You can download import_tools from :')
-    print('https://github.com/SergeDmi/Python-Tools')
-    raise ValueError('Module import_tools required for splot')
+    print('You can download sio_tools from :')
+    print('https://github.com/SergeDmi/')
+    raise ValueError('Module sio_tools required for splot')
 
 
 """
@@ -528,7 +528,7 @@ class Graph(Splotter):
             A=self.data
         else:
             # This is if we are dealing with (hopefuly) numeric data
-            in_data=imp.data_import_wrapper(self.fname)
+            in_data=sio.data_import_wrapper(self.fname)
             A=in_data['data']
             self.labels=in_data['labels']
 
@@ -809,7 +809,7 @@ class goodstyle(Style):
                         # trying if color is a defined PyX color
                         self.setcolor=eval(col)
                     except:
-                        imp.custom_warn('Could not understand color from %s' %col)
+                        sio.custom_warn('Could not understand color from %s' %col)
 
         if gradient:
             try :
@@ -826,7 +826,7 @@ class goodstyle(Style):
                     # trying if color is a defined PyX color
                     self.gradient=eval(gradient)
                 except:
-                    imp.custom_warn('Could not understand gradient from %s' %gradient)
+                    sio.custom_warn('Could not understand gradient from %s' %gradient)
 
         if siz:
             if siz.find('A[')>=0:
@@ -842,14 +842,14 @@ class goodstyle(Style):
                         # size is a numerical value
                         self.setsize=sizi
                 except:
-                    imp.custom_warn('Could not understand size from %s' %siz)
+                    sio.custom_warn('Could not understand size from %s' %siz)
 
         if line:
             self.kind='line'
             try:
                 self.linew=linw_dict[line]
             except:
-                imp.custom_warn('Could not understand line width from %s' %line)
+                sio.custom_warn('Could not understand line width from %s' %line)
 
         if stil:
 
@@ -861,7 +861,7 @@ class goodstyle(Style):
                     self.symbol=symst_dict[stil]
                     self.kind='symbol'
                 except:
-                    imp.custom_warn('Could not understand style from %s' %stil)
+                    simp.custom_warn('Could not understand style from %s' %stil)
 
         if self.kind=='line':
             # For now splot does not support gradient line coloring
