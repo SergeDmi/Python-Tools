@@ -17,7 +17,7 @@ except:
     print('https://github.com/SergeDmi/')
     raise ValueError('Module sio_tools required for seplot')
 
-__VERSION__ = "1.1.0"
+__VERSION__ = "1.1.1"
 
 """
 # SYNOPSIS
