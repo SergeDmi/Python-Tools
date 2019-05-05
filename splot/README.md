@@ -32,7 +32,7 @@ $ pip3 install .
 ## Basic usage
 Splot is meant to be used from command line or from a python script. The typical command line instruction to plot from a file data.txt would be :
 ```shell
-	$ splot.py data.txt
+$ splot.py data.txt
 ```
 By omitting further instructions, it is implied that the data in data.txt is a set of vertical columns, and we plot column 1 as a function of column 0. Splot uses Python's zero-indexing convention (column 0 is the first column). This could also be written :
 ```shell
