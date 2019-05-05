@@ -50,7 +50,7 @@ $ seplot.py data_1.txt x=0 dx=1 y=2 dy=3 color=4 size=5 function='y(x)=x'
 Here, we even used data to assign a size and color to the plot symbols ! Note that seplot can easily be used from inside a python script :
 ```python
 import seplot
-plot=seplot.Splotter(file='data.txt)
+plot=seplot.Splotter(file='data.txt')
 # alternatively, with A an array containing the data
 plot.add_plot(data=A)
 plot.make_and_save()
