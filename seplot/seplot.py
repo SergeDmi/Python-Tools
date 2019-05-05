@@ -132,6 +132,8 @@ __VERSION__ = "1.1.1"
 
 """
 
+#@TODO : sepearate file for dictionaries
+
 # Basic set of colours
 colours=[color.gray(0.0),color.gray(0.5),color.rgb.red,color.rgb.blue]
 symbols=[graph.style.symbol.plus,graph.style.symbol.circle,graph.style.symbol.cross,graph.style.symbol.triangle]
