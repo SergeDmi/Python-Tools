@@ -51,7 +51,7 @@ Here, we even used data to assign a size and color to the plot symbols ! Note th
 ```python
 import seplot
 # A is an array containing the data
-plot=seplot.Splotter(data=A)
+plot=seplot.Splotter(file='data.txt')
 plot.make_and_save()
 ```
 This readme focuses on the command-line interface, but all instructions can also be used equally easily through the python interface.
@@ -141,6 +141,6 @@ Global options are passed when calling **seplot.Splotter** and local options are
 ```python
 import seplot
 plot=seplot.Splotter(key='tl')
-plot.add_plot(data=A,cond='A[:,0]>0')
+plot.add_plot(file='data.txt',cond='A[:,0]>0')
 plot.make_and_save()
 ```
