@@ -108,7 +108,7 @@ $ splot.py data.txt xlabel='time ($s$)' ylabel='$v$ ($m s^{-1}$)'
 ```
 Splot also can read directly the label from a text file using the keyword  **-autolabel**. For example for a file with a simple header  &#35; time position}:
 ```shell
-	$ cat data.txt
+$ cat data.txt
 	# time position
 	0 1
 	1 2
