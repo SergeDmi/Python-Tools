@@ -16,6 +16,9 @@ setup(
      description="A front-end for Python PyX",
      long_description=splot_description,
      url="https://github.com/SergeDmi/Python-Tools/",
-
+     install_requires=[
+          'pyx',
+          'numpy'
+      ],
      packages=['seplot' ]
  )
