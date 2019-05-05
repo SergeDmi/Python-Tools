@@ -11,7 +11,7 @@ from pyx.graph import axis
 import sys
 
 try:
-    import sio_tools as sio
+    import splot.sio_tools as sio
 except:
     print('You can download sio_tools from :')
     print('https://github.com/SergeDmi/')
@@ -200,6 +200,11 @@ kw_dict={
 }
 
 __SPLIT_MARK__ = '--split_mark--'
+__VERSION__ = 1.0
+
+def cast_help():
+    print("Splot version %s " %__VERSION__)
+    print(__doc__)
 
 class Toplot:
     # Toplot is a class containing the options for plotting
@@ -313,6 +318,9 @@ class Splotter:
         # we iterate through arguments and assign them to global or local options
         for arg in arguments:
             # Global options
+            if arg.endswith('-help'):
+                cast_help()
+                sys.exit()
             if arg.startswith('out='):
                 self.out=arg[4:]
             elif arg.startswith('xlabel='):
@@ -861,7 +869,7 @@ class goodstyle(Style):
                     self.symbol=symst_dict[stil]
                     self.kind='symbol'
                 except:
-                    simp.custom_warn('Could not understand style from %s' %stil)
+                    sio.custom_warn('Could not understand style from %s' %stil)
 
         if self.kind=='line':
             # For now splot does not support gradient line coloring
