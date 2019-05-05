@@ -11,30 +11,31 @@ from pyx.graph import axis
 import sys
 
 try:
-    import splot.sio_tools as sio
+    import seplot.sio_tools as sio
 except:
     print('You can download sio_tools from :')
     print('https://github.com/SergeDmi/')
-    raise ValueError('Module sio_tools required for splot')
+    raise ValueError('Module sio_tools required for seplot')
 
+__VERSION__ = "1.0.4"
 
 """
 # SYNOPSIS
 
-   splot is a shorthand command-line tool draw graphs using PyX. PyX is good.
+   seplot is a shorthand command-line tool draw graphs using PyX. PyX is good.
 
 # DESCRIPTION
 
-   splot plots a graph from a text file (should I add excel support ?)
+   seplot plots a graph from a text file (should I add excel support ?)
    it is meant to be fast and dirty (but uses PyX to be beautiful)
 
 # SYNTAX
 
-   python splot.py TEXT_FILE [OPTIONS] [ADDITIONAL_TEXT_FILES] [ADDITIONAL_OPTIONS]
+   python seplot.py TEXT_FILE [OPTIONS] [ADDITIONAL_TEXT_FILES] [ADDITIONAL_OPTIONS]
 
 # OPTIONS
 
-    splot has two kinds of options : global (for the whole figure) and local (for a particular file)
+    seplot has two kinds of options : global (for the whole figure) and local (for a particular file)
     All options should be written as option_name=option_value
 
     Global options :
@@ -88,43 +89,43 @@ except:
 
 # EXAMPLES :
 
-            splot.py file.txt
+            seplot.py file.txt
                         plots the second column of file.txt as a function of the first column
-            splot.py file.txt x=3 y=7
+            seplot.py file.txt x=3 y=7
                         plots the 4th (3+1) column of file.txt as a function of the eigth column (7+1)
-            splot.py file.txt x=3 y=7 and x=3 y=10
+            seplot.py file.txt x=3 y=7 and x=3 y=10
                         plots the 4th (3+1) column of file.txt as a function of the eigth column (7+1),
                         and another plot of 4th column as a function of 11th column
-            splot.py file.txt color=red file2.txt out=plot.pdf
+            seplot.py file.txt color=red file2.txt out=plot.pdf
                         plots in red the second column of file.txt as a function of the first column
                         plots the second column of file2.txt as a function of the first column in the same graph
-            splot.py file.txt 'y=sqrt(A[:,1]^2+A[:,2]^2)' dy=3 color=1 grad=gray xlabel='$t$ in minutes' ylabel='$\bar{z}$'
+            seplot.py file.txt 'y=sqrt(A[:,1]^2+A[:,2]^2)' dy=3 color=1 grad=gray xlabel='$t$ in minutes' ylabel='$\bar{z}$'
                         A[:,1] and A[:,2] are the second and third columns of file.txt
                         the deviation is set from the fourth column of file.txt
                         the color is set from the second column of file.txt, based on a gray-level gradient
                         labels and titles use the Latex interpreter
-            splot.py file.txt if='A[:,0]>1'
+            seplot.py file.txt if='A[:,0]>1'
                         plots the second column as a function of the first if elements of the first are greater than 1
-            splot.py file.txt mode='h' if='A[0,:]>1' -xlog
+            seplot.py file.txt mode='h' if='A[0,:]>1' -xlog
                         plots the second row as a function of the first row if elements of the first row are greater than 1
                         the x axis is logarithmic
-            splot.py file.txt mode='h' if='A[0,:]>1' andif='A[0,:]<=1'
+            seplot.py file.txt mode='h' if='A[0,:]>1' andif='A[0,:]<=1'
                         plots the second row as a function of the first row if elements of the first row are greater than 1
                         and (with a different style) if the elements of the first row are smaller than 1
-            splot.py range=3 -keep data_0*.txt
+            seplot.py range=3 -keep data_0*.txt
                         plots data from only the third line of the files data_0*.txt
-            splot.py file.txt range=0:4
+            seplot.py file.txt range=0:4
                         plots data from only the first to 4th line of file.txt
-            splot.py data.txt x=1 y=2 and y=3
+            seplot.py data.txt x=1 y=2 and y=3
                         plots the third and fourth column as a function of the second
 
-# USE SPLOT from python :
+# USE seplot from python :
             # Single plot :
-            import splot
-            plot=splot.Splotter('-xlog',key='tr',data=A)           # A is a data array, arguments is a list of argument
+            import seplot
+            plot=seplot.Splotter('-xlog',key='tr',data=A)           # A is a data array, arguments is a list of argument
             plot.make_and_save()                           # e.g. : arguments=['color=red','-xlog']
             # Several plots :
-            plot=splot.Splotter('-autolabel',key='tl')
+            plot=seplot.Splotter('-autolabel',key='tl')
             plot.add_plot(data=A,color='blue')
             plot.add_plot(data=B,color=red)
             plot.make_and_save()
@@ -200,10 +201,12 @@ kw_dict={
 }
 
 __SPLIT_MARK__ = '--split_mark--'
-__VERSION__ = 1.0
+
+def version():
+    return __VERSION__
 
 def cast_help():
-    print("Splot version %s " %__VERSION__)
+    print("seplot version %s " %version())
     print(__doc__)
 
 class Toplot:
@@ -266,7 +269,7 @@ class Toplot:
 
 
 class Splotter:
-    # Splot is the global plotter class
+    # seplot is the global plotter class
     # It mostly sorts arguments and prepares global plot options
     def __init__(self,*args,arguments=[],data=[],**kwargs):
         ## First we initialize class members
@@ -309,7 +312,12 @@ class Splotter:
         for arg in args:
             arguments.append(arg)
         for key, value in kwargs.items():
-            arguments.append('%s=%s' %(key,value))
+            if key.startswith('file='):
+                # if the input is a file
+                arguments.append(value)
+            else:
+                # for any other keyword argument
+                arguments.append('%s=%s' %(key,value))
         keyz=''
         current_args=[]
         keep=0
@@ -495,12 +503,12 @@ class Splotter:
 
 
     def usage(self):
-        disp('splot is a simple command line plotting tool based on PyX (PyX is awesome !)')
+        disp('seplot is a simple command line plotting tool based on PyX (PyX is awesome !)')
         disp('---------------------------- Warning : you should use PyX for more options')
         disp('Examples :')
-        disp('splot.py file.txt')
-        disp('splot.py file.txt color=red file2.txt out=plot.pdf')
-        disp('splot.py file.txt y=A[:,1]^2+A[:,2]^2 dy=3 color=1')
+        disp('seplot.py file.txt')
+        disp('seplot.py file.txt color=red file2.txt out=plot.pdf')
+        disp('seplot.py file.txt y=A[:,1]^2+A[:,2]^2 dy=3 color=1')
         quit
 
 class Graph(Splotter):
@@ -872,7 +880,7 @@ class goodstyle(Style):
                     sio.custom_warn('Could not understand style from %s' %stil)
 
         if self.kind=='line':
-            # For now splot does not support gradient line coloring
+            # For now seplot does not support gradient line coloring
             if not self.setcolor:
                 self.setcolor=colours[int(ceil(numr/4)) %4]
 
@@ -930,5 +938,5 @@ if __name__ == "__main__":
     nargs=len(sys.argv);
     args=sys.argv[1:];
 
-    splot=Splotter(arguments=args)
-    splot.make_and_save()
+    seplot=Splotter(arguments=args)
+    seplot.make_and_save()

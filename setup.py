@@ -1,7 +1,21 @@
 from setuptools import setup
- 
+from seplot import seplot as sep
+
+with open("seplot/README.md", "r") as handle:
+    splot_description = handle.read()
+
+version=sep.__VERSION__
+
 setup(
-     name='splot',   			
-     version='1.0',                          
-     packages=['splot' ]                 
+     name='seplot',
+     version=version,
+
+
+
+     author="Serge Dmitrieff",
+     description="A front-end for Python PyX",
+     long_description=splot_description,
+     url="https://github.com/SergeDmi/Python-Tools/",
+
+     packages=['seplot' ]
  )

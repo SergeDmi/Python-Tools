@@ -1,1 +1,1 @@
-from .splot import *
+from .seplot import *
