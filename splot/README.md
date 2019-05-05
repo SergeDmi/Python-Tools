@@ -64,11 +64,11 @@ $ splot.py data.txt y='A[:,1]^2'
 ```
 Here *A[:,1]* is the *second* column of *A*. We can use the same syntax for conditional expressions using the keyword **if** :
 ```shell
-	$ splot.py data.txt y='A[:,1]^2' if='A[:,1]>0'
+$ splot.py data.txt y='A[:,1]^2' if='A[:,1]>0'
 ```
 We can now combine several features :
 ```shell
-	$ splot.py data.txt y='A[:,1]^2' if='A[:,1]>0' color=blue
+$ splot.py data.txt y='A[:,1]^2' if='A[:,1]>0' color=blue
 		   and if='A[:,1]<0' color=red
 ```
 We used the **and** keyword to re-use the data from *data.txt* into another plot element (note that the shorthand  **andif=**... is also supported).
