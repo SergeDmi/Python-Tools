@@ -205,10 +205,6 @@ __SPLIT_MARK__ = '--split_mark--'
 def version():
     return __VERSION__
 
-def cast_help():
-    print("seplot version %s " %version())
-    print(__doc__)
-
 class Toplot:
     # Toplot is a class containing the options for plotting
     #   it also contains a method to split into two
@@ -326,9 +322,6 @@ class Splotter:
         # we iterate through arguments and assign them to global or local options
         for arg in arguments:
             # Global options
-            if arg.endswith('-help'):
-                cast_help()
-                sys.exit()
             if arg.startswith('out='):
                 self.out=arg[4:]
             elif arg.startswith('xlabel='):
@@ -356,7 +349,8 @@ class Splotter:
             elif arg.startswith('legend=') or arg.startswith('title'):
                 self.key=graph.key.key(pos="tl", dist=self.kdist)
                 current_args.append(arg)
-            elif arg.startswith('--help'):
+            elif arg.endswith('-help'):
+                print("seplot version %s " %version())
                 self.usage()
             elif arg.startswith('-autol'):
                 self.autolabel=1
