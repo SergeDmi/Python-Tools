@@ -18,7 +18,9 @@ setup(
      url="https://github.com/SergeDmi/Python-Tools/",
      install_requires=[
           'pyx',
-          'numpy'
+          'numpy',
+          'sio_tools'
       ],
-     packages=['seplot' ]
+     packages=['seplot' ],
+     scripts=['seplot/bin/seplot' ]
  )

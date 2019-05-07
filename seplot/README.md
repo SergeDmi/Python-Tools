@@ -6,11 +6,9 @@ https://www.biophysics.fr
 # Installation
 
 ## Required packages
-seplot requires PyX, Numpy. Pandas is necessary to import csv/excel documents.
+seplot requires PyX, Numpy, and sio_tools. Pandas is necessary to import csv/excel documents.
 
 ```shell
-$ pip3 install numpy
-$ pip3 install PyX
 $ pip3 install pandas
 ```
 

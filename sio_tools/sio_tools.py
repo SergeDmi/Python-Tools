@@ -8,6 +8,8 @@ import sys
 import os
 import warnings
 
+__VERSION__ = "0.1"
+
 try:
 	import pandas as pd
 except:
@@ -20,7 +22,6 @@ except:
 
 __exclude_key__=["__EXCLUDE_KEY__"]
 __COMMENTS__=["#","%"]
-
 
 """
 # SYNOPSIS

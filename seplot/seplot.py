@@ -9,15 +9,9 @@ from pyx import *
 from numpy import *
 from pyx.graph import axis
 import sys
+import sio_tools as sio
 
-try:
-    import seplot.sio_tools as sio
-except:
-    print('You can download sio_tools from :')
-    print('https://github.com/SergeDmi/')
-    raise ValueError('Module sio_tools required for seplot')
-
-__VERSION__ = "1.1.1"
+__VERSION__ = "1.1.3"
 
 """
 # SYNOPSIS
