@@ -63,18 +63,22 @@ $ seplot.py data.txt y='A[:,1]^2'
 ```
 Here *A[:,1]* is the *second* column of *A*. We can use the same syntax for conditional expressions using the keyword **if** :
 ```shell
-$ seplot.py data.txt y='A[:,1]^2' if='A[:,1]>0'
+$ seplot.py data.txt y='A[:,1]^2' if='y>0'
 ```
 We can now combine several features :
 ```shell
-$ seplot.py data.txt y='A[:,1]^2' if='A[:,1]>0' color=blue
-		   and if='A[:,1]<0' color=red
+$ seplot.py data.txt y='A[:,1]^2' if='y>0' color=blue
+		   and if='y<0' color=red
 ```
 We used the **and** keyword to re-use the data from *data.txt* into another plot element (note that the shorthand  **andif=**... is also supported).
 
-Thus we can easily compute and plot complex functions of the input data :
+We can easily compute and plot complex functions of the input data :
 ```shell
 $ seplot.py data.txt y='sqrt(1/(1+A[:,1]^2))/A[:,2]+sin(A[:,3])'
+```
+Similarly, the **if** keyword can be used for any function of the input data :
+```shell
+$ seplot.py data.txt y='A[:,1]^2' if='sqrt(A[:,1])>10'
 ```
 Additionally, one can  select a sub-set of the data, both by *first* choosing a range of lines (resp. columns in horizontal mode), and *second* a conditional expression, e.g. :
 ```shell

@@ -22,5 +22,5 @@ setup(
           'sio_tools'
       ],
      packages=['seplot' ],
-     scripts=['seplot/bin/seplot' ]
+     scripts=['seplot/bin/seplot','seplot/seplot.py' ]
  )

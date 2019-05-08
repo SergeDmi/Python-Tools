@@ -11,7 +11,7 @@ from pyx.graph import axis
 import sys
 import sio_tools as sio
 
-__VERSION__ = "1.1.3"
+__VERSION__ = "1.1.5"
 
 """
 # SYNOPSIS
@@ -98,12 +98,12 @@ __VERSION__ = "1.1.3"
                         the deviation is set from the fourth column of file.txt
                         the color is set from the second column of file.txt, based on a gray-level gradient
                         labels and titles use the Latex interpreter
-            seplot.py file.txt if='A[:,0]>1'
+            seplot.py file.txt if='x>1'
                         plots the second column as a function of the first if elements of the first are greater than 1
             seplot.py file.txt mode='h' if='A[0,:]>1' -xlog
                         plots the second row as a function of the first row if elements of the first row are greater than 1
                         the x axis is logarithmic
-            seplot.py file.txt mode='h' if='A[0,:]>1' andif='A[0,:]<=1'
+            seplot.py file.txt mode='h' if='x>1' andif='x<=1'
                         plots the second row as a function of the first row if elements of the first row are greater than 1
                         and (with a different style) if the elements of the first row are smaller than 1
             seplot.py range=3 -keep data_0*.txt
@@ -481,7 +481,6 @@ class Splotter:
         else:
             self.graph.plot([graph.data.points([(x,graf.Y[i],graf.dX[i],graf.dY[i],graf.S[i],graf.C[i]) for i, x in enumerate(graf.X[:])], x=1, y=2,dx=3,dy=4,size=5,color=6,title=graf.legend)],graf.style)
 
-
     def save_plot(self):
         if self.graphs:
             if self.out.endswith('.eps'):
@@ -490,7 +489,6 @@ class Splotter:
                 self.graph.writeSVGfile(self.out)
             else:
                 self.graph.writePDFfile(self.out)
-
 
     def usage(self):
         disp('seplot is a simple command line plotting tool based on PyX (PyX is awesome !)')
@@ -559,7 +557,8 @@ class Graph(Splotter):
             #if (len(self.range) or len(cond)):
             if len(range):
                 A=self.set_A_range(A,range)
-
+            # Set X Y to start with
+            self.set_init_XY(A)
             # We perform a first extraction of X and Y to be able to evalyate conditions on X,Y
             self.X=self.set_from_input(A,x,'x')
             self.Y=self.set_from_input(A,y,'y')
@@ -569,7 +568,8 @@ class Graph(Splotter):
             #if (len(self.range) or len(cond)):
             if len(cond):
                 A=self.set_A_condition(A,cond)
-
+            # Set X Y to start with
+            self.set_init_XY(A)
             # Now we perform the definitive extraction of X,Y once A has been filtered
             self.X=self.set_from_input(A,x,'x')
             self.Y=self.set_from_input(A,y,'y')
@@ -626,6 +626,17 @@ class Graph(Splotter):
                 if lenf<=16:
                     self.legend=self.fname
 
+    def set_init_XY(self,A):
+        try:
+            if self.mode=='h':
+                self.X=A[0,:]
+                self.Y=A[1,:]
+            else:
+                self.X=A[:,0]
+                self.Y=A[:,1]
+        except:
+            sio.custom_warn('Could not set initial X Y values before reading arguments')
+        return
 
     def set_n_points(self,arg):
         self.n_points=200
@@ -644,8 +655,8 @@ class Graph(Splotter):
 
     def set_from_input(self,A,input,coord):
         # We first check if axis defined by a row/column number
-        X=self.X
-        Y=self.Y
+        X=self.X;x=X
+        Y=self.Y;y=Y
         if input in self.labels:
             input=self.label_dict[input]
         try :
@@ -716,8 +727,8 @@ class Graph(Splotter):
             B=A.copy()
 
         if len(cond)>0:
-            X=self.X
-            Y=self.Y
+            X=self.X;x=X
+            Y=self.Y;y=Y
             try:
                 kept=eval(cond)
                 if self.mode=='h':

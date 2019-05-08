@@ -2,14 +2,7 @@
 This repository contains generic but useful python utilities
 
 ## seplot
-### sio_tools.py :
-  Simple I/O utilities used by other projects
-  Reading/writing array from/to file
-  Running bash jobs from python and returning output
-  File text cleanup and parsing
-  And quite a bit more…
 
-### seplot.py :    
  A command line plot maker.  
  Examples :  
  seplot position.txt  
@@ -18,6 +11,13 @@ This repository contains generic but useful python utilities
 
 ![Example](plot.png)
 
+## sio_tools
+
+  Simple I/O utilities used by other projects
+  Reading/writing array from/to file
+  Running bash jobs from python and returning output
+  File text cleanup and parsing
+  And quite a bit more…
 
 ## ply :
 Utilities to work with ply files
