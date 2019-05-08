@@ -11,7 +11,7 @@ from pyx.graph import axis
 import sys
 import sio_tools as sio
 
-__VERSION__ = "1.1.5"
+__VERSION__ = "1.1.7"
 
 """
 # SYNOPSIS
