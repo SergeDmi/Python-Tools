@@ -11,7 +11,7 @@ from pyx.graph import axis
 import sys
 import sio_tools as sio
 
-__VERSION__ = "1.1.7"
+__VERSION__ = "1.1.12"
 
 """
 # SYNOPSIS
@@ -522,6 +522,8 @@ class Graph(Splotter):
         self.range=range
         self.set_n_points(n_points)
         self.label_dict={}
+        self.color_from_data=False
+        self.legend=None
 
         self.make_auto_legend(legend)
 
@@ -577,10 +579,13 @@ class Graph(Splotter):
             self.dY=self.set_from_input(A,dy,'dy')
 
             # Now we assign colors and size if need be
-            if siz.isdigit() or siz.find('A[')>=0:
-                self.S=self.set_from_input(A,siz,'size')
-            if col.isdigit() or col.find('A[')>=0:
-                self.C=self.set_from_input(A,col,'color')
+            #if siz.isdigit() or siz.find('A[')>=0:
+            self.S=self.set_from_input(A,siz,'size')
+            #if col.isdigit() or col.find('A[')>=0:
+            self.C=self.set_from_input(A,col,'color')
+            if len(self.C):
+                self.color_from_data=True
+                #print("Set color from data")
 
             if not len(self.C):
                 self.C=self.X
@@ -611,6 +616,7 @@ class Graph(Splotter):
         # and now we can make the style !
         kwargs['col']=col ; kwargs['siz']=siz ; kwargs['is_function']=self.is_function
         kwargs['numr']=self.numr ; kwargs['dx']=dx ; kwargs['dy']=dy
+        kwargs['color_from_data']=self.color_from_data
         self.style=Style(*args,**kwargs).style
 
     def make_auto_legend(self,legend):
@@ -625,6 +631,8 @@ class Graph(Splotter):
                 lenf=len(self.fname)
                 if lenf<=16:
                     self.legend=self.fname
+            else:
+                self.legend=None
 
     def set_init_XY(self,A):
         try:
@@ -671,6 +679,23 @@ class Graph(Splotter):
                     self.set_label(self.labels[i],coord)
                 return A[:,i]
         except:
+            if coord=='color':
+                # here we make sure the input is not a color
+                try :
+                    # We first try to set it from the dictionary
+                    test_color=col_dict[input]
+                    return []
+                except :
+                    if not input.startswith('color.'):
+                        # shorthand notation is tolerated
+                        col='color.%s' %(input)
+                    try:
+                        # trying if color is a defined PyX color
+                        test_color=eval(input)
+                        return []
+                    except:
+                        False
+                        #sio.custom_warn('Could not understand color from %s' %col)
             if input:
                 # Automatic axis value : 1 to length of array
                 try:
@@ -793,7 +818,7 @@ class goodstyle(Style):
     def __init__(self,*args,
                 numr=0,
                 col='',siz='',line='',stil='',gradient='',
-                is_function=0,
+                is_function=0,color_from_data=False,
                 **kwargs):
 
         self.kind='symbol'
@@ -804,29 +829,27 @@ class goodstyle(Style):
         self.linest=linests[numr %4]
         self.gradient=color.gradient.Rainbow;
 
+
         # By default, function should be a line
         #for arg in args:
         if is_function:
             self.kind='line'
 
-        if col:
+        if col and not color_from_data:
             try :
                 # We first try to set it from the dictionary
                 self.setcolor=col_dict[col]
             except :
-                if col.isdigit() or col.find('A[')>=0:
-                    # Color should be set from the data
-                    self.setcolor=False
-                else:
-                    # color might have been passed as a proper color
-                    if not col.startswith('color.'):
-                        # shorthand notation is tolerated
-                        col='color.%s' %(col)
-                    try:
-                        # trying if color is a defined PyX color
-                        self.setcolor=eval(col)
-                    except:
-                        sio.custom_warn('Could not understand color from %s' %col)
+                if not col.startswith('color.'):
+                    # shorthand notation is tolerated
+                    col='color.%s' %(col)
+                try:
+                    # trying if color is a defined PyX color
+                    self.setcolor=eval(col)
+                except:
+                    sio.custom_warn('Could not understand color from %s' %col)
+        elif color_from_data:
+            self.setcolor=None
 
         if gradient:
             try :

@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, Extension
 from seplot import seplot as sep
 
 with open("seplot/README.md", "r") as handle:
@@ -15,6 +15,7 @@ setup(
      author="Serge Dmitrieff",
      description="A front-end for Python PyX",
      long_description=splot_description,
+     long_description_content_type='text/markdown',
      url="https://github.com/SergeDmi/Python-Tools/",
      install_requires=[
           'pyx',

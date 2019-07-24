@@ -70,7 +70,7 @@ class Shooter():
     def __init__(self, error_function=None,task="shoot",step_size=None, max_step_size=None,
                     initial_parameters=[0], epsilons=[1],
                     conditions=None,thresholds=None,
-                    force_parameters=None,max_n_steps=Inf,
+                    force_parameters=None,max_n_steps=Inf,verbose=0,
                     damping=1.0,n_jobs=1,**kwargs):
 
         if error_function is None:
@@ -83,6 +83,7 @@ class Shooter():
         self.task=task
         self.status=0
         self.max_n_steps=max_n_steps
+        self.verbose=verbose
 
 
 
@@ -173,7 +174,11 @@ class Shooter():
         status=0
         # As long as one criterion imposes, we refine the solution
         while any(criteria) and status>=0 and count<self.max_n_steps:
+            if self.verbose>0:
+                print('# parameters : %s' % parameters)
+
             [parameters,status]=self.step_shoot(parameters,errors)
+
             if status>=0:
                 if self.force_parameters is not None:
                     parameters=self.force_parameters(parameters,errors)
@@ -266,7 +271,7 @@ class Shooter():
         return x
 
     def above_threshold(self,x,x0):
-        if len(x)>1:
+        if len(x)==1:
             return abs(x)>x0
         else:
             return [abs(x)>x0]

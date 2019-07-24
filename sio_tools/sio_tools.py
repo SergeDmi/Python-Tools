@@ -8,7 +8,7 @@ import sys
 import os
 import warnings
 
-__VERSION__ = "0.1"
+__VERSION__ = "0.1.1"
 
 try:
 	import pandas as pd
@@ -191,6 +191,24 @@ def remove_comments(lines,comments=__COMMENTS__,**kwargs):
 	return lines
 
 
+# Remove commented lines / line sections
+def lines_remove_comments(lines,comments=__COMMENTS__,**kwargs):
+	new_lines=[]
+	for line in lines:
+		new_line=line_remove_comments(line,comments=comments,**kwargs)
+		if new_line:
+			new_lines.append(new_line)
+	return new_lines
+
+def line_remove_comments(line,comments=__COMMENTS__,**kwargs):
+	for c in comments:
+		k=line.find(c)
+		if k>0:
+			line=line[:k]
+		elif k==0:
+			line=''
+	return line
+
 # generates arguments and keyword arguments from arguments (e.g. sys.argv[1:])
 def make_args_and_kwargs(arguments):
 	args=[]
@@ -335,7 +353,7 @@ def make_prop_dict(fname,key):
 		ixes=[i for i,word in enumerate(words) if word.find(key)>=0]
 		for i in ixes:
 			try:
-				props[words[i+1]]=words[i+2]
+				props[words[i+1]]=line_remove_comments(clean_line(''.join(words[i+2:])))
 			except:
 				print('Could not understand property %s from configuration file %s' %(words[i],fname))
 	#for line in lines1:
