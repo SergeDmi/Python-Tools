@@ -404,11 +404,12 @@ class Splotter:
         # we return current arguments
         return current_args
 
-    def make_and_save(self):
-        self.make_plot()
-        self.save_plot()
+    def make_and_save(self,*args,**kwargs):
+        self.make_plot(*args,**kwargs)
+        self.save_plot(*args,**kwargs)
 
-    def make_plot(self):
+    def make_plot(self,*args,**kwargs):
+        self.read_args(*args,**kwargs)
         # we check if the plots must be split by and / andif
         for i,toplot in enumerate(self.future_plots):
             [is_split,new_plot]=toplot.check_split()
@@ -481,12 +482,14 @@ class Splotter:
         else:
             self.graph.plot([graph.data.points([(x,graf.Y[i],graf.dX[i],graf.dY[i],graf.S[i],graf.C[i]) for i, x in enumerate(graf.X[:])], x=1, y=2,dx=3,dy=4,size=5,color=6,title=graf.legend)],graf.style)
 
-    def save_plot(self):
+    def save_plot(self,*args,out=None,**kwargs):
+        if not out:
+            out=self.out
         if self.graphs:
-            if self.out.endswith('.eps'):
-                self.graph.writeEPSfile(self.out)
-            elif self.out.endswith('.svg'):
-                self.graph.writeSVGfile(self.out)
+            if out.endswith('.eps'):
+                self.graph.writeEPSfile(out)
+            elif out.endswith('.svg'):
+                self.graph.writeSVGfile(out)
             else:
                 self.graph.writePDFfile(self.out)
 

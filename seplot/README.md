@@ -5,24 +5,16 @@ https://www.biophysics.fr
 
 # Installation
 
+## Installing with pip3 (recommended)
+ ```shell
+ $ pip3 install seplot
+```
+
 ## Required packages
 seplot requires PyX, Numpy, and sio_tools. Pandas is necessary to import csv/excel documents.
 
 ```shell
 $ pip3 install pandas
-```
-
-## With pip3, online
- ```shell
- $ pip3 install seplot
-```
-
-## With pip3, from github
-
-```shell
-$ git clone https://github.com/SergeDmi/Python-Tools.git python_tools
-$ cd python_tools
-$ pip3 install .
 ```
 
 # Usage
