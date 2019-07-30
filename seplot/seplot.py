@@ -11,7 +11,7 @@ from pyx.graph import axis
 import sys
 import sio_tools as sio
 
-__VERSION__ = "1.1.12"
+__VERSION__ = "1.1.13"
 
 """
 # SYNOPSIS
@@ -604,7 +604,7 @@ class Graph(Splotter):
                 self.C=self.X
             if not len(self.S):
                 self.S=self.X
-            
+
             # We check size
             lX=len(self.X)
             lY=len(self.Y)
