@@ -174,8 +174,8 @@ class Shooter():
         status=0
         # As long as one criterion imposes, we refine the solution
         while any(criteria) and status>=0 and count<self.max_n_steps:
-            if self.verbose>0:
-                print('# parameters : %s' % parameters)
+            #if self.verbose>0:
+            #    print('# parameters : %s' % parameters)
 
             [parameters,status]=self.step_shoot(parameters,errors)
 
@@ -195,8 +195,17 @@ class Shooter():
         status=1
         if self.n_jobs==1:
             d_errors=array([self.compute_errors(parameters+d_param) for d_param in self.mat_epsilons])
+            #print([parameters+d_param  for d_param in self.mat_epsilons ])
+            #print(d_errors)
+            #print(shape(d_errors))
+            #print(type(d_errors))
         else:
-            d_errors=array(self.pool.map(self.compute_errors, [parameters+d_param for d_param in self.mat_epsilons]))
+            cc=self.compute_errors
+            d_errors=array(self.pool.map(cc, [parameters+d_param for d_param in self.mat_epsilons]))
+            #print([parameters+d_param  for d_param in self.mat_epsilons ])
+            #print(d_errors)
+            #print(shape(d_errors))
+            #print(type(d_errors))
 
         Jacobian=array([(error_col - errors)/self.epsilons[i] for i,error_col in enumerate(d_errors)])
         try:
@@ -234,7 +243,8 @@ class Shooter():
 
     # Prepares a pool of workers
     def prepare_pool(self):
-        self.pool=Pool(nodes=self.n_jobs)
+        #self.pool=Pool(nodes=self.n_jobs)
+        self.pool=Pool(self.n_jobs)
         return
 
     # Prepares the array of perturbations to compute the gradient
@@ -246,7 +256,10 @@ class Shooter():
 
     # Wrapper for the error function
     def compute_errors(self,parameters):
+        #print("# ---- got parameters: %s" % parameters)
+        #print(self.error_function)
         errors=self.error_function(parameters)
+        #print("# ---- got errors: %s" % errors)
         return errors
 
     # Computes the criteria from errors
