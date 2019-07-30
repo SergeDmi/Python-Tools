@@ -54,6 +54,7 @@
 
 import types
 from numpy import *
+import copy
 
 MULTIPROCESSING=1
 try:
@@ -112,7 +113,7 @@ class Shooter():
                 assert(damping>0)
                 self.damping=lambda pars,errs,dF : self.limit(dF/damping)
             except:
-                raise ValueError('Unrecognized input type for daming : should be function or a scalar >0 ')
+                raise ValueError('Unrecognized input type for damping : should be function or a scalar >0 ')
 
 
         # Function handle : returns corrected parameters
@@ -156,7 +157,7 @@ class Shooter():
         if self.n_jobs>1:
             self.prepare_pool()
 
-
+        #self.compute_error_jobs=[copy.deepcopy(compute_error) for i in range(n_jobs)]
     ## Class methods
 
     # Solving for the current state
@@ -200,8 +201,8 @@ class Shooter():
             #print(shape(d_errors))
             #print(type(d_errors))
         else:
-            cc=self.compute_errors
-            d_errors=array(self.pool.map(cc, [parameters+d_param for d_param in self.mat_epsilons]))
+            #cc=
+            d_errors=array(self.pool.map(self.compute_errors, [parameters+d_param for d_param in self.mat_epsilons]))
             #print([parameters+d_param  for d_param in self.mat_epsilons ])
             #print(d_errors)
             #print(shape(d_errors))
@@ -260,6 +261,7 @@ class Shooter():
         #print(self.error_function)
         errors=self.error_function(parameters)
         #print("# ---- got errors: %s" % errors)
+        #print("parameters : %s ---- error : %s" %(parameters,errors))
         return errors
 
     # Computes the criteria from errors
