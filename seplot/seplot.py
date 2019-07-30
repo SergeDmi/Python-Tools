@@ -536,13 +536,8 @@ class Graph(Splotter):
         elif self.data.size>0:
             A=self.data
         else:
-            # This is if we are dealing with (hopefuly) numeric data
             in_data=sio.data_import_wrapper(self.fname)
             A=in_data['data']
-            self.labels=in_data['labels']
-
-            for i,label in enumerate(self.labels):
-                self.label_dict[label]=i
 
             # Dirty tricks for maximum compatibility
             if min(in_data['size_x'],in_data['size_y'])==1:
@@ -550,6 +545,20 @@ class Graph(Splotter):
                 self.y=0
             if in_data['size_x']==1:
                 self.mode='h'
+
+            # This is if we are dealing with (hopefuly) numeric data
+
+            labels=in_data['labels']
+            if self.mode=='v':
+                ncols=A.shape[1]
+            else:
+                ncols=A.shape[0]
+
+            if len(labels)<=ncols:
+                self.labels=in_data['labels']
+            #print(self.labels)
+            for i,label in enumerate(self.labels):
+                self.label_dict[label]=i
 
         # using local options
         for arg in args:
@@ -590,11 +599,12 @@ class Graph(Splotter):
                 self.color_from_data=True
                 #print("Set color from data")
 
+
             if not len(self.C):
                 self.C=self.X
             if not len(self.S):
                 self.S=self.X
-
+            
             # We check size
             lX=len(self.X)
             lY=len(self.Y)
@@ -668,8 +678,10 @@ class Graph(Splotter):
         # We first check if axis defined by a row/column number
         X=self.X;x=X
         Y=self.Y;y=Y
+
         if input in self.labels:
             input=self.label_dict[input]
+
         try :
             i=int(input)
             if self.mode=='h':
