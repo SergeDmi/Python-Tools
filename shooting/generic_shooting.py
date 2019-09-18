@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
 # Copyright Serge Dmitrieff
@@ -51,14 +51,12 @@
     print(shooting_problem.extremum)
 
 """
+#@TODO : Lots of stuff, for instance damping as an array
 
 import types
 from numpy import *
-import copy
-
 MULTIPROCESSING=1
 try:
-    #from pathos.multiprocessing import ProcessingPool as Pool
     # We might want to use ThreadPool as the computations might need to call threads/processes themselves
     from pathos.multiprocessing import ThreadPool as Pool
 except:
@@ -67,7 +65,7 @@ except:
 STATUS_DICTIONARY={'Not started' : 0, 'Success' : 1, 'Singular Jacobian' : -1, 'Exceeded count'  : -2 }
 
 class Shooter():
-    # Shooter is a class implemeting linear shooting method
+    # Shooter is a class implementing a linear shooting method
     def __init__(self, error_function=None,task="shoot",step_size=None, max_step_size=None,
                     initial_parameters=[0], epsilons=[1],
                     conditions=None,thresholds=None,
@@ -86,8 +84,6 @@ class Shooter():
         self.max_n_steps=max_n_steps
         self.verbose=verbose
 
-
-
         if task=="minimize" or task=="maximize" or task=="extremize":
             self.integral_function=self.error_function
             self.error_function=self.compute_derivative(self.integral_function)
@@ -98,7 +94,6 @@ class Shooter():
 
         # How many jobs (if multiprocessing)
         self.n_jobs=n_jobs
-
 
         if max_step_size is not None:
             self.limit=lambda dF : self.limit_step_size(dF,max_step_size)
@@ -148,7 +143,7 @@ class Shooter():
 
         # If multiprocessing
         # Warning, multiprocessing has a lot of overhead
-        #           use only if error_function is slow
+        #           use only if error_function is **SUPER** slow (seconds)
         if self.n_jobs>1:
             if MULTIPROCESSING==0:
                 print("Warning : multiprocessing unavailable")
@@ -157,7 +152,7 @@ class Shooter():
         if self.n_jobs>1:
             self.prepare_pool()
 
-        #self.compute_error_jobs=[copy.deepcopy(compute_error) for i in range(n_jobs)]
+
     ## Class methods
 
     # Solving for the current state
@@ -196,19 +191,11 @@ class Shooter():
         status=1
         if self.n_jobs==1:
             d_errors=array([self.compute_errors(parameters+d_param) for d_param in self.mat_epsilons])
-            #print([parameters+d_param  for d_param in self.mat_epsilons ])
-            #print(d_errors)
-            #print(shape(d_errors))
-            #print(type(d_errors))
         else:
-            #cc=
             d_errors=array(self.pool.map(self.compute_errors, [parameters+d_param for d_param in self.mat_epsilons]))
-            #print([parameters+d_param  for d_param in self.mat_epsilons ])
-            #print(d_errors)
-            #print(shape(d_errors))
-            #print(type(d_errors))
 
         Jacobian=array([(error_col - errors)/self.epsilons[i] for i,error_col in enumerate(d_errors)])
+
         try:
             dF=-linalg.solve(Jacobian,errors)
         except:
@@ -217,11 +204,6 @@ class Shooter():
 
         if status>0:
             [parameters,status]=self.compute_new_parameters(parameters,errors,dF,status)
-            # We check what kind of dumping we have
-            #if isinstance(self.damping,types.FunctionType):
-            #    parameters=parameters+dF/self.damping(parameters,errors)
-            #else:
-            #    parameters=parameters+dF/self.damping
 
         return parameters,status
 
@@ -244,7 +226,6 @@ class Shooter():
 
     # Prepares a pool of workers
     def prepare_pool(self):
-        #self.pool=Pool(nodes=self.n_jobs)
         self.pool=Pool(self.n_jobs)
         return
 
@@ -259,15 +240,14 @@ class Shooter():
     def compute_errors(self,parameters):
         #print("# ---- got parameters: %s" % parameters)
         #print(self.error_function)
-        errors=self.error_function(parameters)
         #print("# ---- got errors: %s" % errors)
         #print("parameters : %s ---- error : %s" %(parameters,errors))
-        return errors
+        #return errors
+        return self.error_function(parameters)
 
     # Computes the criteria from errors
     def compute_criteria(self,errors):
-        criteria=self.conditions(errors)
-        return criteria
+        return self.conditions(errors)
 
     # If we try to maximize a function F, the error function is the derivative of F
     def compute_derivative(self,func):
@@ -278,7 +258,6 @@ class Shooter():
     def column_derivatives(self,func,x):
         Fx=func(x)
         return array([squeeze((func(x+d_param)-Fx)/(self.epsilons[i])) for i,d_param in enumerate(self.mat_epsilons)])
-
 
     ## Generic helper functions
     # Any function ; meant to test the program
@@ -296,8 +275,9 @@ class Shooter():
 
     def limit_step_size(self,dF,max_step_size):
         step=linalg.norm(dF)
-        if step>max_step_size:
-            print('Warning : limiting step size ')
+        if any(step>max_step_size):
+            if self.verbose:
+                print('Warning : limiting step size ')
             return dF*max_step_size/step
         else:
             return dF

@@ -7,6 +7,8 @@ import os.path
 import sys
 import os
 import warnings
+import copy
+
 
 __VERSION__ = "0.1.1"
 
@@ -252,7 +254,7 @@ def clean_line(line):
 def clean_lines(lines):
 	for i,line in enumerate(lines):
 		lines[i]=clean_line(line)
-	return lines
+	return [line for line in lines if line]
 
 
 #creates an array of numbers equi valent to matlab minA:stepA:maxA
@@ -459,7 +461,8 @@ def import_from_frames(frames):
 	return {'data' : data , 'labels' : labels, 'size_x' : sx , 'size_y' : sy , 'body' : [] , 'header' : [] }
 
 # Extract space separatated value array from file
-def getdata_lines(lines,**kwargs):
+def getdata_lines(old_lines,**kwargs):
+	lines=copy.copy(old_lines)
 	lines=clean_lines(remove_comments(lines,**kwargs))
 	#print lines
 	nl=len(lines)
