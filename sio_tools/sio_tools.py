@@ -10,7 +10,7 @@ import warnings
 import copy
 
 
-__VERSION__ = "0.1.5"
+__VERSION__ = "0.1.6"
 
 try:
 	import pandas as pd
@@ -37,7 +37,7 @@ __COMMENTS__=["#","%"]
 
 
 ## Warning tools
-def current_version():
+def version():
     return __VERSION__
 
 def custom_warn(message):
@@ -96,6 +96,14 @@ def bjarray(jname,fname,ename,a,b):
 def bjobs(jname,fname,ename,jvals):
 	return bjarray(jname,fname,ename,min(jvals),max(jvals))
 
+
+# Make an array from a string containing an array
+def make_array_from_str(value):
+    i=value.find('[')
+    j=value.find(']')
+    value=value[i+1:j]
+    elements=value.split(',')
+    return array([float(val) for val in elements])
 
 #Removes extension from file
 def remove_ext(fname):
