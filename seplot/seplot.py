@@ -11,7 +11,7 @@ from pyx.graph import axis
 import sys
 import sio_tools as sio
 
-__VERSION__ = "1.1.13"
+__VERSION__ = "1.1.14"
 
 """
 # SYNOPSIS
@@ -126,7 +126,8 @@ __VERSION__ = "1.1.13"
 
 """
 
-#@TODO : sepearate file for dictionaries
+#@TODO  : separate file for dictionaries
+#       : histogram support
 
 # Basic set of colours
 colours=[color.gray(0.0),color.gray(0.5),color.rgb.red,color.rgb.blue]
@@ -200,6 +201,15 @@ __SPLIT_MARK__ = '--split_mark--'
 
 def version():
     return __VERSION__
+
+def get_histogram(Y,bins='auto'):
+    (Y,X)=histogram(Y,bins)
+    nx=len(X)
+    if nx:
+        X=(X[0:(nx-1)]+X[1:nx])/2.0
+    else:
+        raise ValueError('Empty histogram from numpy.histogram')
+    return (Y,X)
 
 class Toplot:
     # Toplot is a class containing the options for plotting
@@ -474,13 +484,24 @@ class Splotter:
         for graf in self.graphs:
             self.plot(graf)
 
+        self.graph.finish()
+
+        for graf in self.graphs:
+            if graf.is_histogram:
+                for plot in graf.ploted:
+                    self.graph.stroke(plot.path,graf.stroke_style)
+
+                #self.graph.stroke(path, [deco.filled([color.gray(0.8)])])
+
     def plot(self,graf):
         if graf.is_function==1:
-            self.graph.plot(graph.data.function(graf.function_string,points=graf.n_points,title=graf.legend),graf.style)
+            graf.ploted=self.graph.plot(graph.data.function(graf.function_string,points=graf.n_points,title=graf.legend),graf.style)
         elif graf.is_histogram==1:
-            self.graph.plot([graph.data.points([(x,graf.Y[i]) for i, x in enumerate(graf.X[:])], x=1, y=2,title=graf.legend)],graf.style)
+            graf.ploted=self.graph.plot([graph.data.points([(x,graf.Y[i]) for i, x in enumerate(graf.X[:])], x=1, y=2,title=graf.legend)],graf.style)
+            #self.graph.plot([graph.data.points([(x,graf.Y[i]) for i, x in enumerate(graf.X[:])], xname=1, y=2,title=graf.legend)],graf.style)
+            #self.graph.plot([graph.data.points([(x,graf.Y[i]) for i, x in enumerate(graf.X[:])],xname=0, y=2,title=graf.legend)],[graph.style.changebar()])
         else:
-            self.graph.plot([graph.data.points([(x,graf.Y[i],graf.dX[i],graf.dY[i],graf.S[i],graf.C[i]) for i, x in enumerate(graf.X[:])], x=1, y=2,dx=3,dy=4,size=5,color=6,title=graf.legend)],graf.style)
+            graf.ploted=self.graph.plot([graph.data.points([(x,graf.Y[i],graf.dX[i],graf.dY[i],graf.S[i],graf.C[i]) for i, x in enumerate(graf.X[:])], x=1, y=2,dx=3,dy=4,size=5,color=6,title=graf.legend)],graf.style)
 
     def save_plot(self,*args,out=None,**kwargs):
         if not out:
@@ -520,6 +541,7 @@ class Graph(Splotter):
         self.X=[] ; self.Y=[] ; self.S=[] ; self.C=[]
         self.is_function=0
         self.is_histogram=0
+        self.make_histogram=0
         self.xlabel=None ; self.ylabel=None
         self.labels=[]
         self.range=range
@@ -527,6 +549,8 @@ class Graph(Splotter):
         self.label_dict={}
         self.color_from_data=False
         self.legend=None
+        self.path=None
+        self.stroke_style=None
 
         self.make_auto_legend(legend)
 
@@ -565,40 +589,78 @@ class Graph(Splotter):
             if arg.startswith('-hist'):
                 self.is_histogram=1
 
+        # using local options
+        for arg in args:
+            if arg.startswith('-makehist'):
+                self.is_histogram=1
+                self.make_histogram=1
+
 
         if not self.is_function:
-            # This is if we are dealing with (hopefuly) numeric data
-            #if (len(self.range) or len(cond)):
-            if len(range):
-                A=self.set_A_range(A,range)
-            # Set X Y to start with
-            self.set_init_XY(A)
-            # We perform a first extraction of X and Y to be able to evalyate conditions on X,Y
-            self.X=self.set_from_input(A,x,'x')
-            self.Y=self.set_from_input(A,y,'y')
-            self.dX=self.set_from_input(A,dx,'dx')
-            self.dY=self.set_from_input(A,dy,'dy')
+            if not self.make_histogram:
+                # This is if we are dealing with (hopefuly) numeric data
+                #if (len(self.range) or len(cond)):
+                if len(range):
+                    A=self.set_A_range(A,range)
+                # Set X Y to start with
+                self.set_init_XY(A)
+                # We perform a first extraction of X and Y to be able to evalyate conditions on X,Y
+                self.X=self.set_from_input(A,x,'x')
+                self.Y=self.set_from_input(A,y,'y')
+                self.dX=self.set_from_input(A,dx,'dx')
+                self.dY=self.set_from_input(A,dy,'dy')
 
-            #if (len(self.range) or len(cond)):
-            if len(cond):
-                A=self.set_A_condition(A,cond)
-            # Set X Y to start with
-            self.set_init_XY(A)
-            # Now we perform the definitive extraction of X,Y once A has been filtered
-            self.X=self.set_from_input(A,x,'x')
-            self.Y=self.set_from_input(A,y,'y')
-            self.dX=self.set_from_input(A,dx,'dx')
-            self.dY=self.set_from_input(A,dy,'dy')
+                #if (len(self.range) or len(cond)):
+                if len(cond):
+                    A=self.set_A_condition(A,cond)
+                # Set X Y to start with
+                self.set_init_XY(A)
+                # Now we perform the definitive extraction of X,Y once A has been filtered
+                self.X=self.set_from_input(A,x,'x')
+                self.Y=self.set_from_input(A,y,'y')
+                self.dX=self.set_from_input(A,dx,'dx')
+                self.dY=self.set_from_input(A,dy,'dy')
 
-            # Now we assign colors and size if need be
-            #if siz.isdigit() or siz.find('A[')>=0:
-            self.S=self.set_from_input(A,siz,'size')
-            #if col.isdigit() or col.find('A[')>=0:
-            self.C=self.set_from_input(A,col,'color')
-            if len(self.C):
-                self.color_from_data=True
-                #print("Set color from data")
-
+                # Now we assign colors and size if need be
+                #if siz.isdigit() or siz.find('A[')>=0:
+                self.S=self.set_from_input(A,siz,'size')
+                #if col.isdigit() or col.find('A[')>=0:
+                self.C=self.set_from_input(A,col,'color')
+                if len(self.C):
+                    self.color_from_data=True
+                    #print("Set color from data")
+            else:
+                # We're making a histogram !
+                self.X=self.set_from_input(A,y,'y')
+                if len(cond):
+                    A=self.set_A_condition(A,cond)
+                self.Y=self.set_from_input(A,y,'y')
+                bin_number=0
+                try:
+                    bin_number=int(x)
+                    if not bin_number==0:
+                        try:
+                            (self.Y,self.X)=get_histogram(self.Y,bins=bin_number)
+                        except:
+                            raise ValueError('Could not make histogram with data Y=%s and bins=%s (assumed bin number)'  %(y,x) )
+                    else:
+                        (self.Y,self.X)=get_histogram(self.Y,bins='auto')
+                except:
+                    try:
+                        bins=sio.make_array_from_str(x)
+                        print(bins)
+                        if len(bins):
+                            try:
+                                (self.Y,self.X)=get_histogram(self.Y,bins=bins)
+                            except:
+                                raise ValueError('Could not make histogram with data Y=%s and bins=%s (assumed array)'  %(y,bins) )
+                    except:
+                        try:
+                            (self.Y,self.X)=get_histogram(self.Y,bins=x)
+                        except:
+                            raise ValueError('Could not make histogram with data Y=%s and bins=%s (assumed text or other)'  %(y,x) )
+                #print(self.X)
+                #print(self.Y)
 
             if not len(self.C):
                 self.C=self.X
@@ -630,7 +692,17 @@ class Graph(Splotter):
         kwargs['col']=col ; kwargs['siz']=siz ; kwargs['is_function']=self.is_function
         kwargs['numr']=self.numr ; kwargs['dx']=dx ; kwargs['dy']=dy
         kwargs['color_from_data']=self.color_from_data
-        self.style=Style(*args,**kwargs).style
+        kwargs['is_histogram']=self.is_histogram
+
+        style=Style(*args,**kwargs)
+        self.style=style.style
+
+
+        if self.is_histogram:
+            #self.stroke=Style(*args,**kwargs).style
+             self.stroke_style=style.stroke_style
+
+             #self.stroke_style=Style(*args,**kwargs.style)
 
     def make_auto_legend(self,legend):
         if legend=='None' or legend=='none':
@@ -795,7 +867,7 @@ class Style(Graph):
         self.is_histogram=0
 
         for arg in args:
-            if arg.startswith('-hist'):
+            if arg.startswith('-hist') or arg.startswith('-makehist'):
                 self.is_histogram=1
         #print(self.goodstyle.setcolor)
         if len(dx)>0 or len(dy)>0:
@@ -825,7 +897,12 @@ class Style(Graph):
                 self.style=[graph.style.line([self.goodstyle.linest,self.goodstyle.linew,self.goodstyle.setcolor]),graph.style.errorbar(errorbarattrs=self.dxy)]
 
         if self.is_histogram:
-            self.style=[graph.style.histogram()]
+            #self.style=[graph.style.bar()]
+            self.style=[graph.style.histogram(lineattrs=[self.goodstyle.linew,self.goodstyle.setcolor],fillable=1,fromvalue=1)]
+
+            #skwa=kwargs
+            #stroke_style=goodstyle(*args,**kwargs)
+            self.stroke_style=[deco.filled([self.goodstyle.setcolor])]
 
 
 class goodstyle(Style):
