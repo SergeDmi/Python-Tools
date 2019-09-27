@@ -2,6 +2,7 @@ from setuptools import setup
 from sio_tools import sio_tools as sio
 
 version=sio.__VERSION__
+print(version)
 
 setup(
      name='sio_tools',

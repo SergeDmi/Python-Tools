@@ -10,7 +10,7 @@ import warnings
 import copy
 
 
-__VERSION__ = "0.1.1"
+__VERSION__ = "0.1.5"
 
 try:
 	import pandas as pd
@@ -37,6 +37,8 @@ __COMMENTS__=["#","%"]
 
 
 ## Warning tools
+def current_version():
+    return __VERSION__
 
 def custom_warn(message):
 	warnings.formatwarning = simp_formatwarning
@@ -254,7 +256,7 @@ def clean_line(line):
 def clean_lines(lines):
 	for i,line in enumerate(lines):
 		lines[i]=clean_line(line)
-	return [line for line in lines if line]
+	return [line for line in lines if line and not line.isspace()]
 
 
 #creates an array of numbers equi valent to matlab minA:stepA:maxA
