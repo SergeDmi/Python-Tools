@@ -12,7 +12,7 @@ import sys
 import sio_tools as sio
 import copy
 
-__VERSION__ = "1.1.16"
+__VERSION__ = "1.1.17"
 
 """
 # SYNOPSIS

@@ -47,6 +47,16 @@ plot.make_and_save()
 ```
 This readme focuses on the command-line interface, but all instructions can also be used equally easily through the python interface.
 
+### Histograms
+```shell
+$ seplot.py data.txt x=0 y=1 dy=2 and x=0 y=1 line=1
+```
+Does a scatter plot of the second column as a function of the first, using the third column for error bars. Then does a line plot of the secund column as a function of the first.
+
+```shell
+$ seplot.py data.txt -hist x=10 y=0 data.txt -hist x='[0,1,2,3,4]' y=0
+```
+Does a histogram of the first column (y=0) of data.txt, with 10 bins (x=10) and then with bins centered around 0,1,2,3,4.
 
 ### Data manipulation and conditional expressions
  Using Python's *eval()* function, we can perform operations on the input data. Data read from the data file (eg. data.txt) is stored in a numpy array called *A*. We can apply any numpy function on *A* in *seplot* through a simple syntax :
@@ -114,7 +124,7 @@ We can use the instruction :
 ```shell
 $ seplot.py data.txt -autolabel
 ```
-Which will yield *xlabel}=time* and  *ylabel=position*.
+Which will yield *xlabel=time* and  *ylabel=position*.
 
 We can also specify the position of the graph legend, e.g. with *key=tl* for the top left :
 ```shell
