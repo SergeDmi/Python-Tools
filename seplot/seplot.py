@@ -10,8 +10,9 @@ from numpy import *
 from pyx.graph import axis
 import sys
 import sio_tools as sio
+import copy
 
-__VERSION__ = "1.1.14"
+__VERSION__ = "1.1.16"
 
 """
 # SYNOPSIS
@@ -127,7 +128,6 @@ __VERSION__ = "1.1.14"
 """
 
 #@TODO  : separate file for dictionaries
-#       : histogram support
 
 # Basic set of colours
 colours=[color.gray(0.0),color.gray(0.5),color.rgb.red,color.rgb.blue]
@@ -238,6 +238,13 @@ class Toplot:
             future_args=self.arguments
             self.arguments=self.arguments[0:n_split]
             future_args.pop(n_split)
+            if len(future_args)>n_split:
+                if future_args[n_split]=='-discard':
+                    if len(future_args)>n_split+1:
+                        future_args=future_args[(n_split+1):]
+                    else:
+                        future_args=[]
+
             new_dict={**self.__dict__}
             new_dict['arguments']=future_args
             #print('new object with : %s ' %(new_dict))
@@ -275,6 +282,7 @@ class Splotter:
     # It mostly sorts arguments and prepares global plot options
     def __init__(self,*args,arguments=[],data=[],**kwargs):
         ## First we initialize class members
+        self.canvas=canvas.canvas()
         #if not args and not data:
         #    self.usage()
         self.out='plot'
@@ -392,6 +400,8 @@ class Splotter:
             # If it's not an option, it's definitey a filename
             elif arg=='and':
                 current_args.append(__SPLIT_MARK__)
+                if keep==0:
+                    current_args.append('-discard')
             else:
                 # If there is already a name for a future plot
                 if has_name:
@@ -437,7 +447,6 @@ class Splotter:
 
             #print(i)
         #self.graphs=[Graph(toplot) for toplot in self.future_plots]
-
         if self.autolabel:
             for graf in self.graphs:
                 if graf.xlabel:
@@ -483,20 +492,26 @@ class Splotter:
         ## Here we do the plotting itlsef
         for graf in self.graphs:
             self.plot(graf)
-
+        ## We finish() the graph to be able to work with pathes
         self.graph.finish()
 
+        ## Now if there are graphs with a stroke_style, we paint them !
+        # This is meant for histograms
         for graf in self.graphs:
-            if graf.is_histogram:
+            if len(graf.stroke_style):
                 for plot in graf.ploted:
-                    self.graph.stroke(plot.path,graf.stroke_style)
+                    self.canvas.stroke(plot.path,graf.stroke_style)
 
-                #self.graph.stroke(path, [deco.filled([color.gray(0.8)])])
+        self.canvas.insert(self.graph)
+
+
+
 
     def plot(self,graf):
         if graf.is_function==1:
             graf.ploted=self.graph.plot(graph.data.function(graf.function_string,points=graf.n_points,title=graf.legend),graf.style)
         elif graf.is_histogram==1:
+            #print(graph.X)
             graf.ploted=self.graph.plot([graph.data.points([(x,graf.Y[i]) for i, x in enumerate(graf.X[:])], x=1, y=2,title=graf.legend)],graf.style)
             #self.graph.plot([graph.data.points([(x,graf.Y[i]) for i, x in enumerate(graf.X[:])], xname=1, y=2,title=graf.legend)],graf.style)
             #self.graph.plot([graph.data.points([(x,graf.Y[i]) for i, x in enumerate(graf.X[:])],xname=0, y=2,title=graf.legend)],[graph.style.changebar()])
@@ -508,11 +523,12 @@ class Splotter:
             out=self.out
         if self.graphs:
             if out.endswith('.eps'):
-                self.graph.writeEPSfile(out)
+                self.canvas.writeEPSfile(out)
             elif out.endswith('.svg'):
-                self.graph.writeSVGfile(out)
+                self.canvas.writeSVGfile(out)
             else:
-                self.graph.writePDFfile(self.out)
+                #self.graph.writePDFfile(self.out)
+                self.canvas.writePDFfile(self.out)
 
     def usage(self):
         disp('seplot is a simple command line plotting tool based on PyX (PyX is awesome !)')
@@ -526,7 +542,7 @@ class Splotter:
 class Graph(Splotter):
     # Graph is a class containing a single line/set of points and their style, created from class Toplot
     def __init__(self,*args,
-                x=0,y=1,dx=[],dy=[],col='',siz='',
+                x=0,y=1,dx=[],dy=[],col='',siz='',stil='',
                 cond=[],range=[],
                 function_string='',legend='',
                 fname='',data=[],numr=0,mode='v',
@@ -585,15 +601,20 @@ class Graph(Splotter):
                 self.label_dict[label]=i
 
         # using local options
-        for arg in args:
-            if arg.startswith('-hist'):
-                self.is_histogram=1
+        #for arg in args:
+        #    if arg.startswith('-hist'):
+        #        self.is_histogram=1
+        # There should be a style : bar
 
         # using local options
         for arg in args:
-            if arg.startswith('-makehist'):
+            if arg.startswith('-hist'):
                 self.is_histogram=1
                 self.make_histogram=1
+                if not stil:
+                    stil='B'
+                elif not (stil=='b' or stil=='B'):
+                    sio.warning('Forcing style to histogram')
 
 
         if not self.is_function:
@@ -629,6 +650,7 @@ class Graph(Splotter):
                 if len(self.C):
                     self.color_from_data=True
                     #print("Set color from data")
+
             else:
                 # We're making a histogram !
                 self.X=self.set_from_input(A,y,'y')
@@ -648,10 +670,11 @@ class Graph(Splotter):
                 except:
                     try:
                         bins=sio.make_array_from_str(x)
-                        print(bins)
+                        #print(bins)
                         if len(bins):
                             try:
-                                (self.Y,self.X)=get_histogram(self.Y,bins=bins)
+                                #(self.Y,self.X)=get_histogram(self.Y,bins=bins)
+                                (self.Y,self.X)=histogram(self.Y,bins)
                             except:
                                 raise ValueError('Could not make histogram with data Y=%s and bins=%s (assumed array)'  %(y,bins) )
                     except:
@@ -690,17 +713,20 @@ class Graph(Splotter):
 
         # and now we can make the style !
         kwargs['col']=col ; kwargs['siz']=siz ; kwargs['is_function']=self.is_function
-        kwargs['numr']=self.numr ; kwargs['dx']=dx ; kwargs['dy']=dy
+        kwargs['numr']=self.numr ; kwargs['dx']=dx ; kwargs['dy']=dy ; kwargs['stil']=stil
         kwargs['color_from_data']=self.color_from_data
-        kwargs['is_histogram']=self.is_histogram
+        #kwargs['is_histogram']=self.is_histogram
 
         style=Style(*args,**kwargs)
         self.style=style.style
+        self.stroke_style=style.stroke_style
 
+        if style.goodstyle.kind=='histogram':
+            self.is_histogram=1
 
-        if self.is_histogram:
+        #if self.is_histogram:
             #self.stroke=Style(*args,**kwargs).style
-             self.stroke_style=style.stroke_style
+            #self.stroke_style=style.stroke_style
 
              #self.stroke_style=Style(*args,**kwargs.style)
 
@@ -795,10 +821,10 @@ class Graph(Splotter):
                     try:
                         return eval(input)
                     except:
-                        print('We could note evaluate %s from %s' %(coord,input))
+                        sio.warning('We could note evaluate %s from %s' %(coord,input))
                     return []
                 except:
-                    print('We could note evaluate %s from %s' %(coord,input))
+                    sio.warning('We could note evaluate %s from %s' %(coord,input))
             else:
                 return []
 
@@ -820,7 +846,7 @@ class Graph(Splotter):
                 elif lr==3:
                     B=B[iii[0]:iii[2]:iii[1]]
                 else:
-                    print('Range must be of the format begin:end or begin:range')
+                    #print('Range must be of the format begin:end or begin:range')
                     raise ValueError('Range must be of the format begin:end or begin:step:end')
             except:
                 raise ValueError('Cannot convert Range to adequate format (note : range must be of the format begin:end or begin:step:end)')
@@ -861,14 +887,19 @@ class Style(Graph):
 
         self.style=[]
         self.dxy=[]
+        self.stroke_style=[]
         if numr:
             kwargs['numr']=numr
         self.goodstyle=goodstyle(*args,**kwargs)
-        self.is_histogram=0
+        #print(self.goodstyle.kind)
+        #self.is_histogram=0
 
-        for arg in args:
-            if arg.startswith('-hist') or arg.startswith('-makehist'):
-                self.is_histogram=1
+        #for arg in args:
+        #    if arg.startswith('-hist') or arg.startswith('-makehist'):
+        #        self.is_histogram=1
+
+        if self.goodstyle.kind=='histogram':
+            self.is_histogram=1
         #print(self.goodstyle.setcolor)
         if len(dx)>0 or len(dy)>0:
             if self.goodstyle.setcolor:
@@ -896,13 +927,14 @@ class Style(Graph):
             else:
                 self.style=[graph.style.line([self.goodstyle.linest,self.goodstyle.linew,self.goodstyle.setcolor]),graph.style.errorbar(errorbarattrs=self.dxy)]
 
-        if self.is_histogram:
+        elif self.goodstyle.kind=='histogram':
             #self.style=[graph.style.bar()]
-            self.style=[graph.style.histogram(lineattrs=[self.goodstyle.linew,self.goodstyle.setcolor],fillable=1,fromvalue=1)]
+            self.style=[graph.style.histogram(lineattrs=[self.goodstyle.linew,self.goodstyle.setcolor],fillable=1)]
 
             #skwa=kwargs
             #stroke_style=goodstyle(*args,**kwargs)
-            self.stroke_style=[deco.filled([self.goodstyle.setcolor])]
+            #self.stroke_style=[deco.filled([self.goodstyle.setcolor])]
+            self.stroke_style=self.goodstyle.stroke_style
 
 
 class goodstyle(Style):
@@ -920,7 +952,7 @@ class goodstyle(Style):
         self.linew=style.linewidth.thin
         self.linest=linests[numr %4]
         self.gradient=color.gradient.Rainbow;
-
+        self.stroke_style=[]
 
         # By default, function should be a line
         #for arg in args:
@@ -984,18 +1016,20 @@ class goodstyle(Style):
                 sio.custom_warn('Could not understand line width from %s' %line)
 
         if stil:
-
-            try:
-                self.linest=linst_dict[stil]
-                self.kind='line'
-            except:
+            if stil.startswith('b') or stil.startswith('B'):
+                self.kind='histogram'
+            else:
                 try:
-                    self.symbol=symst_dict[stil]
-                    self.kind='symbol'
+                    self.linest=linst_dict[stil]
+                    self.kind='line'
                 except:
-                    sio.custom_warn('Could not understand style from %s' %stil)
+                    try:
+                        self.symbol=symst_dict[stil]
+                        self.kind='symbol'
+                    except:
+                        sio.custom_warn('Could not understand style from %s' %stil)
 
-        if self.kind=='line':
+        if not self.kind=='symbol':
             # For now seplot does not support gradient line coloring
             if not self.setcolor:
                 self.setcolor=colours[int(ceil(numr/4)) %4]
@@ -1003,6 +1037,10 @@ class goodstyle(Style):
         if is_function==1:
             if self.kind=='symbol':
                 raise ValueError('Cannot use symbols with function. For point-valued function estimation please use x=A[:,i] y=function(A[:,j])')
+
+        if stil:
+            if stil.startswith('B'):
+                self.stroke_style=[deco.filled([self.setcolor])]
 
 class changesymbol(graph.style.symbol):
     # A flexible symbol class derived from PyX's very own changesymbol class
@@ -1012,7 +1050,7 @@ class changesymbol(graph.style.symbol):
                        symbol=graph.style.symbol.triangle,
                        symbolattrs=[deco.filled, deco.stroked],
                        setsize=0.5,kind='symbol',linew=False,linest=False,
-                       setcolor=color.gray(0.0),numr=0,
+                       setcolor=color.gray(0.0),numr=0,stroke_style=None,
                        **kwargs):
         # add some configuration parameters and modify some other
         self.sizecolumnname = sizecolumnname
