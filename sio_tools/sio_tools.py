@@ -21,6 +21,7 @@ except:
 # @TODO : use *args,**kwargs EVERYWHERE
 # @TODO : replace all the concatenate with os.join()
 # @TODO : better cleanup and stuff
+# @TODO : MASSIVE CODE CLEANUP 
 
 __exclude_key__=["__EXCLUDE_KEY__"]
 __COMMENTS__=["#","%"]
