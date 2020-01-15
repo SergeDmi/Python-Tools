@@ -14,7 +14,7 @@ import copy
 import style_dictionaries as sd
 import kw_dictionaries as kd
 
-__VERSION__ = "1.1.18"
+__VERSION__ = "1.2.0"
 
 """
 # SYNOPSIS
@@ -50,7 +50,7 @@ __VERSION__ = "1.1.18"
         -xlog         : x axis is logarithmic
         -keep         : keep options for subsequent plots, until -discard
         -discard      : discard options for next plot
-        -equal        : equal x-y axis range 
+        -equal        : equal x-y axis range
         -autolabels   : tries to automatically find labels from data file
 
     Local options :
