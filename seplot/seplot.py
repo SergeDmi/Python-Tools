@@ -11,8 +11,10 @@ from pyx.graph import axis
 import sys
 import sio_tools as sio
 import copy
+import style_dictionaries as sd
+import kw_dictionaries as kd
 
-__VERSION__ = "1.1.17"
+__VERSION__ = "1.1.18"
 
 """
 # SYNOPSIS
@@ -48,6 +50,7 @@ __VERSION__ = "1.1.17"
         -xlog         : x axis is logarithmic
         -keep         : keep options for subsequent plots, until -discard
         -discard      : discard options for next plot
+        -equal        : equal x-y axis range 
         -autolabels   : tries to automatically find labels from data file
 
     Local options :
@@ -127,75 +130,22 @@ __VERSION__ = "1.1.17"
 
 """
 
-#@TODO  : separate file for dictionaries
+#@TODO  :    yaml config file
 
-# Basic set of colours
-colours=[color.gray(0.0),color.gray(0.5),color.rgb.red,color.rgb.blue]
-symbols=[graph.style.symbol.plus,graph.style.symbol.circle,graph.style.symbol.cross,graph.style.symbol.triangle]
-linests=[style.linestyle.solid,style.linestyle.dashed,style.linestyle.dashdotted,style.linestyle.dotted]
 
-# Dictionaries
-col_dict= {
-    'red' : color.rgb.red,
-    'blue' : color.rgb.blue,
-    'green' : color.rgb.green,
-    'black' : color.gray(0.0),
-    'dark' : color.gray(0.25),
-    'medium' : color.gray(0.5),
-    'light' : color.gray(0.75)
-    }
-
-linst_dict={
-    '_' : style.linestyle.solid,
-    '-' : style.linestyle.solid,
-    '.' : style.linestyle.dotted,
-    '.-' : style.linestyle.dashdotted,
-    '-.' : style.linestyle.dashdotted,
-    '--' : style.linestyle.dashed
-    }
-
-symst_dict={
-    'x' : graph.style.symbol.cross,
-    '*' : graph.style.symbol.cross,
-    '+' : graph.style.symbol.plus,
-    'o' : graph.style.symbol.circle,
-    '>' : graph.style.symbol.triangle,
-    '<' : graph.style.symbol.triangle
-    }
-
-linw_dict={
-    '1' :     style.linewidth.thin,
-    '2' :     style.linewidth.thick,
-    '3' :     style.linewidth.Thick,
-    '4' :     style.linewidth.THIck,
-    '5' :     style.linewidth.THICK
-    }
-
-grad_dict={
-    'rainbow'    :     color.gradient.Rainbow,
-    'whitered'    :     color.gradient.WhiteRed,
-    'wr'        :     color.gradient.WhiteRed,
-    'redwhite'    :     color.gradient.RedWhite,
-    'rw'        :     color.gradient.RedWhite,
-    'gray'        :     color.gradient.Gray,
-    'grey'        :     color.gradient.Gray,
-    'gr'        :     color.gradient.Gray,
-    'jet'        :     color.gradient.Jet,
-    }
-
-kw_dict={
-    'function'          : 'function_string',
-    'title'             : 'legend',
-    'andcond'           : 'cond',
-    'if'                : 'cond',
-    'andif'             : 'cond',
-    'color'             : 'col',
-    'size'              : 'siz',
-    'style'             : 'stil',
-    'npoints'           : 'n_points',
-    'npts'              : 'n_points'
-
-}
+# Basic set of colours, symbols, and lines
+csl=sd.get_colors_symbols_lines()
+colours=csl['colours']
+symbols=csl['symbols']
+linests=csl['linests']
+# dictionaries
+dicos=sd.get_dictionaries()
+col_dict=dicos['colors']
+linst_dict=dicos['lines']
+symst_dict=dicos['symbols']
+linw_dict=dicos['widths']
+grad_dict=dicos['gradients']
+kw_dict=kd.get_keywords()
 
 __SPLIT_MARK__ = '--split_mark--'
 
@@ -299,6 +249,7 @@ class Splotter:
         self.xlog=0
         self.ylog=0
         self.autolabel=0
+        self.equalaxis=0
         self.future_plots=[]
         self.graphs=[]
         data=array(data)
@@ -368,6 +319,8 @@ class Splotter:
                 self.usage()
             elif arg.startswith('-autol'):
                 self.autolabel=1
+            elif arg.startswith('-equal'):
+                self.equalaxis=1
             elif arg.startswith('-xlog'):
                 self.xlog=1
             elif arg.startswith('-ylog'):
@@ -469,10 +422,15 @@ class Splotter:
             except:
                 self.ylabel=None
 
+        if self.equalaxis:
+            self.height=self.width
+            self.make_equal_axis_range()
+
+
         if self.xlog:
             xaxis=axis.log(title=self.xlabel,min=self.xmin,max=self.xmax);
             for graf in self.graphs:
-                if sum(graf.X<=0):
+                if sum(array(graf.X)<=0):
                     raise ValueError('Could not plot log with non-positive X values')
         else:
             xaxis=axis.linear(title=self.xlabel,min=self.xmin,max=self.xmax)
@@ -480,10 +438,11 @@ class Splotter:
         if self.ylog:
             yaxis=axis.log(title=self.ylabel,min=self.ymin,max=self.ymax)
             for graf in self.graphs:
-                if sum(graf.Y<=0):
+                if sum(array(graf.Y)<=0):
                     raise ValueError('Could not plot log with non-positive X values')
         else:
             yaxis=axis.linear(title=self.ylabel,min=self.ymin,max=self.ymax)
+
 
         self.graph=graph.graphxy(width=self.width,height=self.height,key=self.key,
                 x=xaxis,
@@ -529,6 +488,30 @@ class Splotter:
             else:
                 #self.graph.writePDFfile(self.out)
                 self.canvas.writePDFfile(self.out)
+
+    def make_equal_axis_range(self):
+        xmax=None
+        self.xmax=proper_max(self.xmax,self.ymax)
+        self.xmin=proper_min(self.xmin,self.ymin)
+        if self.xmin is None:
+            (self.xmin,xmax)=self.get_data_extrema()
+        if self.xmax is None:
+            if xmax is not None:
+                self.xmax=xmax
+            else:
+                (xmin,self.xmax)=self.get_data_extrema()
+        self.ymax=self.xmax
+        self.ymin=self.xmin
+
+    def get_data_extrema(self):
+        minv=sys.float_info.max
+        maxv=-minv
+        for graf in self.graphs:
+            if not graf.is_function:
+                minv=min(minv,min(graf.X),min(graf.Y))
+                maxv=max(maxv,max(graf.X),max(graf.Y))
+        return minv,maxv
+
 
     def usage(self):
         disp('seplot is a simple command line plotting tool based on PyX (PyX is awesome !)')
@@ -685,9 +668,16 @@ class Graph(Splotter):
                 #print(self.X)
                 #print(self.Y)
 
-            if not len(self.C):
+            try:
+                if not len(self.C):
+                    self.C=self.X
+            except:
                 self.C=self.X
-            if not len(self.S):
+
+            try:
+                if not len(self.S):
+                    self.S=self.X
+            except:
                 self.S=self.X
 
             # We check size
@@ -785,7 +775,7 @@ class Graph(Splotter):
             if self.mode=='h':
                 # We try auto-setting the label if no label is defined
                 if i<len(self.labels):
-                    self.set_label(selfs.labels[i],coord)
+                    self.set_label(self.labels[i],coord)
                 return A[i,:]
             else:
                 if i<len(self.labels):
@@ -906,12 +896,6 @@ class Style(Graph):
                 self.dxy=[self.goodstyle.linew,self.goodstyle.setcolor]
             else:
                 self.dxy=[self.goodstyle.linew,colours[0]]
-        #print(self.dxy)        #print('not goodstyle.setcolor')
-        #    if arg.startswith('dy=') or arg.startswith('dx='):
-        #        if self.goodstyle.setcolor:
-        #            self.dxy=[self.goodstyle.linew,self.goodstyle.setcolor]
-        #        else:
-        #            self.dxy=[self.goodstyle.linew,colours[0]]
 
         if self.goodstyle.kind=='symbol':
             symbol_dict={**vars(self.goodstyle)}
@@ -931,9 +915,6 @@ class Style(Graph):
             #self.style=[graph.style.bar()]
             self.style=[graph.style.histogram(lineattrs=[self.goodstyle.linew,self.goodstyle.setcolor],fillable=1)]
 
-            #skwa=kwargs
-            #stroke_style=goodstyle(*args,**kwargs)
-            #self.stroke_style=[deco.filled([self.goodstyle.setcolor])]
             self.stroke_style=self.goodstyle.stroke_style
 
 
@@ -1010,10 +991,16 @@ class goodstyle(Style):
 
         if line:
             self.kind='line'
-            try:
-                self.linew=linw_dict[line]
-            except:
-                sio.custom_warn('Could not understand line width from %s' %line)
+            if line.find('.')>=0:
+                try:
+                    self.linew=style.linewidth(float(line))
+                except:
+                    sio.custom_warn('Could not understand line width from %s' %line)
+            else:
+                try:
+                    self.linew=linw_dict[line]
+                except:
+                    sio.custom_warn('Could not understand line width from %s' %line)
 
         if stil:
             if stil.startswith('b') or stil.startswith('B'):
@@ -1087,6 +1074,22 @@ class changesymbol(graph.style.symbol):
             col =privatedata.symbolattrs + [color]
             privatedata.symbol(privatedata.symbolcanvas, x_pt, y_pt, siz, col)
 
+def proper_max(*args):
+    nn=not_none(*args)
+    if len(nn):
+        return max(nn)
+    else:
+        return None
+
+def proper_min(*args):
+    nn=not_none(*args)
+    if len(nn):
+        return min(nn)
+    else:
+        return None
+
+def not_none(*args):
+    return [arg for arg in args if arg is not None]
 
 if __name__ == "__main__":
     nargs=len(sys.argv);
