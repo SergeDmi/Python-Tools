@@ -20,8 +20,9 @@ setup(
      install_requires=[
           'pyx',
           'numpy',
-          'sio_tools'
+          'sio_tools',
+          'pandas'
       ],
      packages=['seplot' ],
-     scripts=['seplot/bin/seplot','seplot/seplot.py' ]
+     scripts=['seplot/bin/seplot','seplot/seplot.py','seplot/dicos/kw_dictionaries.py','seplot/dicos/style_dictionaries.py']
  )
