@@ -19,7 +19,7 @@ else:
     import style_dictionaries as sd
 
 
-__VERSION__ = "1.2.0"
+__VERSION__ = "1.2.2"
 
 """
 # SYNOPSIS
@@ -77,6 +77,7 @@ __VERSION__ = "1.2.0"
 
         style    : style of plot : - or _ for a line, -- for dashed, .- for dashdotted
                                     o for circles  x , * for crosses  + for plus   > , <     for triangles
+                                    b for a bar graph , B for a filled bar graph (histogram)
 
         if / cond : condition to keep the rows or columns
 
@@ -89,6 +90,8 @@ __VERSION__ = "1.2.0"
         line     : thickness of line, from 0 to 5
 
         title (or legend) : title of the graph
+
+        -hist    : makes a histogram out of the data
 
 # EXAMPLES :
 
