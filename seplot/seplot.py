@@ -20,7 +20,7 @@ else:
     import style_dictionaries as sd
 
 
-__VERSION__ = "1.2.5"
+__VERSION__ = "1.2.6"
 
 """
 # SYNOPSIS
@@ -500,8 +500,8 @@ class Splotter:
 
     def make_equal_axis_range(self):
         xmax=None
-        self.xmax=proper_max(self.xmax,self.ymax)
-        self.xmin=proper_min(self.xmin,self.ymin)
+        self.xmax=apply_on_not_none(self.xmax,self.ymax,function=max)
+        self.xmin=apply_on_not_none(self.xmin,self.ymin,function=min)
         if self.xmin is None:
             (self.xmin,xmax)=self.get_data_extrema()
         if self.xmax is None:
@@ -606,7 +606,7 @@ class Graph(Splotter):
                 if not stil:
                     stil='B'
                 elif not (stil=='b' or stil=='B'):
-                    sio.warning('Forcing style to histogram')
+                    sio.custom_warn('Forcing style to histogram')
 
 
         if not self.is_function:
@@ -820,10 +820,10 @@ class Graph(Splotter):
                     try:
                         return eval(input)
                     except:
-                        sio.warning('We could note evaluate %s from %s' %(coord,input))
+                        sio.custom_warn('We could note evaluate %s from %s' %(coord,input))
                     return []
                 except:
-                    sio.warning('We could note evaluate %s from %s' %(coord,input))
+                    sio.custom_warn('We could note evaluate %s from %s' %(coord,input))
             else:
                 return []
 
@@ -1083,17 +1083,10 @@ class changesymbol(graph.style.symbol):
             col =privatedata.symbolattrs + [color]
             privatedata.symbol(privatedata.symbolcanvas, x_pt, y_pt, siz, col)
 
-def proper_max(*args):
+def apply_on_not_none(*args,function=None):
     nn=not_none(*args)
     if len(nn):
-        return max(nn)
-    else:
-        return None
-
-def proper_min(*args):
-    nn=not_none(*args)
-    if len(nn):
-        return min(nn)
+        return function(nn)
     else:
         return None
 
