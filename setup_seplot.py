@@ -1,5 +1,7 @@
-from setuptools import setup, Extension
+from setuptools import setup, Extension, find_packages
 from seplot import seplot as sep
+#from
+
 
 with open("seplot/README.md", "r") as handle:
     splot_description = handle.read()
@@ -23,6 +25,7 @@ setup(
           'sio_tools',
           'pandas'
       ],
-     packages=['seplot' ],
-     scripts=['seplot/bin/seplot','seplot/seplot.py','seplot/dicos/kw_dictionaries.py','seplot/dicos/style_dictionaries.py']
+     packages=find_packages(),
+     scripts=['seplot/bin/seplot','seplot/seplot.py',
+        'seplot/kw_dictionaries.py','seplot/style_dictionaries.py']
  )
