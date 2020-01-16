@@ -11,6 +11,7 @@ from pyx.graph import axis
 import sys
 import sio_tools as sio
 import copy
+
 if __package__:
     import seplot.kw_dictionaries as kd
     import seplot.style_dictionaries as sd
@@ -19,7 +20,7 @@ else:
     import style_dictionaries as sd
 
 
-__VERSION__ = "1.2.2"
+__VERSION__ = "1.2.5"
 
 """
 # SYNOPSIS

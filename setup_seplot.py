@@ -1,12 +1,18 @@
 from setuptools import setup, Extension, find_packages
-from seplot import seplot as sep
-#from
+import re
 
+def find_version(fname):
+    with open(fname,'r') as file:
+        version_file=file.read()
+        version_match = re.search(r"__VERSION__ = ['\"]([^'\"]*)['\"]",version_file, re.M)
+    if version_match:
+        return version_match.group(1)
+    raise RuntimeError("Unable to find version string.")
 
 with open("seplot/README.md", "r") as handle:
     splot_description = handle.read()
 
-version=sep.__VERSION__
+version=find_version("seplot/seplot.py")
 
 setup(
      name='seplot',
