@@ -11,11 +11,7 @@ https://www.biophysics.fr
 ```
 
 ## Required packages
-seplot requires PyX, Numpy, and sio_tools. Pandas is necessary to import csv/excel documents.
-
-```shell
-$ pip3 install pandas
-```
+seplot requires PyX, Numpy, pandas, and sio_tools. They will be downloaded when installed with pip3.
 
 # Usage
 
@@ -149,3 +145,45 @@ plot=seplot.Splotter(key='tl')
 plot.add_plot(file='data.txt',cond='A[:,0]>0')
 plot.make_and_save()
 ```
+
+## Detailed option list
+### Global options
+**xlabel=**        : label of x axis  
+**ylabel=**        : label of y axis  
+**width=**         : width of figure  
+**height=**        : height of figure  
+**xmin=**          : min x value  
+**xmax=**          : max x value  
+**ymin=**          : min y value  
+**ymax=**          : max y value  
+**key=**           : position of figure legend (tr,br,tl,bl)  
+**out=**           : name of output file  
+**-ylog**         : y axis is logarithmic  
+**-xlog**         : x axis is logarithmic  
+**-keep**         : keep options for subsequent plots, until -discard  
+**-discard**      : discard options for next plot  
+**-equal**        : equal x-y axis range  
+**-autolabels**   : tries to automatically find labels from data file  
+
+### Local options (per plot)
+**x=**        : index of column or row to be used as x axis values (e.g. x=0 for the first column)  
+                also can specify an operation : x='A[:,0]*A[:,1]'  
+                also can specify a label read from file header : x=first_column_label  
+                can also be automatic, i.e. index : x=auto  
+**y=**        : index of column or row to be used as y axis values (e.g. x=0 for the first column)  
+                also can specify an operation : y='A[:,1]*A[:,2]/A[:,3]'  
+**dy=**       : index of column or row to be used as dy values (e.g. x=0 for the first column)  
+                also can specify an operation : dy='A[:,2]/sqrt(A[:,3])'  
+**mode=**     : h for horizontal (rows), v for vertical (column) (default)  when reading data
+**color=**    : color of lines or symbol ; can be either red, green, blue, dark, medium, light, black  
+                or color.cmyk.*  or color.rgb.*  
+                or an operation, e.g. color=A[:,2]  
+**and=**      : add another graph (possibly with different options)  
+**style=**    : style of plot : - or _ for a line, -- for dashed, .- for dashdotted  
+                            o for circles  x , * for crosses  + for plus   > , <     for triangles  
+**if= / cond=** : condition to keep the rows or columns  
+**andif=**     :  add another graph with different conditions  
+**range=**    : range of rows / columns to plot  
+**size=**     : size of symbol used  
+**line=**     : thickness of line, from 0 to 5  
+**title= / legend=** : title of the graph  
