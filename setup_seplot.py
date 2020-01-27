@@ -1,10 +1,18 @@
-from setuptools import setup, Extension
-from seplot import seplot as sep
+from setuptools import setup, Extension, find_packages
+import re
+
+def find_version(fname):
+    with open(fname,'r') as file:
+        version_file=file.read()
+        version_match = re.search(r"__VERSION__ = ['\"]([^'\"]*)['\"]",version_file, re.M)
+    if version_match:
+        return version_match.group(1)
+    raise RuntimeError("Unable to find version string.")
 
 with open("seplot/README.md", "r") as handle:
     splot_description = handle.read()
 
-version=sep.__VERSION__
+version=find_version("seplot/seplot.py")
 
 setup(
      name='seplot',
@@ -20,8 +28,10 @@ setup(
      install_requires=[
           'pyx',
           'numpy',
-          'sio_tools'
+          'sio_tools',
+          'pandas'
       ],
-     packages=['seplot' ],
-     scripts=['seplot/bin/seplot','seplot/seplot.py' ]
+     packages=find_packages(),
+     scripts=['seplot/bin/seplot','seplot/seplot.py',
+        'seplot/kw_dictionaries.py','seplot/style_dictionaries.py']
  )
