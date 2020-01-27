@@ -21,7 +21,7 @@ except:
 # @TODO : use *args,**kwargs EVERYWHERE
 # @TODO : replace all the concatenate with os.join()
 # @TODO : better cleanup and stuff
-# @TODO : MASSIVE CODE CLEANUP 
+# @TODO : MASSIVE CODE CLEANUP
 
 __exclude_key__=["__EXCLUDE_KEY__"]
 __COMMENTS__=["#","%"]
@@ -336,7 +336,13 @@ def make_file_list(part_fname,outro):
 # makes a file list recursively with include and exclude options !
 #@TODO : document
 #@TODO : search depth
-def make_recursive_file_list(folder='.',include=[''],ext='',exclude=__exclude_key__,**kwargs):
+def make_recursive_file_list(*args,folder='.',include=[''],ext='',exclude=__exclude_key__,**kwargs):
+	"""
+	Makes a recursive file list from a location (folder=LOCATION),
+	specific must-contain word parts may be provided ( include=WORD_PART or include=[PART1 , PART2] )
+	certain must-not-contain word parts can be excluded ( exclude=WORD_PART or exclude=[PART1 , PART2] )
+	an extension can be specified : ( ext=EXTENSION )
+	"""
 	liste=[]
 	dict=kwargs
 	if not type(include)==list:
@@ -369,15 +375,33 @@ def make_ordered_file_list(part_fname,outro):
 # Important for analysis
 # makes a list of properties  from a config file of name file_name
 # properties are identified by keyword key
-def make_prop_dict(fname,key):
+def make_prop_dict(fname,*args,key="set",name_offset=1,value_offset=2,**kwargs):
+	"""
+	Makes a dictionary of properties from a file
+	properties are in lines with the format :
+	[...] KEY NAME VALUE [...]
+	ex :
+	" % set pressure 1 " will yield {"pressure" : 1}
+	(in which key="set")
+	A different offset for name can be provided :
+	" % set pressure to 1 "
+	Here one should use value_offset=2 (default 1)
+	" 1 is the chosen pressure value  "
+	{"pressure":1} can be found by calling
+	make_prop_dict(FNAME,key="is the",name_offset=2,value_offset=-2)
+
+	"""
+
 	lines=getlines(fname)
 	props={}
+	keys=key.split()
+	lines=[line for line in lines if line.find(key)>=0]
 	for line in lines:
 		words=line.split()
-		ixes=[i for i,word in enumerate(words) if word.find(key)>=0]
+		ixes=[i for i,word in enumerate(words) if word.find(keys[-1])>=0]
 		for i in ixes:
 			try:
-				props[words[i+1]]=line_remove_comments(clean_line(''.join(words[i+2:])))
+				props[words[i+name_offset]]=line_remove_comments(clean_line(''.join(words[i+value_offset:]),*args,**kwargs),*args,**kwargs)
 			except:
 				print('Could not understand property %s from configuration file %s' %(words[i],fname))
 	#for line in lines1:
