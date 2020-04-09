@@ -20,7 +20,7 @@ else:
     import style_dictionaries as sd
 
 
-__VERSION__ = "2.0.0"
+__VERSION__ = "2.0.1"
 
 """
 # SYNOPSIS
@@ -640,7 +640,7 @@ class Graph(Splotter):
                 #if col.isdigit() or col.find('A[')>=0:
                 self.C=self.set_from_input(A,col,'color')
                 if len(self.C):
-                    if not std(self.C)==0.0:
+                    if not std(self.C)<sys.float_info.epsilon:
                         self.color_from_data=True
                     else:
                         sio.custom_warn("No variance in color provided, using random color based on mean value !")
