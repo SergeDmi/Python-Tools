@@ -20,7 +20,7 @@ else:
     import style_dictionaries as sd
 
 
-__VERSION__ = "1.2.6"
+__VERSION__ = "2.0.0"
 
 """
 # SYNOPSIS
@@ -61,18 +61,16 @@ __VERSION__ = "1.2.6"
 
     Local options :
         x        : index of column or row to be used as x axis values (e.g. x=0 for the first column)
-                        also can specify an operation : x='A[:,0]*A[:,1]'
-                        also can specify a label read from file header : x=first_column_label
+                        also can specify a label read from file header : x=column_label
+                        also can specify an operation : x='A[:,0]*A[:,1]' or x='column_label*column_label'
                         can also be automatic, i.e. index : x=auto
-        y        : index of column or row to be used as y axis values (e.g. x=0 for the first column)
-                        also can specify an operation : y='A[:,1]*A[:,2]/A[:,3]'
-        dy       : index of column or row to be used as dy values (e.g. x=0 for the first column)
-                        also can specify an operation : dy='A[:,2]/sqrt(A[:,3])'
+        y        : index of column or row to be used as y axis values, same possibilities as x=
+        dy       : index of column or row to be used as dy values , same possibilities as x=
         mode     : h for horizontal (rows), v for vertical (column) (default)
 
         color    : color of lines or symbol ; can be either red, green, blue, dark, medium, light, black
                         or color.cmyk.*  or color.rgb.*
-                        or an operation, e.g. color=A[:,2]
+                        or an operation, e.g. color=A[:,2] or color=columns_label*5
 
         and      : add another graph (possibly with different options)
 
