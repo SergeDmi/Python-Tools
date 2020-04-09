@@ -2,10 +2,11 @@ from pyx import *
 from pyx.graph import axis
 
 def get_colors_symbols_lines():
+    colour_strings=['black','dark','medium','light','blue','red','green']
     colours=[color.gray(0.0),color.gray(0.5),color.rgb.red,color.rgb.blue]
     symbols=[graph.style.symbol.plus,graph.style.symbol.circle,graph.style.symbol.cross,graph.style.symbol.triangle]
     linests=[style.linestyle.solid,style.linestyle.dashed,style.linestyle.dashdotted,style.linestyle.dotted]
-    return {'colours':colours,'symbols':symbols,'linests':linests}
+    return {'colours': colours, 'symbols': symbols, 'linests': linests, 'colour_strings': colour_strings}
 
 # Dictionaries
 def get_dictionaries():
