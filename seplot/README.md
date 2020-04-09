@@ -24,8 +24,32 @@ By omitting further instructions, it is implied that the data in data.txt is a s
 ```shell
 $ seplot.py data.txt mode=v x=0 y=1 out=plot.pdf
 ```
+Where **mode**  is **v** (vertical) for columns of data and **h** for rows (horizontal), and plot.pdf is the output file.  
 
-Where **mode**  is **v** (vertical) for columns of data and **h** for rows (horizontal), and plot.pdf is the output file. Of course several files can be plotted with different colors :
+When using a *.csv* file, or a *.txt* file with a header, we can use directly the column names :
+```shell
+$ seplot.py data.txt x=time y=distance
+```
+Where *data.txt* looks like :
+ ```
+# time distance 
+0 1.0
+1 2.0
+...
+```
+ For a csv file :  
+ ```shell
+$ seplot.py data.csv x=time y=distance
+```
+Where *data.csv* looks like :
+ ```
+,time,distance
+,0,1.0
+,1,2.0
+...
+```
+ 
+ Of course several files can be plotted with different colors :
 ```shell
 $ seplot.py data_1.txt color=red data_2.txt color=blue
 ```
@@ -61,24 +85,31 @@ $ seplot.py data.txt -hist x=10 y=0 style=b data.txt -hist x='[0,1,2,3,4]' style
 Does a histogram of the first column (y=0) of data.txt, with 10 bins (x=10) and then with bins centered around 0,1,2,3,4 (and filled bars : style=B)
 
 ### Data manipulation and conditional expressions
- Using Python's *eval()* function, we can perform operations on the input data. Data read from the data file (eg. data.txt) is stored in a numpy array called *A*. We can apply any numpy function on *A* in *seplot* through a simple syntax :
+ We can perform operations on the input data. For a csv file, or a text file with header, we can use directly the column names as if it was the values :
+  ```shell
+$ seplot.py data.csv y='distance*distance'
+```
+Any python/numpy operation on the data is permitted. If the data is not directly named (text file without header), it is still possible to perform operation on the data.  
+Data read from the data file (eg. data.txt) is stored in a numpy array called *A*. We can apply any numpy function on *A* in *seplot* through a simple syntax :
 ```shell
 $ seplot.py data.txt y='A[:,1]^2'
 ```
-Here *A[:,1]* is the *second* column of *A*. We can use the same syntax for conditional expressions using the keyword **if** :
+Here *A[:,1]* is the *second* column of *A*.  
+
+We can use the same syntax for conditional expressions using the keyword **if** :
 ```shell
-$ seplot.py data.txt y='A[:,1]^2' if='y>0'
+$ seplot.py data.txt y='distance*distance' if='y>1'
 ```
 We can now combine several features :
 ```shell
-$ seplot.py data.txt y='A[:,1]^2' if='y>0' color=blue
-		   and if='y<0' color=red
+$ seplot.py data.txt y='distance*distance' if='y>1' color=blue
+		   and color=red if='y<1'
 ```
 We used the **and** keyword to re-use the data from *data.txt* into another plot element (note that the shorthand  **andif=**... is also supported).
 
 We can easily compute and plot complex functions of the input data :
 ```shell
-$ seplot.py data.txt y='sqrt(1/(1+A[:,1]^2))/A[:,2]+sin(A[:,3])'
+$ seplot.py data.txt y='sqrt(distance*distance)/time' color='sin(time)'
 ```
 Similarly, the **if** keyword can be used for any function of the input data :
 ```shell
