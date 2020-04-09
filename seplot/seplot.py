@@ -146,6 +146,7 @@ __VERSION__ = "1.2.6"
 # Basic set of colours, symbols, and lines
 csl=sd.get_colors_symbols_lines()
 colours=csl['colours']
+colour_strings=csl['colour_strings']
 symbols=csl['symbols']
 linests=csl['linests']
 # dictionaries
@@ -641,7 +642,12 @@ class Graph(Splotter):
                 #if col.isdigit() or col.find('A[')>=0:
                 self.C=self.set_from_input(A,col,'color')
                 if len(self.C):
-                    self.color_from_data=True
+                    if not std(self.C)==0.0:
+                        self.color_from_data=True
+                    else:
+                        sio.custom_warn("No variance in color provided, using random color based on mean value !")
+                        col=colour_strings[int(mean(self.C)) %7]
+                        self.C=[]
                     #print("Set color from data")
 
             else:
