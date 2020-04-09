@@ -139,7 +139,8 @@ __VERSION__ = "1.2.6"
 
 """
 
-#@TODO  :    yaml config file
+#@TODO :    yaml config file
+#@TODO :    separate script from module !
 
 
 # Basic set of colours, symbols, and lines
@@ -791,41 +792,36 @@ class Graph(Splotter):
                     self.set_label(self.labels[i],coord)
                 return A[:,i]
         except:
-            if coord=='color':
-                # here we make sure the input is not a color
-                try :
-                    # We first try to set it from the dictionary
-                    test_color=col_dict[input]
-                    return []
-                except :
-                    if not input.startswith('color.'):
-                        # shorthand notation is tolerated
-                        col='color.%s' %(input)
-                    try:
-                        # trying if color is a defined PyX color
-                        test_color=eval(input)
-                        return []
-                    except:
-                        False
-                        #sio.custom_warn('Could not understand color from %s' %col)
             if input:
                 # Automatic axis value : 1 to length of array
-                try:
-                    if input.startswith('aut'):
-                        if self.mode=='h':
-                            return array(range(len(A[0,:])))
-                        else:
-                            return array(range(len(A[:,0])))
+                if input.startswith('aut'):
+                    if self.mode=='h':
+                        return array(range(len(A[0,:])))
+                    else:
+                        return array(range(len(A[:,0])))
                 # Interpreting axis value
-                    try:
-                        return eval(input)
-                    except:
-                        sio.custom_warn('We could note evaluate %s from %s' %(coord,input))
-                    return []
+                for label in self.labels:
+                    # trying to substitute label to array values
+                    if input.find(label)>=0:
+                        input=self.substitute_label(input,A,label)
+                try:
+                    return eval(input)
                 except:
-                    sio.custom_warn('We could note evaluate %s from %s' %(coord,input))
+                    if not coord=="color":
+                        raise ValueError('We could note evaluate %s from %s' %(coord,input))
+                    else:
+                        sio.custom_warn('We might not be able to evaluate %s from %s' %(coord,input))
+                    return []
             else:
                 return []
+
+    def substitute_label(self,input,A,label):
+        i=self.label_dict[label]
+        if self.mode=='h':
+            replace='A[%s,:]' %i
+        else:
+            replace='A[:,%s]' %i
+        return input.replace(label,replace)
 
     def set_A_range(self,A,in_range):
         # first we need to make data horizontal for the range operation
