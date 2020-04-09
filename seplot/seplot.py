@@ -20,7 +20,7 @@ else:
     import style_dictionaries as sd
 
 
-__VERSION__ = "2.0.1"
+__VERSION__ = "2.0.2"
 
 """
 # SYNOPSIS
