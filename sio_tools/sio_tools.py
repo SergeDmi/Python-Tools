@@ -8,9 +8,9 @@ import sys
 import os
 import warnings
 import copy
+import yaml
 
-
-__VERSION__ = "0.1.6"
+__VERSION__ = "0.1.7"
 
 try:
 	import pandas as pd
@@ -21,10 +21,12 @@ except:
 # @TODO : use *args,**kwargs EVERYWHERE
 # @TODO : replace all the concatenate with os.join()
 # @TODO : better cleanup and stuff
-# @TODO : MASSIVE CODE CLEANUP 
+# @TODO : MASSIVE CODE CLEANUP
 
 __exclude_key__=["__EXCLUDE_KEY__"]
 __COMMENTS__=["#","%"]
+__cleanup_dict__={",":"" , " ":"", ")":"" }
+__word_clean_tags__=['','\n']
 
 """
 # SYNOPSIS
@@ -37,13 +39,47 @@ __COMMENTS__=["#","%"]
 """
 
 
+def load_config(name="config.yaml"):
+    with open(name,'r') as file:
+        config=yaml.load(file, Loader=yaml.SafeLoader)
+        return config
+    raise ValueError("Could not load config from %s" %name)
+    return None
+
+def config_to_args_kwargs(config):
+    kwargs={}
+    try:
+        args=config['Options']
+    except:
+        args=[]
+    try:
+        for (key,value) in options['Parameters']:
+            kwargs[key]=value
+    except:
+        print("No parameter passed when reading the config")
+    return args,kwargs
+
+def save_config(name="config.yaml",*args,**kwargs):
+    config={'Options':args, 'Parameters': kwargs   }
+    with open(name, 'w') as outfile:
+        yaml.dump(config, outfile, default_flow_style=False)
+
+def append_config(config,*args,**kwargs):
+	na,kwa=config_to_args_kwargs(config)
+	args+=na
+	kwargs={**kwargs,**kwa}
+	return args,kwargs
+
+
+
 ## Warning tools
 def version():
     return __VERSION__
 
-def custom_warn(message):
-	warnings.formatwarning = simp_formatwarning
-	warnings.warn(message)
+def custom_warn(message,*args,verbose=1,**kwargs):
+	if verbose:
+		warnings.formatwarning = simp_formatwarning
+		warnings.warn(message)
 
 def simp_formatwarning(message, *args, **kwargs):
     # A very simple sarning with just a message
@@ -68,35 +104,19 @@ def make_exec(fname):
 	return run("chmod +x "+fname)
 
 #Runs a unic command and returns the stdout
-def unpy(job):
+def run_and_return(job,*args,**kwargs):
 	if not type(job)==list:
-		job=[job]
+		job=[job,*args,*make_args_from_kwargs(kwargs)]
 	proc=subprocess.Popen(job,stdout=subprocess.PIPE)
 	return proc.stdout.readlines()
 
-
-#pwd
-def pwd():
-	lines=unpy('pwd')
-	return clean_line(lines[0])
-
-# folder
-def last_pwd():
-	fold=pwd()
-	fold=fold.rstrip('/')
-	words=fold.split('/')
-	return words[-1]
-
-#create job list from index a to index b
-#fname/index/ename is absolute adress of the executable
-def bjarray(jname,fname,ename,a,b):
-	fname=conc(fname,'\$LSB_JOBINDEX',ename)
-	return r'bsub -J "%s[%s-%s]" %s -o /g/nedelec/dmitrief/clustero/output' %(jname,a,b,fname)
-
-# create job lists, to improve
-def bjobs(jname,fname,ename,jvals):
-	return bjarray(jname,fname,ename,min(jvals),max(jvals))
-
+def make_args_from_kwargs(*args,**kwargs):
+	for arg in args:
+		kwargs={**arg,**kwargs}
+	new_args=[]
+	for (key,value) in kwargs.items():
+		new_args.append("%s=%s" %(key,value))
+	return new_args
 
 # Make an array from a string containing an array
 def make_array_from_str(value):
@@ -116,63 +136,53 @@ def remove_ext(fname):
 		return "".join(word+"." for word in words[0:l-1])
 
 # Archive a folder with tar
-def archive(fname):
-	job="tar -czf %s.tgz %s && rm -R %s" %(remove_ext(clean_name(fname)),fname,fname)
-	run(job)
-	return
+# deprecated
 
+def archive(fname,*args,remove=0,outname=None,**kwargs):
+	if outname is None:
+		outname="%s.tgz" % remove_ext(clean_slash_from_name_end(fname))
+	archive_job=['tar','-czf',outname,fname]
+	if remove==0:
+		return run_and_return(archive_job)
+	else:
+		delete_job=['rm','-R',fname]
+		return [run_and_return(archive_job),run_and_return(delete_job)]
 
-#runs a bash line
-def run(job):
-	subprocess.call([job],shell=True)
-
-#create a folder with a name name
-def mkdir(name):
-	if ~(os.path.isdir(name)):
-		job="%s%s" % ("mkdir ",name)
-		run(job)
-	return
 
 #copies files to the folder fn
+# deprecated
 def copy_files(fn,files):
+	out=[]
 	for f in files:
-		fname=conc(fn,f)
-		job="cp %s %s" % (f,fname)
-		run(job)
-	return
+		fname=os.join(fn,f)
+		job=["cp",f,fname]
+		out.append(run_and_return(job))
+	return out
 
-#writes lines in a file in a folder
-def write_file(file_name,lines):
-	fname=conc(folder_name,file_name)
-	f=open(fname,'w')
-	for line in clean_lines(lines):
-		f.write(line+"\n")
-	f.close()
-	return
-
-## Word processing
+## Word processin
 # Replace some words by others in a set of strings (lines)
 def switch_words_in_lines(lines,dict):
 	return [switch_words(line,dict) for line in lines]
 
 # Replace some words by others in a single string (line)
-def switch_words(line,dict):
+def word_substitute_from_dict(line,dict):
 	for key,value in dict.items():
-		if line.find(key)>=0:
-			words=line.split(key)
-			return ''.join([words[0],value,words[1]])
+		line=line.replace(key,value)
 	return line
+		#if line.find(key)>=0:
+		#	return li
+		#	words=line.split(key)
+		#	return ''.join([words[0],value,words[1]])
+	#return line
 
 # Cleanup a word ...
 # @TODO ; to be improved !!!!
-def word_cleanup(word):
-	word =word.replace(",","")
-	word =word.replace(" ","")
-	word =word.replace(")","")
+def word_cleanup(word,dict=__cleanup_dict__):
+	word=word_substitute_from_dict(word,dict)
 	return word
 
 # Remove / at the end of folder names
-def clean_name(fname):
+def clean_slash_from_name_end(fname):
 	l=len(fname)
 	if l and fname.find("/")==l-1:
 		return fname[0:l-1]
@@ -180,7 +190,8 @@ def clean_name(fname):
 		return fname
 
 # Remove commented lines / line sections
-def remove_comments(lines,comments=__COMMENTS__,**kwargs):
+# deprecated ?
+def remove_comments(lines,*args,comments=__COMMENTS__,**kwargs):
 	comments=__COMMENTS__
 	for c in comments:
 		l=len(lines)
@@ -223,11 +234,13 @@ def line_remove_comments(line,comments=__COMMENTS__,**kwargs):
 	return line
 
 # generates arguments and keyword arguments from arguments (e.g. sys.argv[1:])
+# cleanup !
 def make_args_and_kwargs(arguments):
 	args=[]
 	if len(arguments)>0:
 		kwingredients=[]
-		for arg in arguments[1:]:
+		# sys.argv[1:]
+		for arg in arguments[0:]:
 			jcvd=arg.split('=')
 			n=len(jcvd)
 			if n==1:
@@ -242,21 +255,19 @@ def make_args_and_kwargs(arguments):
 	return args,kwargs
 
 # Concatenate folder names, being carefull of the "/" at the end
-#@TODO : use os.join !!!!!!
+#DEPRECATED : use os.join !!!!!!
 def conc(*names):
 	l=len(names)
 	if l>1:
-		return "%s/%s" % (clean_name(names[0]),conc(*names[1:l]))
+		return "%s/%s" % (clean_slash_from_name_end(names[0]),conc(*names[1:l]))
 	else:
 		return names[0]
 
 # Remove end-of-line (\n) for a string
-def clean_word_list(words):
-	tags=['','\n']
+def clean_word_list(words,*args,tags=__word_clean_tags__,**kwargs):
 	return [word for word in words if word not in tags]
 
-
-def clean_line(line):
+def clean_line_return(line):
 	#while line.find("\n")>-1:
 	line=line.rstrip("\n")
 	return line
@@ -264,7 +275,7 @@ def clean_line(line):
 # Remove end-of-lines (\n) for an array of strings
 def clean_lines(lines):
 	for i,line in enumerate(lines):
-		lines[i]=clean_line(line)
+		lines[i]=clean_line_return(line)
 	return [line for line in lines if line and not line.isspace()]
 
 
@@ -325,7 +336,13 @@ def make_file_list(part_fname,outro):
 # makes a file list recursively with include and exclude options !
 #@TODO : document
 #@TODO : search depth
-def make_recursive_file_list(folder='.',include=[''],ext='',exclude=__exclude_key__,**kwargs):
+def make_recursive_file_list(*args,folder='.',include=[''],ext='',exclude=__exclude_key__,**kwargs):
+	"""
+	Makes a recursive file list from a location (folder=LOCATION),
+	specific must-contain word parts may be provided ( include=WORD_PART or include=[PART1 , PART2] )
+	certain must-not-contain word parts can be excluded ( exclude=WORD_PART or exclude=[PART1 , PART2] )
+	an extension can be specified : ( ext=EXTENSION )
+	"""
 	liste=[]
 	dict=kwargs
 	if not type(include)==list:
@@ -358,15 +375,33 @@ def make_ordered_file_list(part_fname,outro):
 # Important for analysis
 # makes a list of properties  from a config file of name file_name
 # properties are identified by keyword key
-def make_prop_dict(fname,key):
+def make_prop_dict(fname,*args,key="set",name_offset=1,value_offset=2,**kwargs):
+	"""
+	Makes a dictionary of properties from a file
+	properties are in lines with the format :
+	[...] KEY NAME VALUE [...]
+	ex :
+	" % set pressure 1 " will yield {"pressure" : 1}
+	(in which key="set")
+	A different offset for name can be provided :
+	" % set pressure to 1 "
+	Here one should use value_offset=2 (default 1)
+	" 1 is the chosen pressure value  "
+	{"pressure":1} can be found by calling
+	make_prop_dict(FNAME,key="is the",name_offset=2,value_offset=-2)
+
+	"""
+
 	lines=getlines(fname)
 	props={}
+	keys=key.split()
+	lines=[line for line in lines if line.find(key)>=0]
 	for line in lines:
 		words=line.split()
-		ixes=[i for i,word in enumerate(words) if word.find(key)>=0]
+		ixes=[i for i,word in enumerate(words) if word.find(keys[-1])>=0]
 		for i in ixes:
 			try:
-				props[words[i+1]]=line_remove_comments(clean_line(''.join(words[i+2:])))
+				props[words[i+name_offset]]=line_remove_comments(clean_line(''.join(words[i+value_offset:]),*args,**kwargs),*args,**kwargs)
 			except:
 				print('Could not understand property %s from configuration file %s' %(words[i],fname))
 	#for line in lines1:
@@ -375,7 +410,7 @@ def make_prop_dict(fname,key):
 # Check if word exist in lines
 def isword_lines(lines,word):
 	for li in lines:
-		if li.find(word)>-1:
+		if li.find(word)>=0:
 			return 1
 	return 0
 
@@ -387,8 +422,8 @@ def getlines(fname):
 	return lines
 
 # decomposes a file into body and header
-def decompose_file(fname,comments=__COMMENTS__,**kwargs):
-	lines=clean_lines(getlines(fname))
+def decompose_file(fname,*args,comments=__COMMENTS__,**kwargs):
+	lines=clean_lines(getlines(fname),*args,**kwargs)
 	head_lines=[]
 	body_lines=[]
 
@@ -403,16 +438,16 @@ def decompose_file(fname,comments=__COMMENTS__,**kwargs):
 
 	return body_lines,head_lines
 
-def get_data_and_header(fname):
-	(body,header)=decompose_file(fname)
+def get_data_and_header(fname,*args,**kwargs):
+	(body,header)=decompose_file(fname,*args,**kwargs)
 	head=header[-1]
-	data=getdata_lines(body)
+	data=getdata_lines(body,*args,**kwargs)
 	return data,head
 
-def make_nice_headers(heads,comments=__COMMENTS__,**kwargs):
-	return [clean_head(head,comments=comments,**kwargs) for head in heads if head not in comments]
+def make_nice_headers(heads,*args,comments=__COMMENTS__,**kwargs):
+	return [clean_head(head,*args,comments=comments,**kwargs) for head in heads if head not in comments]
 
-def clean_head(head,comments=__COMMENTS__,**kwargs):
+def clean_head(head,*args,comments=__COMMENTS__,**kwargs):
 	if head:
 		for c in comments:
 			f=head.find(c)
@@ -420,51 +455,51 @@ def clean_head(head,comments=__COMMENTS__,**kwargs):
 				head=head[f+len(c):]
 	return head
 
-def splitheader(fname):
-	heads=getheader(fname)
+def splitheader(fname,*args,spliter=' ',**kwargs):
+	heads=getheader(fname,*args,**kwargs)
 	if heads:
-		heads=heads.split(' ')
-		return make_nice_headers(heads)
+		heads=heads.split(spliter)
+		return make_nice_headers(heads,*args,**kwargs)
 	else:
 		return []
 
-def split_header(heads):
+def split_header(heads,*args,spliter=' ',**kwargs):
 	if heads:
 		heads=heads[-1]
-		heads=heads.split(' ')
-		return make_nice_headers(heads)
+		heads=heads.split(spliter)
+		return make_nice_headers(heads,*args,**kwargs)
 	else:
 		return []
 
-def data_import_wrapper(fname,**kwargs):
+def data_import_wrapper(fname,*args,**kwargs):
 	if fname.endswith('.txt'):
-		return txt_import_wrapper(fname,**kwargs)
+		return txt_import_wrapper(fname,*args,**kwargs)
 	elif fname.endswith('.csv'):
-		return csv_import_wrapper(fname,**kwargs)
+		return csv_import_wrapper(fname,*args,**kwargs)
 	elif fname.endswith('.xls') or fname.endswith('.xlsx'):
-		return xls_import_wrapper(fname,**kwargs)
+		return xls_import_wrapper(fname,*args,**kwargs)
 	else:
 		try:
-			return txt_import_wrapper(fname,**kwargs)
+			return txt_import_wrapper(fname,*args,**kwargs)
 		except:
 			raise ValueError('Unsupported format for file %s'  %fname)
 			return empty_out_data()
 
-def txt_import_wrapper(fname,**kwargs):
+def txt_import_wrapper(fname,*args,**kwargs):
 	(body_lines,head_lines)=decompose_file(fname,**kwargs)
 	(data,sx,sy)=getdata_lines(body_lines,**kwargs)
 	return {'data' : data , 'labels' : split_header(head_lines), 'size_x' : sx , 'size_y' : sy , 'body' : body_lines , 'header' : head_lines}
 
-def csv_import_wrapper(fname,**kwargs):
+def csv_import_wrapper(fname,*args,**kwargs):
 	frames=pd.read_csv(fname)
-	return import_from_frames(frames)
+	return import_array_from_frames(frames)
 
-def xls_import_wrapper(fname,**kwargs):
+def xls_import_wrapper(fname,*args,**kwargs):
 	custom_warn('Excel support very limited')
-	frames=pd.read_excel(fname)
-	return import_from_frames(frames)
+	frames=pd.read_excel(fname,*args,**kwargs)
+	return import_array_from_frames(frames)
 
-def import_from_frames(frames):
+def import_array_from_frames(frames):
 	cols=frames.columns.values
 	labels=[word for word in cols]
 	data=frames.values
@@ -472,9 +507,9 @@ def import_from_frames(frames):
 	return {'data' : data , 'labels' : labels, 'size_x' : sx , 'size_y' : sy , 'body' : [] , 'header' : [] }
 
 # Extract space separatated value array from file
-def getdata_lines(old_lines,**kwargs):
+def getdata_lines(old_lines,*args,**kwargs):
 	lines=copy.copy(old_lines)
-	lines=clean_lines(remove_comments(lines,**kwargs))
+	lines=clean_lines(remove_comments(lines,*args,**kwargs),*args,**kwargs)
 	#print lines
 	nl=len(lines)
 	i=0
@@ -492,7 +527,7 @@ def getdata_lines(old_lines,**kwargs):
 			n=n+1
 	return ar[0:n,:],n,nc
 
-def getdata(fname,**kwargs):
+def getdata(fname,*args,**kwargs):
 	try:
 		lines=getlines(fname)
 		return getdata_lines(lines,**kwargs)
@@ -501,8 +536,8 @@ def getdata(fname,**kwargs):
 		return [],-1,-1
 
 # Extract space separatated value array from file
-def readnumsinlines(fname,**kwargs):
-	lines=clean_lines(remove_comments(getlines(fname),**kwargs))
+def readnumsinlines(fname,*args,**kwargs):
+	lines=clean_lines(remove_comments(getlines(fname),*args,**kwargs),*args,**kwargs)
 	br=[]
 	for line in lines:
 		nus=nums(line)
@@ -518,6 +553,7 @@ def savedata(*args,fname="default.txt",header="#",**kwargs):
 		return
 	data=args[0]
 
+	# Deprecated !
 	if nargs>1:
 		fname=args[1]
 		if nargs==3:
@@ -534,6 +570,7 @@ def savedata(*args,fname="default.txt",header="#",**kwargs):
 	fi.close()
 	return
 
+# save lines to file name
 def savelines(lines,fname):
 	f=open(fname,"w")
 	for line in lines:
