@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
 # Copyright Serge Dmitrieff
@@ -118,7 +118,7 @@ class Mesh:
         arg2 : list
             list of arguments
         """
-        
+
         plydata=load_from_file(fname_in,args)
         self.arguments=[arg for arg in args]
         self.in_elements=[elem for elem in plydata.elements]
@@ -139,11 +139,33 @@ class Mesh:
             if elem.name==name:
                 return ix,elem
 
+    def get_in_element_by_name(self,name):
+        for ix,elem in enumerate(self.in_elements):
+            if elem.name==name:
+                return ix,elem
     # We need the ply files to have some simularity :
     #   normals should be at least existent, if not computed
     #   faces should be called vertex_index, not vertex_indices
     def verify_elements(self):
         count=-1
+        args=self.arguments
+        ixmin=0
+        filter=0
+        faces_only=0
+        for arg in args:
+            if arg.startswith('-faces_only'):
+                faces_only=1
+                filter=1
+                (ix_v,vertices)=self.get_in_element_by_name('vertex')
+                (ix_f,faces) =self.get_in_element_by_name('face')
+                # list of vertices in the faces !
+                ixes=sort(unique(array([face[0] for face in faces])))
+                n_verts=len(ixes)
+                new_ixes=arange(n_verts)
+                convert=-ones((max(ixes)+1,))
+                convert[ixes]=new_ixes
+
+
         for elem in self.in_elements:
             count+=1
             # First if we deal with faces, we make sure the name is correct
@@ -151,14 +173,23 @@ class Mesh:
                 # we convert vertex_indices into vertex_index
                 for prop in elem.properties:
                     if prop.name.startswith('vertex_'):
-                        face=array([([T[0][0],T[0][1],T[0][2]],) for T in elem],dtype=[('vertex_index','i4',(3,))])
+                        if faces_only:
+                            face=array([([convert[T[0][0]],convert[T[0][1]],convert[T[0][2]]],) for T in elem],dtype=[('vertex_index','i4',(3,))])
+                        else:
+                            face=array([([T[0][0],T[0][1],T[0][2]],) for T in elem],dtype=[('vertex_index','i4',(3,))])
                         elem=PlyElement.describe(face,elem.name)
             elif elem.name=='vertex':
                 # we check if normals are defined, otherwise we have to create them
                 if not '-normals' in self.arguments:
                     self.arguments.append('-normals')
                 if len(elem[0])<6:
-                    face=array([(l[0],l[1],l[2],0.0,0.0,0.0) for l in elem],dtype=[('x','f4'),('y','f4'),('z','f4'),('nx','f4'),('ny','f4'),('nz','f4')])
+                    if filter==0:
+                        face=array([(l[0],l[1],l[2],0.0,0.0,0.0) for l in elem],dtype=[('x','f4'),('y','f4'),('z','f4'),('nx','f4'),('ny','f4'),('nz','f4')])
+                    else:
+                        face=array([(l[0],l[1],l[2],0.0,0.0,0.0) for j,l in enumerate(elem) if j in ixes],dtype=[('x','f4'),('y','f4'),('z','f4'),('nx','f4'),('ny','f4'),('nz','f4')])
+                    elem=PlyElement.describe(face,elem.name)
+                elif filter:
+                    face=array([(l[0],l[1],l[2],l[3],l[4],l[5]) for j,l in enumerate(elem) if j in ixes],dtype=[('x','f4'),('y','f4'),('z','f4'),('nx','f4'),('ny','f4'),('nz','f4')])
                     elem=PlyElement.describe(face,elem.name)
             self.elements.append(elem)
 
@@ -180,6 +211,9 @@ class Mesh:
 
             if arg.startswith("-center"):
                 self.center_mesh()
+
+            #if arg.startswith("-faces_only"):
+            #    self.keep_only_faces()
 
             if arg.startswith("length="):
                 length=float(arg[7:])
@@ -392,6 +426,7 @@ def create_plydata(items,dict_values):
                 #print(vertex)
             elif name=="face":
                 face=array([([T[0],T[1],T[2]],) for T in Values],dtype=[('vertex_index','i4',(3,))])
+                print(face)
                 elements.append(PlyElement.describe(face,name))
             elif name=="tetrahedra":
                 face=array([([T[0],T[1],T[2],T[3]],) for T in Values],dtype=[('vertex_index','i4',(4,))])
@@ -601,7 +636,17 @@ def do_batch_conversion(args):
         print('Warning : replacing files')
 
     # Then we check input
-    batch=[arg[6:] for arg in args if arg.startswith('batch=')]
+    batch=[]
+    prefix=''
+    suffix=''
+    for arg in args:
+        if arg.startswith('batch='):
+            batch.append(arg[6:])
+        elif arg.startswith('prefix='):
+            prefix=arg[7:]
+        elif arg.startswith('suffix='):
+            suffix=arg[7:]
+
     if len(batch)>1:
         raise ValueError('Currently only a single batch job is supported !')
     batch=batch[0]
@@ -615,13 +660,15 @@ def do_batch_conversion(args):
     else:
         pathe='.'
 
+
+
     # Now listing all files in path that match batch suffix
     files=[fname for fname in listdir(pathe) if fname.endswith(batch)]
     for file in files:
         if len(sout)==0:
             out=file
         else:
-            out="%s%s" %(file.split(batch)[0],sout)
+            out="%s%s%s%s" %(prefix,file.split(batch)[0],sout,suffix)
         # this is proper way to copy.
         newargs=args[:]
         newargs.append("out=%s" %out )
