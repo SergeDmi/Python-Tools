@@ -10,7 +10,7 @@ import warnings
 import copy
 import yaml
 
-__VERSION__ = "0.1.7"
+__VERSION__ = "0.1.8"
 
 try:
 	import pandas as pd
@@ -336,12 +336,13 @@ def make_file_list(part_fname,outro):
 # makes a file list recursively with include and exclude options !
 #@TODO : document
 #@TODO : search depth
-def make_recursive_file_list(*args,folder='.',include=[''],ext='',exclude=__exclude_key__,**kwargs):
+def make_recursive_file_list(*args,folder=None,folders=[],include=[''],ext=[''],exclude=__exclude_key__,**kwargs):
 	"""
 	Makes a recursive file list from a location (folder=LOCATION),
+	or a set of folders (folders=[LOCATION,LOCATION,LOCATION])
 	specific must-contain word parts may be provided ( include=WORD_PART or include=[PART1 , PART2] )
 	certain must-not-contain word parts can be excluded ( exclude=WORD_PART or exclude=[PART1 , PART2] )
-	an extension can be specified : ( ext=EXTENSION )
+	an extension can be specified : ( ext=EXTENSION or ext=[EXTENSION1,EXTENSION2])
 	"""
 	liste=[]
 	dict=kwargs
@@ -349,21 +350,29 @@ def make_recursive_file_list(*args,folder='.',include=[''],ext='',exclude=__excl
 		include=[include]
 	if not type(exclude)==list:
 		exclude=[exclude]
+	if not type(ext)==list:
+		ext=[ext]
 
-	for f in os.listdir(folder):
-		f=os.path.join(folder,f)
-		if os.path.isdir(f):
-			dict['folder']=f
-			dict['ext']=ext
-			dict['include']=include
-			dict['exclude']=exclude
-			liste+=make_recursive_file_list(**dict)
-		#elif f.find(include)>=0 and f.endswith(ext) and f.find(exclude)<0:
-		elif f.endswith(ext):
-			is_included=[f.find(inc)>=0 for inc in include]
-			is_not_excluded=[f.find(exc)<0 for exc in exclude]
-			if all(is_included) and all(is_not_excluded):
-				liste+=[f]
+	if folder is not None:
+		folders=[folder]
+
+	for folder in folders:
+		for f in os.listdir(folder):
+			f=os.path.join(folder,f)
+			if os.path.isdir(f):
+				dict['folder']=f
+				dict['ext']=ext
+				dict['include']=include
+				dict['exclude']=exclude
+				liste+=make_recursive_file_list(**dict)
+			#elif f.find(include)>=0 and f.endswith(ext) and f.find(exclude)<0:
+			else:
+				for extension in ext:
+					if f.endswith(extension):
+						is_included=[f.find(inc)>=0 for inc in include]
+						is_not_excluded=[f.find(exc)<0 for exc in exclude]
+						if all(is_included) and all(is_not_excluded):
+							liste+=[f]
 	return liste
 
 # Just order stuff
