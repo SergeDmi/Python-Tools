@@ -18,7 +18,8 @@
     ply_convert reads a mesh from a file (.mesh or .ply), performs simple operations, and saves it (to .mesh or .ply)
     Requires module plyfile : https://github.com/dranjan/python-plyfile/
     Requires modules sys,os,numpy,sklearn
-    Uses the module import_tools : https://github.com/SergeDmi/Utilities/blob/master/bin/import_tools.py
+    Uses the module sio_tools : $ pip3 install sio_tools
+    https://github.com/SergeDmi/Python-Tools/blob/master/sio_tools/sio_tools.py
     More : https://biophysics.fr
 
 # SYNTAX
@@ -86,10 +87,11 @@ try:
 except:
     raise ValueError('Necessary Python modules could not be loaded')
 try:
-    from import_tools import *
+    import sio_tools as sio
 except:
-    print('Warning : import_tools could not be loaded. Get it from https://github.com/SergeDmi/Utilities/blob/master/bin/import_tools.py')
+    print('Warning : sio_tools could not be loaded. Get it from https://github.com/SergeDmi/Utilities/blob/master/bin/import_tools.py')
     print('Warning : will not be able to load .mesh files ')
+    print('Warning : will not be able to recursively find files')
 
 # ------------------------------------------------------------------------
 ## ---- DAT MESH CLASS  doin work                                   ------
@@ -426,7 +428,6 @@ def create_plydata(items,dict_values):
                 #print(vertex)
             elif name=="face":
                 face=array([([T[0],T[1],T[2]],) for T in Values],dtype=[('vertex_index','i4',(3,))])
-                print(face)
                 elements.append(PlyElement.describe(face,name))
             elif name=="tetrahedra":
                 face=array([([T[0],T[1],T[2],T[3]],) for T in Values],dtype=[('vertex_index','i4',(4,))])
@@ -441,7 +442,7 @@ def load_mesh(fname_in,args):
     print('Warning : .mesh file reading is still experimental')
     print('Warning : Labels have to be added in command line : label=X')
     print('Warning : now supporting only keys : %s' %(' '.join([k for k in klist])))
-    lines=clean_lines(getlines(fname_in))
+    lines=sio.clean_lines(sio.getlines(fname_in))
     keys=['Dimension','Vertices','Edges','Triangles','Tetrahedra','Quadrilaterals','Geometry','CrackedEdges','End']
     dict_lines={}
     dict_lines_nb={}
@@ -636,43 +637,65 @@ def do_batch_conversion(args):
         print('Warning : replacing files')
 
     # Then we check input
-    batch=[]
+    batches=[]
     prefix=''
     suffix=''
+    recursive=False
+    includes=[]
+    excludes=[]
+    pathes=[]
+
     for arg in args:
         if arg.startswith('batch='):
-            batch.append(arg[6:])
+            batches.append(arg[6:])
         elif arg.startswith('prefix='):
             prefix=arg[7:]
         elif arg.startswith('suffix='):
             suffix=arg[7:]
+        elif arg.startswith('-recurs'):
+            recursive=True
+        elif arg.startswith('include='):
+            includes.append(arg[8:])
+        elif arg.startswith('exclude='):
+            excludes.append(arg[8:])
+        if arg.startswith('path='):
+            pathes.append(arg[5:])
 
-    if len(batch)>1:
-        raise ValueError('Currently only a single batch job is supported !')
-    batch=batch[0]
-    if not batch.startswith('.'):
-        raise ValueError('batch= argument should be a file format, e.g. batch=.ply')
+    #if len(batch)>1:
+    #    raise ValueError('Currently only a single batch job is supported !')
+    #batch=batch[0]
+    for batch in batches:
+        if not batch.startswith('.'):
+            raise ValueError('batch= argument should be a file format, e.g. batch=.ply')
 
-    # Do we have a path ? If not, path is here.
-    pathes=[arg[5:] for arg in args if arg.startswith('path=')]
-    if len(pathes)>0:
-        pathe=pathes[0]
+    files=[]
+    if not recursive:
+        # Do we have a path ? If not, path is here.s
+        if len(pathes)==0:
+            pathes=['.']
+        for pathe in pathes:
+            # Now listing all files in path that match a batch suffix
+            for fname in listdir(pathe):
+                if len(fname) > 4:
+                    if fname[-4:] in batches:
+                        files.append(path.join(pathe,fname))
     else:
-        pathe='.'
+        files = sio.make_recursive_file_list(include=includes, exlude=excludes, folders=pathes, ext=batches )
 
-
-
-    # Now listing all files in path that match batch suffix
-    files=[fname for fname in listdir(pathe) if fname.endswith(batch)]
     for file in files:
         if len(sout)==0:
             out=file
         else:
-            out="%s%s%s%s" %(prefix,file.split(batch)[0],sout,suffix)
+            #out="%s%s%s%s" %(prefix,file.split(batch)[0],sout,suffix)
+            name=path.basename(file)
+            pathe=path.dirname(file)
+            rename = "%s%s%s%s" % (prefix, name.split(batch)[0], sout, suffix)
+            out=path.join(pathe,rename)
+
         # this is proper way to copy.
         newargs=args[:]
         newargs.append("out=%s" %out )
-        newargs.insert(0,path.join(pathe,file))
+        newargs.insert(0,file)
         do_mesh_conversion(newargs)
 
     # Done
