@@ -8,6 +8,8 @@
 # @TODO : support for complex mesh (non triangular)
 # @TODO : Document and clarify submesh
 
+__VERSION__ = "0.0.1"
+
 """
 # SYNOPSIS
 
@@ -24,7 +26,7 @@
 
 # SYNTAX
 
-   python ply_convert.py INPUT_FILE out=OUTPUT_FILE [OPTIONS] [out=additional_output_file] [ADDITIONAL_OPTIONS]
+   python ply_convert.py [INPUT_FILE [INPUT_FILE_2 _3 ... ]] [out=OUTPUT_FILE] [OPTION=VALUE]  [-ADDITIONAL_OPTIONS]
 
 # OPTIONS
 
@@ -32,14 +34,16 @@
     Unless mentioned otherwise, options are not applied by default
 
     Supported options :
-        out=            : name of output file
+        out=            : name of output file (single file job) // extension of output file (multiple files)
         scale=          : scale to be applied to points (float or 3x1 vector)
         length=         : length of object on dimension of maximal variance
         thickness=      : adds to each point a vector thickness*normal
-        batch=          : apply to all files of a certain type ; overrides INPUT_FILE
+        batch=          : apply to all files of a certain type
         path=           : path in which to look for files for batch operation
         label=          : label of mesh, added when saving mesh files
         orientation=    : orientation of normals (+1 : towards outside, -1 : towards inside)
+        prefix=         : add a prefix to output file name (multiple files)
+        suffix=         : add a suffix to output file name (multiple files)
         -center         : center the data around [0,0,0]
         -align          : aligns data to dimension x
         -normals        : computes normals from faces
@@ -47,30 +51,40 @@
         -fixnorms       : makes sure normals are inwards (equivalent to option orientation=-1)
         -fixuint        : fixes format to meshlab-friendly
 
+        batch=          : extension of files to process in batch (support multiple)
+        ** batch only **
+        path=            : folder in which to look for files (support multiple)
+        include=         : string that *must* be included in file name (support multiple)
+        exclude=         : string that *must not* be included in file name (support multiple)
+        -recursive       : searches recursively for files  
+
 # EXAMPLES :
 
             ply_convert.py file.ply out=file.mesh
-
                         converts a ply file file.ply to a mesh file file.mesh
 
 
             ply_convert.py file.mesh normals=1 out=file.ply
-
                         converts a mesh file to a ply file, and computes the normal at each point
+
+            ply_convert.py file_1.ply file_2.ply file_3.ply out=.mesh
+                        convers file_1.ply file_2.ply file_3.ply into mesh files
 
 
             ply_convert.py file.ply -center -align -normals length=7 -verbose thickness=0.15 scale='1.0 1.0 2.0'
                                 verbose=1 out=thickened.mesh out=thickened.ply
-
                         converts a ply file to a ply and a mesh file
                         after centering, aligning, computing normals, scaling the object to a length of 7,
                         and adding an extra thickness of 0.15, then scaling the z axis with a factor 2
 
 
-            ply_convert.py batch=.ply path='/home/user/simulations/' out='.ply' -fixuint
+            ply_convert.py batch=.ply path='/home/user/simulations/' out='.ply' scale=0.1 -recursive prefix=scaled_
+                        Recursively find ply files in '/home/user/simulations/', scales them to a factor of 0.1, and
+                        saves them to FOLDER/suffix_NAME.ply with NAME the filename and FOLDER the folder name
 
-                        rewrites all the ply files in folder path after fixing the variable type of Vertices
-                        Note : useful because tinply (<3) doesn't agree with meshlab (<3) for some reason
+
+            ply_convert.py file.ply out=fixed_file.ply -fixuint
+                        fixes the header of a mesh file saved by tinyply (C++) so that it doesn't crash with meshlab.
 
 
 """
@@ -84,14 +98,13 @@ try:
     from os import listdir,path
     from sklearn.decomposition import PCA
     from collections.abc import Iterable
-except:
-    raise ValueError('Necessary Python modules could not be loaded')
-try:
     import sio_tools as sio
 except:
-    print('Warning : sio_tools could not be loaded. Get it from https://github.com/SergeDmi/Utilities/blob/master/bin/import_tools.py')
-    print('Warning : will not be able to load .mesh files ')
-    print('Warning : will not be able to recursively find files')
+    raise ValueError('Necessary Python modules could not be loaded')
+
+## Version
+def version():
+    return __VERSION__
 
 # ------------------------------------------------------------------------
 ## ---- DAT MESH CLASS  doin work                                   ------
@@ -601,6 +614,21 @@ def write_mesh_file(plydata,fname_out,args):
 # --------------------------------------------------------
 ## Specific functions doing tha job for main
 # --------------------------------------------------------
+def main(args):
+    options=[]
+    inputs=[]
+    for arg in args:
+        if arg.startswith('-'):
+            options.append(arg)
+        elif arg.find('=')>0:
+            options.append(arg)
+        else:
+            inputs.append(arg)
+    if len(inputs)==1:
+        args=inputs+options
+        do_mesh_conversion(args)
+    else:
+        do_batch_conversion(options,files=inputs)
 
 # __main__ or do_batch_conversion calls to this function
 def do_mesh_conversion(args):
@@ -623,19 +651,10 @@ def do_mesh_conversion(args):
     return mesh.write_to_file()
 
 ##  Batch conversion of mesh files
-def do_batch_conversion(args):
+def do_batch_conversion(args,files=[]):
     # First we check output
     sout=""
-    outs=[args.pop(i) for i,arg in enumerate(args) if arg.startswith('out=')]
-    if len(outs)>0:
-        sout=outs[0][4:]
-        if not sout.startswith('.'):
-            raise ValueError('Output argument should be a file format in batch mode')
-        if len(outs)>1:
-            print('Warning : several output specified, keeping %s ' %sout)
-    else:
-        print('Warning : replacing files')
-
+    outs=[]
     # Then we check input
     batches=[]
     prefix=''
@@ -646,6 +665,8 @@ def do_batch_conversion(args):
     pathes=[]
 
     for arg in args:
+        if arg.startswith('out='):
+            outs.append(arg[4:])
         if arg.startswith('batch='):
             batches.append(arg[6:])
         elif arg.startswith('prefix='):
@@ -661,6 +682,16 @@ def do_batch_conversion(args):
         if arg.startswith('path='):
             pathes.append(arg[5:])
 
+
+    if len(outs)>0:
+        sout=outs[0]
+        if not sout.startswith('.'):
+            raise ValueError('Output argument should be a file format in batch mode')
+        if len(outs)>1:
+            print('Warning : several output specified, keeping %s ' %sout)
+    else:
+        print('Warning : replacing files')
+
     #if len(batch)>1:
     #    raise ValueError('Currently only a single batch job is supported !')
     #batch=batch[0]
@@ -668,19 +699,19 @@ def do_batch_conversion(args):
         if not batch.startswith('.'):
             raise ValueError('batch= argument should be a file format, e.g. batch=.ply')
 
-    files=[]
-    if not recursive:
-        # Do we have a path ? If not, path is here.s
-        if len(pathes)==0:
-            pathes=['.']
-        for pathe in pathes:
-            # Now listing all files in path that match a batch suffix
-            for fname in listdir(pathe):
-                if len(fname) > 4:
-                    if fname[-4:] in batches:
-                        files.append(path.join(pathe,fname))
-    else:
-        files = sio.make_recursive_file_list(include=includes, exlude=excludes, folders=pathes, ext=batches )
+    if len(batches)>0:
+        if not recursive:
+            # Do we have a path ? If not, path is here.s
+            if len(pathes)==0:
+                pathes=['.']
+            for pathe in pathes:
+                # Now listing all files in path that match a batch suffix
+                for fname in listdir(pathe):
+                    if len(fname) > 4:
+                        if fname[-4:] in batches:
+                            files.append(path.join(pathe,fname))
+        else:
+            files = sio.make_recursive_file_list(include=includes, exlude=excludes, folders=pathes, ext=batches )
 
     for file in files:
         if len(sout)==0:
@@ -689,7 +720,7 @@ def do_batch_conversion(args):
             #out="%s%s%s%s" %(prefix,file.split(batch)[0],sout,suffix)
             name=path.basename(file)
             pathe=path.dirname(file)
-            rename = "%s%s%s%s" % (prefix, name.split(batch)[0], sout, suffix)
+            rename = "%s%s%s%s" % (prefix, name.split('.')[0], sout, suffix)
             out=path.join(pathe,rename)
 
         # this is proper way to copy.
@@ -702,12 +733,7 @@ def do_batch_conversion(args):
     return len(files)
 
 
-
 if __name__ == "__main__":
     args=sys.argv[1:]
-    # Checking which kind of job we're doing : batch XOR single
-    bb=array([1 for arg in args if arg.startswith('batch=')])
-    if sum(bb)>0:
-        do_batch_conversion(args)
-    else:
-        do_mesh_conversion(args)
+    main(args)
+
