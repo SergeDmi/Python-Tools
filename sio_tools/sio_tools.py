@@ -10,7 +10,7 @@ import warnings
 import copy
 import yaml
 
-__VERSION__ = "0.1.8"
+__VERSION__ = "0.1.9"
 
 try:
 	import pandas as pd
@@ -410,7 +410,7 @@ def make_prop_dict(fname,*args,key="set",name_offset=1,value_offset=2,**kwargs):
 		ixes=[i for i,word in enumerate(words) if word.find(keys[-1])>=0]
 		for i in ixes:
 			try:
-				props[words[i+name_offset]]=line_remove_comments(clean_line(''.join(words[i+value_offset:]),*args,**kwargs),*args,**kwargs)
+				props[words[i+name_offset]]=line_remove_comments(clean_line_return(''.join(words[i+value_offset:]),*args,**kwargs),*args,**kwargs)
 			except:
 				print('Could not understand property %s from configuration file %s' %(words[i],fname))
 	#for line in lines1:
