@@ -8,7 +8,7 @@
 # @TODO : support for complex mesh (non triangular)
 # @TODO : Document and clarify submesh
 
-__VERSION__ = "0.0.1"
+__VERSION__ = "0.0.2"
 
 """
 # SYNOPSIS

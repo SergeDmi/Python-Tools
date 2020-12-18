@@ -1,5 +1,5 @@
-## About seplot
-seplot is a frontend for PyX to create plot from text files in command line or through a python interface.
+## About ply_convert
+    ply_convert is a command line tool to manipulae ply meshes 
 Developed by Serge Dmitrieff.
 https://www.biophysics.fr
 
