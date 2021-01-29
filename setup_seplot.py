@@ -32,6 +32,5 @@ setup(
           'pandas'
       ],
      packages=find_packages(),
-     scripts=['seplot/bin/seplot','seplot/seplot.py',
-        'seplot/kw_dictionaries.py','seplot/style_dictionaries.py']
+     scripts=['seplot/bin/seplot']
  )
