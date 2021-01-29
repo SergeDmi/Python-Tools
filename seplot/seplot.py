@@ -531,7 +531,7 @@ class Splotter:
         disp('seplot.py file.txt y=A[:,1]^2+A[:,2]^2 dy=3 color=1')
         quit
 
-class Graph(Splotter):
+class Graph:
     # Graph is a class containing a single line/set of points and their style, created from class Toplot
     def __init__(self,*args,
                 x=0,y=1,dx=[],dy=[],col='',siz='',stil='',
@@ -878,7 +878,7 @@ class Graph(Splotter):
 
         return A
 
-class Style(Graph):
+class Style:
     # A class containing the style to make a graph
     def __init__(self, *args,numr=0,
                 dx=[],dy=[],
@@ -889,7 +889,7 @@ class Style(Graph):
         self.stroke_style=[]
         if numr:
             kwargs['numr']=numr
-        self.goodstyle=goodstyle(*args,**kwargs)
+        self.goodstyle=Goodstyle(*args,**kwargs)
         #print(self.goodstyle.kind)
         #self.is_histogram=0
 
@@ -927,7 +927,7 @@ class Style(Graph):
             self.stroke_style=self.goodstyle.stroke_style
 
 
-class goodstyle(Style):
+class Goodstyle:
     # A class containing the style attributes to pass to python PyX
     def __init__(self,*args,
                 numr=0,
