@@ -99,8 +99,9 @@ class Graph:
 
             # Dirty tricks for maximum compatibility
             if min(in_data['size_x'],in_data['size_y'])==1:
-                self.x='auto'
-                self.y=0
+                x='auto'
+                y=0
+                sio.custom_warn("Single data row/column : x is automatic")
             if in_data['size_x']==1:
                 self.mode='h'
 

@@ -9,7 +9,7 @@ from pyx import *
 from numpy import *
 from pyx.graph import axis
 import sys
-
+import sio_tools as sio
 
 if __package__:
     import seplot.kw_dictionaries as kd
@@ -253,6 +253,7 @@ class Splotter:
         self.ymin=None
         self.ymax=None
         self.key=None
+        self.bgcolor=None
         self.width=8
         self.height=5
         self.kdist=0.1
@@ -262,17 +263,26 @@ class Splotter:
         self.equalaxis=0
         self.future_plots=[]
         self.graphs=[]
-        #data=array(data)
+
         # Now we add extra arguments ; this is a bit weird but the simplest option to use both command line and python import
         for arg in args:
             arguments.append(arg)
         for key, value in kwargs.items():
             arguments.append('%s=%s' %(key,value))
+            
         # Now we read arguments
         current_args=self.read_args(arguments=arguments)
         # and if we have data to plot we add it to future plots
         if data is not None:
             self.add_plot(data=data,arguments=current_args)
+
+    # Integration with IPython (jupyter notebook) : png representation
+    def _repr_png_(self):
+        return self.canvas._repr_png_()
+
+    # Integration with IPython (jupyter notebook) : svg representation
+    def _repr_svg_(self):
+        return self.canvas._repr_svg_()
 
     # Just a wrapper
     def add_plot(self,*args,**kwargs):
@@ -315,6 +325,8 @@ class Splotter:
                 self.xmax=float(arg[5:])
             elif arg.startswith('ymax='):
                 self.ymax=float(arg[5:])
+            elif arg.startswith('bgcolor='):
+                self.bgcolor=arg[8:]
             elif arg.startswith('key='):
                 keyz=arg[4:]
             elif arg.startswith('-key') or arg.startswith('-legend'):
@@ -391,7 +403,7 @@ class Splotter:
         self.make_plot(*args,**kwargs)
         self.save_plot(*args,**kwargs)
 
-    def make_plot(self,*args,**kwargs):
+    def make_plot(self,*args,backgroundattrs=None, **kwargs):
         self.read_args(*args,**kwargs)
         # we check if the plots must be split by and / andif
         for i,toplot in enumerate(self.future_plots):
@@ -450,8 +462,22 @@ class Splotter:
         else:
             yaxis=axis.linear(title=self.ylabel,min=self.ymin,max=self.ymax)
 
+        backgroundattrs = None
+        if self.bgcolor is not None:
+            if self.bgcolor in col_dict.keys():
+                backgroundattrs=[deco.filled([col_dict[self.bgcolor]])]
+            else:
+                if not self.bgcolor.startswith("color"):
+                    if self.bgcolor.find(".")==-1:
+                        self.bgcolor = "cmyk.%s" % self.bgcolor
+                    self.bgcolor="color.%s" %self.bgcolor
+                try:
+                    backgroundattrs=[deco.filled([eval(self.bgcolor)])]
+                except:
+                    sio.custom_warn("Cound not understand background color from %s" %self.bgcolor)
 
         self.graph=graph.graphxy(width=self.width,height=self.height,key=self.key,
+                                 backgroundattrs=backgroundattrs,
                 x=xaxis,
                 y=yaxis )
 
