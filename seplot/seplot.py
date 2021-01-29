@@ -20,8 +20,7 @@ else:
     import style_dictionaries as sd
     from grapher import Graph
 
-
-__VERSION__ = "2.1.0"
+__VERSION__ = "2.1.2"
 
 """
 # SYNOPSIS
@@ -177,10 +176,13 @@ class Toplot:
     # here we need to support a keyword argument having to values, until we split
     # therefore we don't convert everything to *args,**kwargs for now
     # @TODO : toplot should have a kwarg member ! -> No need to translate
-    def __init__(self,*args,arguments=[],data=None,fname="",**kwargs):
+    def __init__(self,*args,arguments=None,data=None,fname="",**kwargs):
         self.fname=fname
         self.data=data
-        self.arguments=[arg for arg in arguments]
+        self.arguments=[]
+        if arguments is not None:
+            self.arguments=arguments
+        #self.arguments=[arg for arg in arguments]
         for arg in args:
             self.arguments.append(arg)
         for key, value in kwargs.items():
@@ -240,7 +242,11 @@ class Toplot:
 class Splotter:
     # seplot is the global plotter class
     # It mostly sorts arguments and prepares global plot options
-    def __init__(self,*args,arguments=[],data=None,**kwargs):
+    def __init__(self,*args,arguments=None,data=None,**kwargs):
+
+        if arguments is None:
+            arguments=[]
+
         ## First we initialize class members
         self.canvas=canvas.canvas()
         #if not args and not data:
@@ -288,7 +294,9 @@ class Splotter:
     def add_plot(self,*args,**kwargs):
         self.future_plots.append(Toplot(*args,**kwargs))
 
-    def read_args(self,*args,arguments=[],**kwargs):
+    def read_args(self,*args,arguments=None,**kwargs):
+        if arguments is None:
+            arguments = []
         ## Now we read arguments
         for arg in args:
             arguments.append(arg)
@@ -564,7 +572,7 @@ def not_none(*args):
 
 if __name__ == "__main__":
     nargs=len(sys.argv)
-    args=sys.argv[1:]
+    dargs=sys.argv[1:]
 
-    seplot=Splotter(arguments=args)
+    seplot=Splotter(arguments=dargs)
     seplot.make_and_save()
