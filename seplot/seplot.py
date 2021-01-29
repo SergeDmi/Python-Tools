@@ -269,7 +269,7 @@ class Splotter:
             arguments.append(arg)
         for key, value in kwargs.items():
             arguments.append('%s=%s' %(key,value))
-            
+
         # Now we read arguments
         current_args=self.read_args(arguments=arguments)
         # and if we have data to plot we add it to future plots
