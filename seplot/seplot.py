@@ -20,7 +20,7 @@ else:
     import style_dictionaries as sd
     from grapher import Graph
 
-__VERSION__ = "2.1.2"
+__VERSION__ = "2.1.3"
 
 """
 # SYNOPSIS
@@ -160,15 +160,6 @@ __SPLIT_MARK__ = '--split_mark--'
 
 def version():
     return __VERSION__
-
-def get_histogram(Y,bins='auto'):
-    (Y,X)=histogram(Y,bins)
-    nx=len(X)
-    if nx:
-        X=(X[0:(nx-1)]+X[1:nx])/2.0
-    else:
-        raise ValueError('Empty histogram from numpy.histogram')
-    return (Y,X)
 
 class Toplot:
     # Toplot is a class containing the options for plotting

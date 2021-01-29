@@ -399,3 +399,14 @@ class Graph:
                 raise ValueError('Cannot understand condition. Hint use : if=\'A[:,2]>0.5\' ')
 
         return A
+
+
+
+def get_histogram(Y,bins='auto'):
+    (Y,X)=histogram(Y,bins)
+    nx=len(X)
+    if nx:
+        X=(X[0:(nx-1)]+X[1:nx])/2.0
+    else:
+        raise ValueError('Empty histogram from numpy.histogram')
+    return (Y,X)
