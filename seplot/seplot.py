@@ -485,6 +485,7 @@ class Splotter:
             self.plot(graf)
         ## We finish() the graph to be able to work with pathes
         self.graph.finish()
+        #self.canvas.insert(self.graph)
 
         ## Now if there are graphs with a stroke_style, we paint them !
         # This is meant for histograms
@@ -492,8 +493,9 @@ class Splotter:
             if len(graf.stroke_style):
                 for plot in graf.ploted:
                     self.canvas.stroke(plot.path,graf.stroke_style)
-
+                    print(graf.stroke_style)
         self.canvas.insert(self.graph)
+        #self.canvas.insert(self.graph)
 
 
 
