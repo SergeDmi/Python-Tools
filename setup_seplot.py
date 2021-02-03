@@ -31,6 +31,7 @@ setup(
           'sio_tools',
           'pandas'
       ],
-     packages=find_packages(),
-     scripts=['seplot/bin/seplot']
+     packages=['seplot'],
+     package_dir={'seplot': 'seplot'},
+     scripts=['seplot/bin/seplot','seplot/seploter.py']
  )

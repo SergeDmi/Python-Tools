@@ -11,16 +11,11 @@ from pyx.graph import axis
 import sys
 import sio_tools as sio
 
-if __package__:
-    import seplot.kw_dictionaries as kd
-    import seplot.style_dictionaries as sd
-    from seplot.grapher import Graph
-else:
-    import kw_dictionaries as kd
-    import style_dictionaries as sd
-    from grapher import Graph
+import seplot.kw_dictionaries as kd
+import seplot.style_dictionaries as sd
+from seplot.grapher import Graph
 
-__VERSION__ = "2.1.3"
+__VERSION__ = "2.1.6"
 
 """
 # SYNOPSIS
@@ -562,10 +557,3 @@ def apply_on_not_none(*args,function=None):
 
 def not_none(*args):
     return [arg for arg in args if arg is not None]
-
-if __name__ == "__main__":
-    nargs=len(sys.argv)
-    dargs=sys.argv[1:]
-
-    seplot=Splotter(arguments=dargs)
-    seplot.make_and_save()

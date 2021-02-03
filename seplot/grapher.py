@@ -4,15 +4,9 @@ import sio_tools as sio
 import pandas as pd
 
 
-if __package__:
-    from seplot.styler import Style
-    import seplot.kw_dictionaries as kd
-    import seplot.style_dictionaries as sd
-
-else:
-    import kw_dictionaries as kd
-    import style_dictionaries as sd
-    from styler import Style
+from seplot.styler import Style
+import seplot.kw_dictionaries as kd
+import seplot.style_dictionaries as sd
 
 
 # Basic set of colours, symbols, and lines
