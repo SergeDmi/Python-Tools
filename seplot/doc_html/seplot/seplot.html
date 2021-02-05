@@ -1,0 +1,1779 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>seplot.seplot API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>seplot.seplot</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+#
+# Copyright Serge Dmitrieff
+# www.biophysics.fr
+#
+# Based on Python Pyx
+from pyx import *
+from numpy import *
+from pyx.graph import axis
+import sys
+import sio_tools as sio
+
+import seplot.kw_dictionaries as kd
+import seplot.style_dictionaries as sd
+from seplot.grapher import Graph
+
+__VERSION__ = &#34;2.1.6&#34;
+
+&#34;&#34;&#34;
+## SYNOPSIS
+
+   seplot is a shorthand command-line/python tool to plot graphs using PyX. PyX is good.
+
+## DESCRIPTION
+
+   seplot plots a graph from text/csv files
+   it is meant to be fast and dirty (but uses PyX to be beautiful)
+   Can be used from the terminal (mostly) but also from a python script and notebook
+
+## SYNTAX
+
+   python seplot.py TEXT_FILE [OPTIONS] [ADDITIONAL_TEXT_FILES] [ADDITIONAL_OPTIONS]
+
+## OPTIONS
+
+    seplot has two kinds of options : global (for the whole figure) and local (for a particular file)
+    All options should be written as option_name=option_value
+
+    Global options :
+        xlabel        : label of x axis
+        ylabel        : label of y axis
+        width         : width of figure
+        height        : height of figure
+        xmin          : min x value
+        xmax          : max x value
+        ymin          : min y value
+        ymax          : max y value
+        key           : position of figure legend (tr,br,tl,bl)
+        out           : name of output file
+        -ylog         : y axis is logarithmic
+        -xlog         : x axis is logarithmic
+        -keep         : keep options for subsequent plots, until -discard
+        -discard      : discard options for next plot
+        -equal        : equal x-y axis range
+        -autolabel    : tries to automatically find labels from data file
+
+    Local options :
+        x        : index of column or row to be used as x axis values (e.g. x=0 for the first column)
+                        also can specify a label read from file header : x=column_label
+                        also can specify an operation : x=&#39;A[:,0]*A[:,1]&#39; or x=&#39;column_label*column_label&#39;
+                        can also be automatic, i.e. index : x=auto
+        y        : index of column or row to be used as y axis values, same possibilities as x=
+        dy       : index of column or row to be used as dy values , same possibilities as x=
+        mode     : h for horizontal (rows), v for vertical (column) (default)
+
+        color    : color of lines or symbol ; can be either red, green, blue, dark, medium, light, black
+                        or color.cmyk.*  or color.rgb.*
+                        or an operation, e.g. color=A[:,2] or color=columns_label*5
+
+        and      : add another graph (possibly with different options)
+
+        style    : style of plot : - or _ for a line, -- for dashed, .- for dashdotted
+                                    o for circles  x , * for crosses  + for plus   &gt; , &lt;     for triangles
+                                    b for a bar graph , B for a filled bar graph (histogram)
+
+        if / cond : condition to keep the rows or columns
+
+        andif     :  add another graph with different conditions
+
+        range    : range of rows / columns to plot
+
+        size     : size of symbol used
+
+        line     : thickness of line, from 0 to 5
+
+        title (or legend) : title of the graph
+
+        -hist    : makes a histogram out of the data
+
+## EXAMPLES :
+
+            seplot.py file.txt
+                        plots the second column of file.txt as a function of the first column
+            seplot.py file.txt x=3 y=7
+                        plots the 4th (3+1) column of file.txt as a function of the eigth column (7+1)
+            seplot.py file.txt x=3 y=7 and x=3 y=10
+                        plots the 4th (3+1) column of file.txt as a function of the eigth column (7+1),
+                        and another plot of 4th column as a function of 11th column
+            seplot.py file.txt color=red file2.txt out=plot.pdf
+                        plots in red the second column of file.txt as a function of the first column
+                        plots the second column of file2.txt as a function of the first column in the same graph
+            seplot.py file.txt &#39;y=sqrt(A[:,1]^2+A[:,2]^2)&#39; dy=3 color=1 grad=gray xlabel=&#39;$t$ in minutes&#39; ylabel=&#39;$\bar{z}$&#39;
+                        A[:,1] and A[:,2] are the second and third columns of file.txt
+                        the deviation is set from the fourth column of file.txt
+                        the color is set from the second column of file.txt, based on a gray-level gradient
+                        labels and titles use the Latex interpreter
+            seplot.py file.txt if=&#39;x&gt;1&#39;
+                        plots the second column as a function of the first if elements of the first are greater than 1
+            seplot.py file.txt mode=&#39;h&#39; if=&#39;A[0,:]&gt;1&#39; -xlog
+                        plots the second row as a function of the first row if elements of the first row are greater than 1
+                        the x axis is logarithmic
+            seplot.py file.txt mode=&#39;h&#39; if=&#39;x&gt;1&#39; andif=&#39;x&lt;=1&#39;
+                        plots the second row as a function of the first row if elements of the first row are greater than 1
+                        and (with a different style) if the elements of the first row are smaller than 1
+            seplot.py range=3 -keep data_0*.txt
+                        plots data from only the third line of the files data_0*.txt
+            seplot.py file.txt range=0:4
+                        plots data from only the first to 4th line of file.txt
+            seplot.py data.txt x=1 y=2 and y=3
+                        plots the third and fourth column as a function of the second
+
+## Use seplot from python :
+            # Single plot :
+            import seplot.seplot as sp
+            plot=sp.Splotter(*args,data=A)           
+            # A is a data array (numpy or pandas dataframe) , args is a list of argument
+            plot.make_and_save(*args)
+            # Several plots :
+            plot=sp.Splotter(&#39;-autolabel&#39;,key=&#39;tl&#39;)
+            plot.add_plot(data=A,color=&#39;blue&#39;)
+            plot.add_plot(data=B,color=&#39;red&#39;)
+            plot.make_and_save()
+&#34;&#34;&#34;
+
+#@TODO :    yaml config file
+#@TODO :    separate script from module !
+
+
+# Basic set of colours, symbols, and lines
+csl=sd.get_colors_symbols_lines()
+colours=csl[&#39;colours&#39;]
+colour_strings=csl[&#39;colour_strings&#39;]
+symbols=csl[&#39;symbols&#39;]
+linests=csl[&#39;linests&#39;]
+# dictionaries
+dicos=sd.get_dictionaries()
+col_dict=dicos[&#39;colors&#39;]
+linst_dict=dicos[&#39;lines&#39;]
+symst_dict=dicos[&#39;symbols&#39;]
+linw_dict=dicos[&#39;widths&#39;]
+grad_dict=dicos[&#39;gradients&#39;]
+kw_dict=kd.get_keywords()
+
+__SPLIT_MARK__ = &#39;--split_mark--&#39;
+
+def version():
+    return __VERSION__
+
+class Toplot:
+    &#34;&#34;&#34;
+    Toplot is a class containing the options for plotting
+    it also contains a method to split into two
+    here we need to support a keyword argument having to values, until we split
+    therefore we don&#39;t convert everything to *args and **kwargs,
+    rather we pass *argument*, a list of arguments and kw arguments
+
+    &#34;&#34;&#34;
+    def __init__(self, *args, arguments=None, data=None, fname=&#34;&#34;, **kwargs):
+        &#34;&#34;&#34; Initialization&#34;&#34;&#34;
+        self.fname=fname
+        &#34;&#34;&#34; filename to read data from &#34;&#34;&#34;
+        self.data=data
+        &#34;&#34;&#34; data to plot from &#34;&#34;&#34;
+        self.arguments=[]
+        &#34;&#34;&#34; actual arguments&#34;&#34;&#34;
+        if arguments is not None:
+            self.arguments=arguments
+
+        for arg in args:
+            self.arguments.append(arg)
+        for key, value in kwargs.items():
+            self.arguments.append(&#39;%s=%s&#39; %(key,value))
+
+    def check_split(self):
+        &#34;&#34;&#34; Checking if we need to split the graph into several graphs when implied from arguments&#34;&#34;&#34;
+        na=len(self.arguments)
+        do_split=0
+        for i,arg in enumerate(self.arguments):
+            if arg==__SPLIT_MARK__:
+                do_split=1
+                n_split=i
+        if do_split:
+            #print(&#39;splitting with %s&#39; %self.arguments)
+            future_args=self.arguments
+            self.arguments=self.arguments[0:n_split]
+            future_args.pop(n_split)
+            if len(future_args)&gt;n_split:
+                if future_args[n_split]==&#39;-discard&#39;:
+                    if len(future_args)&gt;n_split+1:
+                        future_args=future_args[(n_split+1):]
+                    else:
+                        future_args=[]
+
+            new_dict={**self.__dict__}
+            new_dict[&#39;arguments&#39;]=future_args
+            #print(&#39;new object with : %s &#39; %(new_dict))
+            return [1,Toplot(**new_dict)]
+        else:
+            return [0,1]
+
+    def unpack_arguments(self):
+        &#34;&#34;&#34; We convert our coarse list of arguments as a list of strings to a better arg / kwargs format&#34;&#34;&#34;
+        args=self.arguments
+        kwargs={}
+        keys=kw_dict.keys()
+        for arg in list(args):
+            if arg.find(&#39;=&#39;)&gt;0:
+                args.remove(arg)
+                largs=arg.split(&#39;=&#39;)
+                # We fix weird /illegal syntax
+                if largs[0] in keys:
+                    largs[0]=kw_dict[largs[0]]
+                try:
+                    val=&#39;=&#39;.join(largs[1:])
+                    kwargs[largs[0]]=val
+                except:
+                    raise ValueError(&#39;Could not process argument %s&#39; %arg)
+        # let&#39;s not forget filename and/or data
+        kwargs[&#39;fname&#39;]=self.fname
+        kwargs[&#39;data&#39;]=self.data
+        return args,kwargs
+
+
+
+
+class Splotter:
+    &#34;&#34;&#34;
+    Splotter is the global plotter class
+    It mostly sorts arguments and prepares global plot options
+
+    Arguments passed :
+    - arguments=: a list of arguments and kw arguments (those include &#34;=&#34;)
+    - data= : an array/dataframe containing data to be plotted
+    - *args : additional arguments
+    - **kwargs : additional keyword arguments
+    &#34;&#34;&#34;
+    def __init__(self,*args,arguments=None,data=None,**kwargs):
+        &#34;&#34;&#34; Initiation  from arguments and keyword arguments&#34;&#34;&#34;
+        if arguments is None:
+            arguments = []
+
+        self.canvas = canvas.canvas()
+        &#34;&#34;&#34; The canvas (see PyX) &#34;&#34;&#34;
+
+        self.out = &#39;plot&#39;
+        &#34;&#34;&#34; The name of the output file &#34;&#34;&#34;
+
+        self.xlabel = None
+        &#34;&#34;&#34; xlabel &#34;&#34;&#34;
+        self.ylabel = None
+        &#34;&#34;&#34; ylabel &#34;&#34;&#34;
+        self.xmin = None
+        &#34;&#34;&#34; min value of x axis &#34;&#34;&#34;
+        self.xmax = None
+        &#34;&#34;&#34; mas value of x axis &#34;&#34;&#34;
+        self.ymin = None
+        &#34;&#34;&#34; min value of y axis &#34;&#34;&#34;
+        self.ymax = None
+        &#34;&#34;&#34; max value of y axis &#34;&#34;&#34;
+        self.key = None
+        &#34;&#34;&#34; position of the legend (string, cf PyX) &#34;&#34;&#34;
+        self.bgcolor = None
+        &#34;&#34;&#34; background color &#34;&#34;&#34;
+        self.width = 8
+        &#34;&#34;&#34; graph width &#34;&#34;&#34;
+        self.height = 5
+        &#34;&#34;&#34; graph height&#34;&#34;&#34;
+        self.kdist = 0.1
+        &#34;&#34;&#34; distance of the legend&#34;&#34;&#34;
+        self.xlog = 0
+        &#34;&#34;&#34; if x axis in log scale &#34;&#34;&#34;
+        self.ylog = 0
+        &#34;&#34;&#34; if y axis in log scale &#34;&#34;&#34;
+        self.autolabel = 0
+        &#34;&#34;&#34; if we auto label axes &#34;&#34;&#34;
+        self.equalaxis = 0
+        &#34;&#34;&#34; if axes are equal &#34;&#34;&#34;
+
+        self.future_plots=[]
+        &#34;&#34;&#34; the list items to be plotted, &#34;&#34;&#34;
+        self.graphs=[]
+        &#34;&#34;&#34; the list of created graphs &#34;&#34;&#34;
+
+        # Now we add extra arguments ; this is a bit weird but the simplest option to use both command line and python import
+        for arg in args:
+            arguments.append(arg)
+        for key, value in kwargs.items():
+            arguments.append(&#39;%s=%s&#39; %(key,value))
+
+        # Now we read arguments
+        current_args=self.read_args(arguments=arguments)
+        # and if we have data to plot we add it to future plots
+        if data is not None:
+            self.add_plot(data=data,arguments=current_args)
+
+    # Integration with IPython (jupyter notebook) : png representation
+    def _repr_png_(self):
+        &#34;&#34;&#34; For ipython notebooks to display the graph &#34;&#34;&#34;
+        return self.canvas._repr_png_()
+
+    # Integration with IPython (jupyter notebook) : svg representation
+    def _repr_svg_(self):
+        &#34;&#34;&#34; For ipython notebooks to display the graph &#34;&#34;&#34;
+        return self.canvas._repr_svg_()
+
+    # Just a wrapper
+    def add_plot(self,*args,**kwargs):
+        &#34;&#34;&#34; a wrapper to add a plot to future_plots &#34;&#34;&#34;
+        self.future_plots.append(Toplot(*args,**kwargs))
+
+    def read_args(self, *args, arguments=None, **kwargs):
+        &#34;&#34;&#34; Where actually we read arguments !
+        inputs :
+        - arguments= : a list of arguments or kwarguments
+        - *args : additional arguments
+        - *kwargs : additional keyword arguments
+        &#34;&#34;&#34;
+
+        if arguments is None:
+            arguments = []
+        ## Now we read arguments
+        for arg in args:
+            arguments.append(arg)
+        for key, value in kwargs.items():
+            if key.startswith(&#39;file=&#39;):
+                # if the input is a file
+                arguments.append(value)
+            else:
+                # for any other keyword argument
+                arguments.append(&#39;%s=%s&#39; %(key,value))
+        keyz=&#39;&#39;
+        current_args=[]
+        keep=0
+        has_name=0
+        fname=&#39;&#39;
+        # we iterate through arguments and assign them to global or local options
+        for arg in arguments:
+            # Global options
+            if arg.startswith(&#39;out=&#39;):
+                self.out=arg[4:]
+            elif arg.startswith(&#39;xlabel=&#39;):
+                self.xlabel=arg[7:]
+            elif arg.startswith(&#39;ylabel=&#39;):
+                self.ylabel=arg[7:]
+            elif arg.startswith(&#39;width=&#39;):
+                self.width=float(arg[6:])
+            elif arg.startswith(&#39;height=&#39;):
+                self.height=float(arg[7:])
+            elif arg.startswith(&#39;xmin=&#39;):
+                self.xmin=float(arg[5:])
+            elif arg.startswith(&#39;ymin=&#39;):
+                self.ymin=float(arg[5:])
+            elif arg.startswith(&#39;xmax=&#39;):
+                self.xmax=float(arg[5:])
+            elif arg.startswith(&#39;ymax=&#39;):
+                self.ymax=float(arg[5:])
+            elif arg.startswith(&#39;bgcolor=&#39;):
+                self.bgcolor=arg[8:]
+            elif arg.startswith(&#39;key=&#39;):
+                keyz=arg[4:]
+            elif arg.startswith(&#39;-key&#39;) or arg.startswith(&#39;-legend&#39;):
+                keyz=&#39;tl&#39;
+            elif arg.startswith(&#39;kdist=&#39;):
+                self.kdist=arg[6:]
+            elif arg.startswith(&#39;legend=&#39;) or arg.startswith(&#39;title&#39;):
+                self.key=graph.key.key(pos=&#34;tl&#34;, dist=self.kdist)
+                current_args.append(arg)
+            elif arg.endswith(&#39;-help&#39;):
+                print(&#34;seplot version %s &#34; %version())
+                self.usage()
+            elif arg.startswith(&#39;-autol&#39;):
+                self.autolabel=1
+            elif arg.startswith(&#39;-equal&#39;):
+                self.equalaxis=1
+            elif arg.startswith(&#39;-xlog&#39;):
+                self.xlog=1
+            elif arg.startswith(&#39;-ylog&#39;):
+                self.ylog=1
+            # Local / semi-local options
+            elif arg.startswith(&#39;andif&#39;):
+                if has_name==0:
+                    raise ValueError(&#39;Error : cannot use andif= before the first declared file&#39;)
+                else:
+                    #future_plots.append(Toplot(fname,current_args))
+                    current_args.append(__SPLIT_MARK__)
+                    current_args.append(arg)
+
+            elif arg.startswith(&#39;-keep&#39;):
+                keep=1
+            elif arg.startswith(&#39;-discard&#39;):
+                keep=0
+            elif arg.startswith(&#39;function=&#39;):
+                # If there is already a name for a future plot, we append the former to be created
+                if has_name:
+                    self.future_plots.append(Toplot(fname=fname,arguments=current_args))
+                    if keep==0:
+                        current_args=[]
+                else:
+                    has_name=1
+                current_args.append(arg)
+                fname=&#39;&#39;
+            elif arg.startswith(&#39;-&#39;) or arg.find(&#39;=&#39;)&gt;=0:
+                current_args.append(arg)
+            # If it&#39;s not an option, it&#39;s definitey a filename
+            elif arg==&#39;and&#39;:
+                current_args.append(__SPLIT_MARK__)
+                if keep==0:
+                    current_args.append(&#39;-discard&#39;)
+            else:
+                # If there is already a name for a future plot
+                if has_name:
+                    self.future_plots.append(Toplot(fname=fname,arguments=current_args))
+                    if keep==0:
+                        current_args=[]
+                else:
+                    has_name=1
+                fname=arg
+        # We still need add the last file to future_plots
+        if has_name:
+            self.future_plots.append(Toplot(fname=fname,arguments=current_args))
+            has_name=0
+        # also we check key position
+        try:
+            self.key=graph.key.key(pos=&#34;%s&#34; %(keyz), dist=float(self.kdist))
+        except:
+            if keyz==&#39;None&#39;:
+                self.key=None
+        # we return current arguments
+        return current_args
+
+    def make_and_save(self,*args,**kwargs):
+        self.make_plot(*args,**kwargs)
+        self.save_plot(*args,**kwargs)
+
+    def make_plot(self,*args,**kwargs):
+        &#34;&#34;&#34; We do the plotting by dispatching the arguments to PyX. Arguments can be passed again ! &#34;&#34;&#34;
+        self.read_args(*args,**kwargs)
+        # we check if the plots must be split by and / andif
+        for i,toplot in enumerate(self.future_plots):
+            [is_split,new_plot]=toplot.check_split()
+            if is_split:
+                #print(&#39;splitting  ******************************&#39;)
+                self.future_plots.append(new_plot)
+
+        # We create the graphs
+        for i,toplot in enumerate(self.future_plots):
+            (args,kwargs)=toplot.unpack_arguments()
+            kwargs[&#39;numr&#39;]=i
+            self.graphs.append(Graph(*args,**kwargs))
+
+        # Not a great option thou
+        if self.autolabel:
+            for graf in self.graphs:
+                if graf.xlabel:
+                    if not self.xlabel:
+                        self.xlabel=graf.xlabel
+                if graf.ylabel:
+                    if not self.ylabel:
+                        self.ylabel=graf.ylabel
+
+        # we deal with global plot properties
+        if self.xlabel:
+            try:
+                self.xlabel=r&#34;%s&#34; %(self.xlabel)
+            except:
+                self.xlabel=None
+
+        if self.ylabel:
+            try:
+                self.ylabel=r&#34;%s&#34; %(self.ylabel)
+            except:
+                self.ylabel=None
+
+        if self.equalaxis:
+            self.height=self.width
+            self.make_equal_axis_range()
+
+
+        if self.xlog:
+            xaxis=axis.log(title=self.xlabel,min=self.xmin,max=self.xmax);
+            for graf in self.graphs:
+                if sum(array(graf.X)&lt;=0):
+                    raise ValueError(&#39;Could not plot log with non-positive X values&#39;)
+        else:
+            xaxis=axis.linear(title=self.xlabel,min=self.xmin,max=self.xmax)
+
+        if self.ylog:
+            yaxis=axis.log(title=self.ylabel,min=self.ymin,max=self.ymax)
+            for graf in self.graphs:
+                if sum(array(graf.Y)&lt;=0):
+                    raise ValueError(&#39;Could not plot log with non-positive X values&#39;)
+        else:
+            yaxis=axis.linear(title=self.ylabel,min=self.ymin,max=self.ymax)
+
+        backgroundattrs = None
+        if self.bgcolor is not None:
+            if self.bgcolor in col_dict.keys():
+                backgroundattrs=[deco.filled([col_dict[self.bgcolor]])]
+            else:
+                if not self.bgcolor.startswith(&#34;color&#34;):
+                    if self.bgcolor.find(&#34;.&#34;)==-1:
+                        self.bgcolor = &#34;cmyk.%s&#34; % self.bgcolor
+                    self.bgcolor=&#34;color.%s&#34; %self.bgcolor
+                try:
+                    backgroundattrs=[deco.filled([eval(self.bgcolor)])]
+                except:
+                    sio.custom_warn(&#34;Cound not understand background color from %s&#34; %self.bgcolor)
+
+        self.graph=graph.graphxy(width=self.width,height=self.height,key=self.key,
+                                 backgroundattrs=backgroundattrs,
+                x=xaxis,
+                y=yaxis )
+
+        ## Here we do the plotting itlsef
+        for graf in self.graphs:
+            self.plot(graf)
+        ## We finish() the graph to be able to work with pathes
+        self.graph.finish()
+        #self.canvas.insert(self.graph)
+
+        ## Now if there are graphs with a stroke_style, we paint them !
+        # This is meant for histograms
+        for graf in self.graphs:
+            if len(graf.stroke_style):
+                for plot in graf.ploted:
+                    self.canvas.stroke(plot.path,graf.stroke_style)
+                    print(graf.stroke_style)
+        self.canvas.insert(self.graph)
+        #self.canvas.insert(self.graph)
+
+
+
+
+    def plot(self,graf):
+        &#34;&#34;&#34; A wrapper for PyX.graph.plot &#34;&#34;&#34;
+        if graf.is_function==1:
+            graf.ploted=self.graph.plot(graph.data.function(graf.function_string,points=graf.n_points,title=graf.legend),graf.style)
+        elif graf.is_histogram==1:
+            graf.ploted=self.graph.plot([graph.data.points([(x,graf.Y[i]) for i, x in enumerate(graf.X[:])], x=1, y=2,title=graf.legend)],graf.style)
+        else:
+            graf.ploted=self.graph.plot([graph.data.points([(x,graf.Y[i],graf.dX[i],graf.dY[i],graf.S[i],graf.C[i]) for i, x in enumerate(graf.X[:])], x=1, y=2,dx=3,dy=4,size=5,color=6,title=graf.legend)],graf.style)
+
+    def save_plot(self,*args,out=None,**kwargs):
+        &#34;&#34;&#34; Saving canvas to a file &#34;&#34;&#34;
+        if not out:
+            out=self.out
+        if self.graphs:
+            if out.endswith(&#39;.eps&#39;):
+                self.canvas.writeEPSfile(out)
+            elif out.endswith(&#39;.svg&#39;):
+                self.canvas.writeSVGfile(out)
+            else:
+                self.canvas.writePDFfile(self.out)
+
+    def make_equal_axis_range(self):
+        xmax=None
+        self.xmax=apply_on_not_none(self.xmax,self.ymax,function=max)
+        self.xmin=apply_on_not_none(self.xmin,self.ymin,function=min)
+        if self.xmin is None:
+            (self.xmin,xmax)=self.get_data_extrema()
+        if self.xmax is None:
+            if xmax is not None:
+                self.xmax=xmax
+            else:
+                (xmin,self.xmax)=self.get_data_extrema()
+        self.ymax=self.xmax
+        self.ymin=self.xmin
+
+    def get_data_extrema(self):
+        minv=sys.float_info.max
+        maxv=-minv
+        for graf in self.graphs:
+            if not graf.is_function:
+                minv=min(minv,min(graf.X),min(graf.Y))
+                maxv=max(maxv,max(graf.X),max(graf.Y))
+        return minv,maxv
+
+
+    def usage(self):
+        disp(&#39;seplot is a simple command line plotting tool based on PyX (PyX is awesome !)&#39;)
+        disp(&#39;---------------------------- Warning : you should use PyX for more options&#39;)
+        disp(&#39;Examples :&#39;)
+        disp(&#39;seplot.py file.txt&#39;)
+        disp(&#39;seplot.py file.txt color=red file2.txt out=plot.pdf&#39;)
+        disp(&#39;seplot.py file.txt y=A[:,1]^2+A[:,2]^2 dy=3 color=1&#39;)
+        quit
+
+
+def apply_on_not_none(*args,function=None):
+    nn=not_none(*args)
+    if len(nn):
+        return function(nn)
+    else:
+        return None
+
+def not_none(*args):
+    return [arg for arg in args if arg is not None]</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="seplot.seplot.apply_on_not_none"><code class="name flex">
+<span>def <span class="ident">apply_on_not_none</span></span>(<span>*args, function=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def apply_on_not_none(*args,function=None):
+    nn=not_none(*args)
+    if len(nn):
+        return function(nn)
+    else:
+        return None</code></pre>
+</details>
+</dd>
+<dt id="seplot.seplot.not_none"><code class="name flex">
+<span>def <span class="ident">not_none</span></span>(<span>*args)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def not_none(*args):
+    return [arg for arg in args if arg is not None]</code></pre>
+</details>
+</dd>
+<dt id="seplot.seplot.version"><code class="name flex">
+<span>def <span class="ident">version</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def version():
+    return __VERSION__</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="seplot.seplot.Splotter"><code class="flex name class">
+<span>class <span class="ident">Splotter</span></span>
+<span>(</span><span>*args, arguments=None, data=None, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Splotter is the global plotter class
+It mostly sorts arguments and prepares global plot options</p>
+<p>Arguments passed :
+- arguments=: a list of arguments and kw arguments (those include "=")
+- data= : an array/dataframe containing data to be plotted
+- <em>args : additional arguments
+- </em>*kwargs : additional keyword arguments</p>
+<p>Initiation
+from arguments and keyword arguments</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Splotter:
+    &#34;&#34;&#34;
+    Splotter is the global plotter class
+    It mostly sorts arguments and prepares global plot options
+
+    Arguments passed :
+    - arguments=: a list of arguments and kw arguments (those include &#34;=&#34;)
+    - data= : an array/dataframe containing data to be plotted
+    - *args : additional arguments
+    - **kwargs : additional keyword arguments
+    &#34;&#34;&#34;
+    def __init__(self,*args,arguments=None,data=None,**kwargs):
+        &#34;&#34;&#34; Initiation  from arguments and keyword arguments&#34;&#34;&#34;
+        if arguments is None:
+            arguments = []
+
+        self.canvas = canvas.canvas()
+        &#34;&#34;&#34; The canvas (see PyX) &#34;&#34;&#34;
+
+        self.out = &#39;plot&#39;
+        &#34;&#34;&#34; The name of the output file &#34;&#34;&#34;
+
+        self.xlabel = None
+        &#34;&#34;&#34; xlabel &#34;&#34;&#34;
+        self.ylabel = None
+        &#34;&#34;&#34; ylabel &#34;&#34;&#34;
+        self.xmin = None
+        &#34;&#34;&#34; min value of x axis &#34;&#34;&#34;
+        self.xmax = None
+        &#34;&#34;&#34; mas value of x axis &#34;&#34;&#34;
+        self.ymin = None
+        &#34;&#34;&#34; min value of y axis &#34;&#34;&#34;
+        self.ymax = None
+        &#34;&#34;&#34; max value of y axis &#34;&#34;&#34;
+        self.key = None
+        &#34;&#34;&#34; position of the legend (string, cf PyX) &#34;&#34;&#34;
+        self.bgcolor = None
+        &#34;&#34;&#34; background color &#34;&#34;&#34;
+        self.width = 8
+        &#34;&#34;&#34; graph width &#34;&#34;&#34;
+        self.height = 5
+        &#34;&#34;&#34; graph height&#34;&#34;&#34;
+        self.kdist = 0.1
+        &#34;&#34;&#34; distance of the legend&#34;&#34;&#34;
+        self.xlog = 0
+        &#34;&#34;&#34; if x axis in log scale &#34;&#34;&#34;
+        self.ylog = 0
+        &#34;&#34;&#34; if y axis in log scale &#34;&#34;&#34;
+        self.autolabel = 0
+        &#34;&#34;&#34; if we auto label axes &#34;&#34;&#34;
+        self.equalaxis = 0
+        &#34;&#34;&#34; if axes are equal &#34;&#34;&#34;
+
+        self.future_plots=[]
+        &#34;&#34;&#34; the list items to be plotted, &#34;&#34;&#34;
+        self.graphs=[]
+        &#34;&#34;&#34; the list of created graphs &#34;&#34;&#34;
+
+        # Now we add extra arguments ; this is a bit weird but the simplest option to use both command line and python import
+        for arg in args:
+            arguments.append(arg)
+        for key, value in kwargs.items():
+            arguments.append(&#39;%s=%s&#39; %(key,value))
+
+        # Now we read arguments
+        current_args=self.read_args(arguments=arguments)
+        # and if we have data to plot we add it to future plots
+        if data is not None:
+            self.add_plot(data=data,arguments=current_args)
+
+    # Integration with IPython (jupyter notebook) : png representation
+    def _repr_png_(self):
+        &#34;&#34;&#34; For ipython notebooks to display the graph &#34;&#34;&#34;
+        return self.canvas._repr_png_()
+
+    # Integration with IPython (jupyter notebook) : svg representation
+    def _repr_svg_(self):
+        &#34;&#34;&#34; For ipython notebooks to display the graph &#34;&#34;&#34;
+        return self.canvas._repr_svg_()
+
+    # Just a wrapper
+    def add_plot(self,*args,**kwargs):
+        &#34;&#34;&#34; a wrapper to add a plot to future_plots &#34;&#34;&#34;
+        self.future_plots.append(Toplot(*args,**kwargs))
+
+    def read_args(self, *args, arguments=None, **kwargs):
+        &#34;&#34;&#34; Where actually we read arguments !
+        inputs :
+        - arguments= : a list of arguments or kwarguments
+        - *args : additional arguments
+        - *kwargs : additional keyword arguments
+        &#34;&#34;&#34;
+
+        if arguments is None:
+            arguments = []
+        ## Now we read arguments
+        for arg in args:
+            arguments.append(arg)
+        for key, value in kwargs.items():
+            if key.startswith(&#39;file=&#39;):
+                # if the input is a file
+                arguments.append(value)
+            else:
+                # for any other keyword argument
+                arguments.append(&#39;%s=%s&#39; %(key,value))
+        keyz=&#39;&#39;
+        current_args=[]
+        keep=0
+        has_name=0
+        fname=&#39;&#39;
+        # we iterate through arguments and assign them to global or local options
+        for arg in arguments:
+            # Global options
+            if arg.startswith(&#39;out=&#39;):
+                self.out=arg[4:]
+            elif arg.startswith(&#39;xlabel=&#39;):
+                self.xlabel=arg[7:]
+            elif arg.startswith(&#39;ylabel=&#39;):
+                self.ylabel=arg[7:]
+            elif arg.startswith(&#39;width=&#39;):
+                self.width=float(arg[6:])
+            elif arg.startswith(&#39;height=&#39;):
+                self.height=float(arg[7:])
+            elif arg.startswith(&#39;xmin=&#39;):
+                self.xmin=float(arg[5:])
+            elif arg.startswith(&#39;ymin=&#39;):
+                self.ymin=float(arg[5:])
+            elif arg.startswith(&#39;xmax=&#39;):
+                self.xmax=float(arg[5:])
+            elif arg.startswith(&#39;ymax=&#39;):
+                self.ymax=float(arg[5:])
+            elif arg.startswith(&#39;bgcolor=&#39;):
+                self.bgcolor=arg[8:]
+            elif arg.startswith(&#39;key=&#39;):
+                keyz=arg[4:]
+            elif arg.startswith(&#39;-key&#39;) or arg.startswith(&#39;-legend&#39;):
+                keyz=&#39;tl&#39;
+            elif arg.startswith(&#39;kdist=&#39;):
+                self.kdist=arg[6:]
+            elif arg.startswith(&#39;legend=&#39;) or arg.startswith(&#39;title&#39;):
+                self.key=graph.key.key(pos=&#34;tl&#34;, dist=self.kdist)
+                current_args.append(arg)
+            elif arg.endswith(&#39;-help&#39;):
+                print(&#34;seplot version %s &#34; %version())
+                self.usage()
+            elif arg.startswith(&#39;-autol&#39;):
+                self.autolabel=1
+            elif arg.startswith(&#39;-equal&#39;):
+                self.equalaxis=1
+            elif arg.startswith(&#39;-xlog&#39;):
+                self.xlog=1
+            elif arg.startswith(&#39;-ylog&#39;):
+                self.ylog=1
+            # Local / semi-local options
+            elif arg.startswith(&#39;andif&#39;):
+                if has_name==0:
+                    raise ValueError(&#39;Error : cannot use andif= before the first declared file&#39;)
+                else:
+                    #future_plots.append(Toplot(fname,current_args))
+                    current_args.append(__SPLIT_MARK__)
+                    current_args.append(arg)
+
+            elif arg.startswith(&#39;-keep&#39;):
+                keep=1
+            elif arg.startswith(&#39;-discard&#39;):
+                keep=0
+            elif arg.startswith(&#39;function=&#39;):
+                # If there is already a name for a future plot, we append the former to be created
+                if has_name:
+                    self.future_plots.append(Toplot(fname=fname,arguments=current_args))
+                    if keep==0:
+                        current_args=[]
+                else:
+                    has_name=1
+                current_args.append(arg)
+                fname=&#39;&#39;
+            elif arg.startswith(&#39;-&#39;) or arg.find(&#39;=&#39;)&gt;=0:
+                current_args.append(arg)
+            # If it&#39;s not an option, it&#39;s definitey a filename
+            elif arg==&#39;and&#39;:
+                current_args.append(__SPLIT_MARK__)
+                if keep==0:
+                    current_args.append(&#39;-discard&#39;)
+            else:
+                # If there is already a name for a future plot
+                if has_name:
+                    self.future_plots.append(Toplot(fname=fname,arguments=current_args))
+                    if keep==0:
+                        current_args=[]
+                else:
+                    has_name=1
+                fname=arg
+        # We still need add the last file to future_plots
+        if has_name:
+            self.future_plots.append(Toplot(fname=fname,arguments=current_args))
+            has_name=0
+        # also we check key position
+        try:
+            self.key=graph.key.key(pos=&#34;%s&#34; %(keyz), dist=float(self.kdist))
+        except:
+            if keyz==&#39;None&#39;:
+                self.key=None
+        # we return current arguments
+        return current_args
+
+    def make_and_save(self,*args,**kwargs):
+        self.make_plot(*args,**kwargs)
+        self.save_plot(*args,**kwargs)
+
+    def make_plot(self,*args,**kwargs):
+        &#34;&#34;&#34; We do the plotting by dispatching the arguments to PyX. Arguments can be passed again ! &#34;&#34;&#34;
+        self.read_args(*args,**kwargs)
+        # we check if the plots must be split by and / andif
+        for i,toplot in enumerate(self.future_plots):
+            [is_split,new_plot]=toplot.check_split()
+            if is_split:
+                #print(&#39;splitting  ******************************&#39;)
+                self.future_plots.append(new_plot)
+
+        # We create the graphs
+        for i,toplot in enumerate(self.future_plots):
+            (args,kwargs)=toplot.unpack_arguments()
+            kwargs[&#39;numr&#39;]=i
+            self.graphs.append(Graph(*args,**kwargs))
+
+        # Not a great option thou
+        if self.autolabel:
+            for graf in self.graphs:
+                if graf.xlabel:
+                    if not self.xlabel:
+                        self.xlabel=graf.xlabel
+                if graf.ylabel:
+                    if not self.ylabel:
+                        self.ylabel=graf.ylabel
+
+        # we deal with global plot properties
+        if self.xlabel:
+            try:
+                self.xlabel=r&#34;%s&#34; %(self.xlabel)
+            except:
+                self.xlabel=None
+
+        if self.ylabel:
+            try:
+                self.ylabel=r&#34;%s&#34; %(self.ylabel)
+            except:
+                self.ylabel=None
+
+        if self.equalaxis:
+            self.height=self.width
+            self.make_equal_axis_range()
+
+
+        if self.xlog:
+            xaxis=axis.log(title=self.xlabel,min=self.xmin,max=self.xmax);
+            for graf in self.graphs:
+                if sum(array(graf.X)&lt;=0):
+                    raise ValueError(&#39;Could not plot log with non-positive X values&#39;)
+        else:
+            xaxis=axis.linear(title=self.xlabel,min=self.xmin,max=self.xmax)
+
+        if self.ylog:
+            yaxis=axis.log(title=self.ylabel,min=self.ymin,max=self.ymax)
+            for graf in self.graphs:
+                if sum(array(graf.Y)&lt;=0):
+                    raise ValueError(&#39;Could not plot log with non-positive X values&#39;)
+        else:
+            yaxis=axis.linear(title=self.ylabel,min=self.ymin,max=self.ymax)
+
+        backgroundattrs = None
+        if self.bgcolor is not None:
+            if self.bgcolor in col_dict.keys():
+                backgroundattrs=[deco.filled([col_dict[self.bgcolor]])]
+            else:
+                if not self.bgcolor.startswith(&#34;color&#34;):
+                    if self.bgcolor.find(&#34;.&#34;)==-1:
+                        self.bgcolor = &#34;cmyk.%s&#34; % self.bgcolor
+                    self.bgcolor=&#34;color.%s&#34; %self.bgcolor
+                try:
+                    backgroundattrs=[deco.filled([eval(self.bgcolor)])]
+                except:
+                    sio.custom_warn(&#34;Cound not understand background color from %s&#34; %self.bgcolor)
+
+        self.graph=graph.graphxy(width=self.width,height=self.height,key=self.key,
+                                 backgroundattrs=backgroundattrs,
+                x=xaxis,
+                y=yaxis )
+
+        ## Here we do the plotting itlsef
+        for graf in self.graphs:
+            self.plot(graf)
+        ## We finish() the graph to be able to work with pathes
+        self.graph.finish()
+        #self.canvas.insert(self.graph)
+
+        ## Now if there are graphs with a stroke_style, we paint them !
+        # This is meant for histograms
+        for graf in self.graphs:
+            if len(graf.stroke_style):
+                for plot in graf.ploted:
+                    self.canvas.stroke(plot.path,graf.stroke_style)
+                    print(graf.stroke_style)
+        self.canvas.insert(self.graph)
+        #self.canvas.insert(self.graph)
+
+
+
+
+    def plot(self,graf):
+        &#34;&#34;&#34; A wrapper for PyX.graph.plot &#34;&#34;&#34;
+        if graf.is_function==1:
+            graf.ploted=self.graph.plot(graph.data.function(graf.function_string,points=graf.n_points,title=graf.legend),graf.style)
+        elif graf.is_histogram==1:
+            graf.ploted=self.graph.plot([graph.data.points([(x,graf.Y[i]) for i, x in enumerate(graf.X[:])], x=1, y=2,title=graf.legend)],graf.style)
+        else:
+            graf.ploted=self.graph.plot([graph.data.points([(x,graf.Y[i],graf.dX[i],graf.dY[i],graf.S[i],graf.C[i]) for i, x in enumerate(graf.X[:])], x=1, y=2,dx=3,dy=4,size=5,color=6,title=graf.legend)],graf.style)
+
+    def save_plot(self,*args,out=None,**kwargs):
+        &#34;&#34;&#34; Saving canvas to a file &#34;&#34;&#34;
+        if not out:
+            out=self.out
+        if self.graphs:
+            if out.endswith(&#39;.eps&#39;):
+                self.canvas.writeEPSfile(out)
+            elif out.endswith(&#39;.svg&#39;):
+                self.canvas.writeSVGfile(out)
+            else:
+                self.canvas.writePDFfile(self.out)
+
+    def make_equal_axis_range(self):
+        xmax=None
+        self.xmax=apply_on_not_none(self.xmax,self.ymax,function=max)
+        self.xmin=apply_on_not_none(self.xmin,self.ymin,function=min)
+        if self.xmin is None:
+            (self.xmin,xmax)=self.get_data_extrema()
+        if self.xmax is None:
+            if xmax is not None:
+                self.xmax=xmax
+            else:
+                (xmin,self.xmax)=self.get_data_extrema()
+        self.ymax=self.xmax
+        self.ymin=self.xmin
+
+    def get_data_extrema(self):
+        minv=sys.float_info.max
+        maxv=-minv
+        for graf in self.graphs:
+            if not graf.is_function:
+                minv=min(minv,min(graf.X),min(graf.Y))
+                maxv=max(maxv,max(graf.X),max(graf.Y))
+        return minv,maxv
+
+
+    def usage(self):
+        disp(&#39;seplot is a simple command line plotting tool based on PyX (PyX is awesome !)&#39;)
+        disp(&#39;---------------------------- Warning : you should use PyX for more options&#39;)
+        disp(&#39;Examples :&#39;)
+        disp(&#39;seplot.py file.txt&#39;)
+        disp(&#39;seplot.py file.txt color=red file2.txt out=plot.pdf&#39;)
+        disp(&#39;seplot.py file.txt y=A[:,1]^2+A[:,2]^2 dy=3 color=1&#39;)
+        quit</code></pre>
+</details>
+<h3>Instance variables</h3>
+<dl>
+<dt id="seplot.seplot.Splotter.autolabel"><code class="name">var <span class="ident">autolabel</span></code></dt>
+<dd>
+<div class="desc"><p>if we auto label axes</p></div>
+</dd>
+<dt id="seplot.seplot.Splotter.bgcolor"><code class="name">var <span class="ident">bgcolor</span></code></dt>
+<dd>
+<div class="desc"><p>background color</p></div>
+</dd>
+<dt id="seplot.seplot.Splotter.canvas"><code class="name">var <span class="ident">canvas</span></code></dt>
+<dd>
+<div class="desc"><p>The canvas (see PyX)</p></div>
+</dd>
+<dt id="seplot.seplot.Splotter.equalaxis"><code class="name">var <span class="ident">equalaxis</span></code></dt>
+<dd>
+<div class="desc"><p>if axes are equal</p></div>
+</dd>
+<dt id="seplot.seplot.Splotter.future_plots"><code class="name">var <span class="ident">future_plots</span></code></dt>
+<dd>
+<div class="desc"><p>the list items to be plotted,</p></div>
+</dd>
+<dt id="seplot.seplot.Splotter.graphs"><code class="name">var <span class="ident">graphs</span></code></dt>
+<dd>
+<div class="desc"><p>the list of created graphs</p></div>
+</dd>
+<dt id="seplot.seplot.Splotter.height"><code class="name">var <span class="ident">height</span></code></dt>
+<dd>
+<div class="desc"><p>graph height</p></div>
+</dd>
+<dt id="seplot.seplot.Splotter.kdist"><code class="name">var <span class="ident">kdist</span></code></dt>
+<dd>
+<div class="desc"><p>distance of the legend</p></div>
+</dd>
+<dt id="seplot.seplot.Splotter.key"><code class="name">var <span class="ident">key</span></code></dt>
+<dd>
+<div class="desc"><p>position of the legend (string, cf PyX)</p></div>
+</dd>
+<dt id="seplot.seplot.Splotter.out"><code class="name">var <span class="ident">out</span></code></dt>
+<dd>
+<div class="desc"><p>The name of the output file</p></div>
+</dd>
+<dt id="seplot.seplot.Splotter.width"><code class="name">var <span class="ident">width</span></code></dt>
+<dd>
+<div class="desc"><p>graph width</p></div>
+</dd>
+<dt id="seplot.seplot.Splotter.xlabel"><code class="name">var <span class="ident">xlabel</span></code></dt>
+<dd>
+<div class="desc"><p>xlabel</p></div>
+</dd>
+<dt id="seplot.seplot.Splotter.xlog"><code class="name">var <span class="ident">xlog</span></code></dt>
+<dd>
+<div class="desc"><p>if x axis in log scale</p></div>
+</dd>
+<dt id="seplot.seplot.Splotter.xmax"><code class="name">var <span class="ident">xmax</span></code></dt>
+<dd>
+<div class="desc"><p>mas value of x axis</p></div>
+</dd>
+<dt id="seplot.seplot.Splotter.xmin"><code class="name">var <span class="ident">xmin</span></code></dt>
+<dd>
+<div class="desc"><p>min value of x axis</p></div>
+</dd>
+<dt id="seplot.seplot.Splotter.ylabel"><code class="name">var <span class="ident">ylabel</span></code></dt>
+<dd>
+<div class="desc"><p>ylabel</p></div>
+</dd>
+<dt id="seplot.seplot.Splotter.ylog"><code class="name">var <span class="ident">ylog</span></code></dt>
+<dd>
+<div class="desc"><p>if y axis in log scale</p></div>
+</dd>
+<dt id="seplot.seplot.Splotter.ymax"><code class="name">var <span class="ident">ymax</span></code></dt>
+<dd>
+<div class="desc"><p>max value of y axis</p></div>
+</dd>
+<dt id="seplot.seplot.Splotter.ymin"><code class="name">var <span class="ident">ymin</span></code></dt>
+<dd>
+<div class="desc"><p>min value of y axis</p></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="seplot.seplot.Splotter.add_plot"><code class="name flex">
+<span>def <span class="ident">add_plot</span></span>(<span>self, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>a wrapper to add a plot to future_plots</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_plot(self,*args,**kwargs):
+    &#34;&#34;&#34; a wrapper to add a plot to future_plots &#34;&#34;&#34;
+    self.future_plots.append(Toplot(*args,**kwargs))</code></pre>
+</details>
+</dd>
+<dt id="seplot.seplot.Splotter.get_data_extrema"><code class="name flex">
+<span>def <span class="ident">get_data_extrema</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_data_extrema(self):
+    minv=sys.float_info.max
+    maxv=-minv
+    for graf in self.graphs:
+        if not graf.is_function:
+            minv=min(minv,min(graf.X),min(graf.Y))
+            maxv=max(maxv,max(graf.X),max(graf.Y))
+    return minv,maxv</code></pre>
+</details>
+</dd>
+<dt id="seplot.seplot.Splotter.make_and_save"><code class="name flex">
+<span>def <span class="ident">make_and_save</span></span>(<span>self, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def make_and_save(self,*args,**kwargs):
+    self.make_plot(*args,**kwargs)
+    self.save_plot(*args,**kwargs)</code></pre>
+</details>
+</dd>
+<dt id="seplot.seplot.Splotter.make_equal_axis_range"><code class="name flex">
+<span>def <span class="ident">make_equal_axis_range</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def make_equal_axis_range(self):
+    xmax=None
+    self.xmax=apply_on_not_none(self.xmax,self.ymax,function=max)
+    self.xmin=apply_on_not_none(self.xmin,self.ymin,function=min)
+    if self.xmin is None:
+        (self.xmin,xmax)=self.get_data_extrema()
+    if self.xmax is None:
+        if xmax is not None:
+            self.xmax=xmax
+        else:
+            (xmin,self.xmax)=self.get_data_extrema()
+    self.ymax=self.xmax
+    self.ymin=self.xmin</code></pre>
+</details>
+</dd>
+<dt id="seplot.seplot.Splotter.make_plot"><code class="name flex">
+<span>def <span class="ident">make_plot</span></span>(<span>self, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>We do the plotting by dispatching the arguments to PyX. Arguments can be passed again !</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def make_plot(self,*args,**kwargs):
+    &#34;&#34;&#34; We do the plotting by dispatching the arguments to PyX. Arguments can be passed again ! &#34;&#34;&#34;
+    self.read_args(*args,**kwargs)
+    # we check if the plots must be split by and / andif
+    for i,toplot in enumerate(self.future_plots):
+        [is_split,new_plot]=toplot.check_split()
+        if is_split:
+            #print(&#39;splitting  ******************************&#39;)
+            self.future_plots.append(new_plot)
+
+    # We create the graphs
+    for i,toplot in enumerate(self.future_plots):
+        (args,kwargs)=toplot.unpack_arguments()
+        kwargs[&#39;numr&#39;]=i
+        self.graphs.append(Graph(*args,**kwargs))
+
+    # Not a great option thou
+    if self.autolabel:
+        for graf in self.graphs:
+            if graf.xlabel:
+                if not self.xlabel:
+                    self.xlabel=graf.xlabel
+            if graf.ylabel:
+                if not self.ylabel:
+                    self.ylabel=graf.ylabel
+
+    # we deal with global plot properties
+    if self.xlabel:
+        try:
+            self.xlabel=r&#34;%s&#34; %(self.xlabel)
+        except:
+            self.xlabel=None
+
+    if self.ylabel:
+        try:
+            self.ylabel=r&#34;%s&#34; %(self.ylabel)
+        except:
+            self.ylabel=None
+
+    if self.equalaxis:
+        self.height=self.width
+        self.make_equal_axis_range()
+
+
+    if self.xlog:
+        xaxis=axis.log(title=self.xlabel,min=self.xmin,max=self.xmax);
+        for graf in self.graphs:
+            if sum(array(graf.X)&lt;=0):
+                raise ValueError(&#39;Could not plot log with non-positive X values&#39;)
+    else:
+        xaxis=axis.linear(title=self.xlabel,min=self.xmin,max=self.xmax)
+
+    if self.ylog:
+        yaxis=axis.log(title=self.ylabel,min=self.ymin,max=self.ymax)
+        for graf in self.graphs:
+            if sum(array(graf.Y)&lt;=0):
+                raise ValueError(&#39;Could not plot log with non-positive X values&#39;)
+    else:
+        yaxis=axis.linear(title=self.ylabel,min=self.ymin,max=self.ymax)
+
+    backgroundattrs = None
+    if self.bgcolor is not None:
+        if self.bgcolor in col_dict.keys():
+            backgroundattrs=[deco.filled([col_dict[self.bgcolor]])]
+        else:
+            if not self.bgcolor.startswith(&#34;color&#34;):
+                if self.bgcolor.find(&#34;.&#34;)==-1:
+                    self.bgcolor = &#34;cmyk.%s&#34; % self.bgcolor
+                self.bgcolor=&#34;color.%s&#34; %self.bgcolor
+            try:
+                backgroundattrs=[deco.filled([eval(self.bgcolor)])]
+            except:
+                sio.custom_warn(&#34;Cound not understand background color from %s&#34; %self.bgcolor)
+
+    self.graph=graph.graphxy(width=self.width,height=self.height,key=self.key,
+                             backgroundattrs=backgroundattrs,
+            x=xaxis,
+            y=yaxis )
+
+    ## Here we do the plotting itlsef
+    for graf in self.graphs:
+        self.plot(graf)
+    ## We finish() the graph to be able to work with pathes
+    self.graph.finish()
+    #self.canvas.insert(self.graph)
+
+    ## Now if there are graphs with a stroke_style, we paint them !
+    # This is meant for histograms
+    for graf in self.graphs:
+        if len(graf.stroke_style):
+            for plot in graf.ploted:
+                self.canvas.stroke(plot.path,graf.stroke_style)
+                print(graf.stroke_style)
+    self.canvas.insert(self.graph)</code></pre>
+</details>
+</dd>
+<dt id="seplot.seplot.Splotter.plot"><code class="name flex">
+<span>def <span class="ident">plot</span></span>(<span>self, graf)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A wrapper for PyX.graph.plot</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def plot(self,graf):
+    &#34;&#34;&#34; A wrapper for PyX.graph.plot &#34;&#34;&#34;
+    if graf.is_function==1:
+        graf.ploted=self.graph.plot(graph.data.function(graf.function_string,points=graf.n_points,title=graf.legend),graf.style)
+    elif graf.is_histogram==1:
+        graf.ploted=self.graph.plot([graph.data.points([(x,graf.Y[i]) for i, x in enumerate(graf.X[:])], x=1, y=2,title=graf.legend)],graf.style)
+    else:
+        graf.ploted=self.graph.plot([graph.data.points([(x,graf.Y[i],graf.dX[i],graf.dY[i],graf.S[i],graf.C[i]) for i, x in enumerate(graf.X[:])], x=1, y=2,dx=3,dy=4,size=5,color=6,title=graf.legend)],graf.style)</code></pre>
+</details>
+</dd>
+<dt id="seplot.seplot.Splotter.read_args"><code class="name flex">
+<span>def <span class="ident">read_args</span></span>(<span>self, *args, arguments=None, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Where actually we read arguments !
+inputs :
+- arguments= : a list of arguments or kwarguments
+- <em>args : additional arguments
+- </em>kwargs : additional keyword arguments</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_args(self, *args, arguments=None, **kwargs):
+    &#34;&#34;&#34; Where actually we read arguments !
+    inputs :
+    - arguments= : a list of arguments or kwarguments
+    - *args : additional arguments
+    - *kwargs : additional keyword arguments
+    &#34;&#34;&#34;
+
+    if arguments is None:
+        arguments = []
+    ## Now we read arguments
+    for arg in args:
+        arguments.append(arg)
+    for key, value in kwargs.items():
+        if key.startswith(&#39;file=&#39;):
+            # if the input is a file
+            arguments.append(value)
+        else:
+            # for any other keyword argument
+            arguments.append(&#39;%s=%s&#39; %(key,value))
+    keyz=&#39;&#39;
+    current_args=[]
+    keep=0
+    has_name=0
+    fname=&#39;&#39;
+    # we iterate through arguments and assign them to global or local options
+    for arg in arguments:
+        # Global options
+        if arg.startswith(&#39;out=&#39;):
+            self.out=arg[4:]
+        elif arg.startswith(&#39;xlabel=&#39;):
+            self.xlabel=arg[7:]
+        elif arg.startswith(&#39;ylabel=&#39;):
+            self.ylabel=arg[7:]
+        elif arg.startswith(&#39;width=&#39;):
+            self.width=float(arg[6:])
+        elif arg.startswith(&#39;height=&#39;):
+            self.height=float(arg[7:])
+        elif arg.startswith(&#39;xmin=&#39;):
+            self.xmin=float(arg[5:])
+        elif arg.startswith(&#39;ymin=&#39;):
+            self.ymin=float(arg[5:])
+        elif arg.startswith(&#39;xmax=&#39;):
+            self.xmax=float(arg[5:])
+        elif arg.startswith(&#39;ymax=&#39;):
+            self.ymax=float(arg[5:])
+        elif arg.startswith(&#39;bgcolor=&#39;):
+            self.bgcolor=arg[8:]
+        elif arg.startswith(&#39;key=&#39;):
+            keyz=arg[4:]
+        elif arg.startswith(&#39;-key&#39;) or arg.startswith(&#39;-legend&#39;):
+            keyz=&#39;tl&#39;
+        elif arg.startswith(&#39;kdist=&#39;):
+            self.kdist=arg[6:]
+        elif arg.startswith(&#39;legend=&#39;) or arg.startswith(&#39;title&#39;):
+            self.key=graph.key.key(pos=&#34;tl&#34;, dist=self.kdist)
+            current_args.append(arg)
+        elif arg.endswith(&#39;-help&#39;):
+            print(&#34;seplot version %s &#34; %version())
+            self.usage()
+        elif arg.startswith(&#39;-autol&#39;):
+            self.autolabel=1
+        elif arg.startswith(&#39;-equal&#39;):
+            self.equalaxis=1
+        elif arg.startswith(&#39;-xlog&#39;):
+            self.xlog=1
+        elif arg.startswith(&#39;-ylog&#39;):
+            self.ylog=1
+        # Local / semi-local options
+        elif arg.startswith(&#39;andif&#39;):
+            if has_name==0:
+                raise ValueError(&#39;Error : cannot use andif= before the first declared file&#39;)
+            else:
+                #future_plots.append(Toplot(fname,current_args))
+                current_args.append(__SPLIT_MARK__)
+                current_args.append(arg)
+
+        elif arg.startswith(&#39;-keep&#39;):
+            keep=1
+        elif arg.startswith(&#39;-discard&#39;):
+            keep=0
+        elif arg.startswith(&#39;function=&#39;):
+            # If there is already a name for a future plot, we append the former to be created
+            if has_name:
+                self.future_plots.append(Toplot(fname=fname,arguments=current_args))
+                if keep==0:
+                    current_args=[]
+            else:
+                has_name=1
+            current_args.append(arg)
+            fname=&#39;&#39;
+        elif arg.startswith(&#39;-&#39;) or arg.find(&#39;=&#39;)&gt;=0:
+            current_args.append(arg)
+        # If it&#39;s not an option, it&#39;s definitey a filename
+        elif arg==&#39;and&#39;:
+            current_args.append(__SPLIT_MARK__)
+            if keep==0:
+                current_args.append(&#39;-discard&#39;)
+        else:
+            # If there is already a name for a future plot
+            if has_name:
+                self.future_plots.append(Toplot(fname=fname,arguments=current_args))
+                if keep==0:
+                    current_args=[]
+            else:
+                has_name=1
+            fname=arg
+    # We still need add the last file to future_plots
+    if has_name:
+        self.future_plots.append(Toplot(fname=fname,arguments=current_args))
+        has_name=0
+    # also we check key position
+    try:
+        self.key=graph.key.key(pos=&#34;%s&#34; %(keyz), dist=float(self.kdist))
+    except:
+        if keyz==&#39;None&#39;:
+            self.key=None
+    # we return current arguments
+    return current_args</code></pre>
+</details>
+</dd>
+<dt id="seplot.seplot.Splotter.save_plot"><code class="name flex">
+<span>def <span class="ident">save_plot</span></span>(<span>self, *args, out=None, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Saving canvas to a file</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save_plot(self,*args,out=None,**kwargs):
+    &#34;&#34;&#34; Saving canvas to a file &#34;&#34;&#34;
+    if not out:
+        out=self.out
+    if self.graphs:
+        if out.endswith(&#39;.eps&#39;):
+            self.canvas.writeEPSfile(out)
+        elif out.endswith(&#39;.svg&#39;):
+            self.canvas.writeSVGfile(out)
+        else:
+            self.canvas.writePDFfile(self.out)</code></pre>
+</details>
+</dd>
+<dt id="seplot.seplot.Splotter.usage"><code class="name flex">
+<span>def <span class="ident">usage</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def usage(self):
+    disp(&#39;seplot is a simple command line plotting tool based on PyX (PyX is awesome !)&#39;)
+    disp(&#39;---------------------------- Warning : you should use PyX for more options&#39;)
+    disp(&#39;Examples :&#39;)
+    disp(&#39;seplot.py file.txt&#39;)
+    disp(&#39;seplot.py file.txt color=red file2.txt out=plot.pdf&#39;)
+    disp(&#39;seplot.py file.txt y=A[:,1]^2+A[:,2]^2 dy=3 color=1&#39;)
+    quit</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="seplot.seplot.Toplot"><code class="flex name class">
+<span>class <span class="ident">Toplot</span></span>
+<span>(</span><span>*args, arguments=None, data=None, fname='', **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Toplot is a class containing the options for plotting
+it also contains a method to split into two
+here we need to support a keyword argument having to values, until we split
+therefore we don't convert everything to <em>args and </em><em>kwargs,
+rather we pass </em>argument*, a list of arguments and kw arguments</p>
+<p>Initialization</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Toplot:
+    &#34;&#34;&#34;
+    Toplot is a class containing the options for plotting
+    it also contains a method to split into two
+    here we need to support a keyword argument having to values, until we split
+    therefore we don&#39;t convert everything to *args and **kwargs,
+    rather we pass *argument*, a list of arguments and kw arguments
+
+    &#34;&#34;&#34;
+    def __init__(self, *args, arguments=None, data=None, fname=&#34;&#34;, **kwargs):
+        &#34;&#34;&#34; Initialization&#34;&#34;&#34;
+        self.fname=fname
+        &#34;&#34;&#34; filename to read data from &#34;&#34;&#34;
+        self.data=data
+        &#34;&#34;&#34; data to plot from &#34;&#34;&#34;
+        self.arguments=[]
+        &#34;&#34;&#34; actual arguments&#34;&#34;&#34;
+        if arguments is not None:
+            self.arguments=arguments
+
+        for arg in args:
+            self.arguments.append(arg)
+        for key, value in kwargs.items():
+            self.arguments.append(&#39;%s=%s&#39; %(key,value))
+
+    def check_split(self):
+        &#34;&#34;&#34; Checking if we need to split the graph into several graphs when implied from arguments&#34;&#34;&#34;
+        na=len(self.arguments)
+        do_split=0
+        for i,arg in enumerate(self.arguments):
+            if arg==__SPLIT_MARK__:
+                do_split=1
+                n_split=i
+        if do_split:
+            #print(&#39;splitting with %s&#39; %self.arguments)
+            future_args=self.arguments
+            self.arguments=self.arguments[0:n_split]
+            future_args.pop(n_split)
+            if len(future_args)&gt;n_split:
+                if future_args[n_split]==&#39;-discard&#39;:
+                    if len(future_args)&gt;n_split+1:
+                        future_args=future_args[(n_split+1):]
+                    else:
+                        future_args=[]
+
+            new_dict={**self.__dict__}
+            new_dict[&#39;arguments&#39;]=future_args
+            #print(&#39;new object with : %s &#39; %(new_dict))
+            return [1,Toplot(**new_dict)]
+        else:
+            return [0,1]
+
+    def unpack_arguments(self):
+        &#34;&#34;&#34; We convert our coarse list of arguments as a list of strings to a better arg / kwargs format&#34;&#34;&#34;
+        args=self.arguments
+        kwargs={}
+        keys=kw_dict.keys()
+        for arg in list(args):
+            if arg.find(&#39;=&#39;)&gt;0:
+                args.remove(arg)
+                largs=arg.split(&#39;=&#39;)
+                # We fix weird /illegal syntax
+                if largs[0] in keys:
+                    largs[0]=kw_dict[largs[0]]
+                try:
+                    val=&#39;=&#39;.join(largs[1:])
+                    kwargs[largs[0]]=val
+                except:
+                    raise ValueError(&#39;Could not process argument %s&#39; %arg)
+        # let&#39;s not forget filename and/or data
+        kwargs[&#39;fname&#39;]=self.fname
+        kwargs[&#39;data&#39;]=self.data
+        return args,kwargs</code></pre>
+</details>
+<h3>Instance variables</h3>
+<dl>
+<dt id="seplot.seplot.Toplot.arguments"><code class="name">var <span class="ident">arguments</span></code></dt>
+<dd>
+<div class="desc"><p>actual arguments</p></div>
+</dd>
+<dt id="seplot.seplot.Toplot.data"><code class="name">var <span class="ident">data</span></code></dt>
+<dd>
+<div class="desc"><p>data to plot from</p></div>
+</dd>
+<dt id="seplot.seplot.Toplot.fname"><code class="name">var <span class="ident">fname</span></code></dt>
+<dd>
+<div class="desc"><p>filename to read data from</p></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="seplot.seplot.Toplot.check_split"><code class="name flex">
+<span>def <span class="ident">check_split</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Checking if we need to split the graph into several graphs when implied from arguments</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def check_split(self):
+    &#34;&#34;&#34; Checking if we need to split the graph into several graphs when implied from arguments&#34;&#34;&#34;
+    na=len(self.arguments)
+    do_split=0
+    for i,arg in enumerate(self.arguments):
+        if arg==__SPLIT_MARK__:
+            do_split=1
+            n_split=i
+    if do_split:
+        #print(&#39;splitting with %s&#39; %self.arguments)
+        future_args=self.arguments
+        self.arguments=self.arguments[0:n_split]
+        future_args.pop(n_split)
+        if len(future_args)&gt;n_split:
+            if future_args[n_split]==&#39;-discard&#39;:
+                if len(future_args)&gt;n_split+1:
+                    future_args=future_args[(n_split+1):]
+                else:
+                    future_args=[]
+
+        new_dict={**self.__dict__}
+        new_dict[&#39;arguments&#39;]=future_args
+        #print(&#39;new object with : %s &#39; %(new_dict))
+        return [1,Toplot(**new_dict)]
+    else:
+        return [0,1]</code></pre>
+</details>
+</dd>
+<dt id="seplot.seplot.Toplot.unpack_arguments"><code class="name flex">
+<span>def <span class="ident">unpack_arguments</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>We convert our coarse list of arguments as a list of strings to a better arg / kwargs format</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def unpack_arguments(self):
+    &#34;&#34;&#34; We convert our coarse list of arguments as a list of strings to a better arg / kwargs format&#34;&#34;&#34;
+    args=self.arguments
+    kwargs={}
+    keys=kw_dict.keys()
+    for arg in list(args):
+        if arg.find(&#39;=&#39;)&gt;0:
+            args.remove(arg)
+            largs=arg.split(&#39;=&#39;)
+            # We fix weird /illegal syntax
+            if largs[0] in keys:
+                largs[0]=kw_dict[largs[0]]
+            try:
+                val=&#39;=&#39;.join(largs[1:])
+                kwargs[largs[0]]=val
+            except:
+                raise ValueError(&#39;Could not process argument %s&#39; %arg)
+    # let&#39;s not forget filename and/or data
+    kwargs[&#39;fname&#39;]=self.fname
+    kwargs[&#39;data&#39;]=self.data
+    return args,kwargs</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="seplot" href="index.html">seplot</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="seplot.seplot.apply_on_not_none" href="#seplot.seplot.apply_on_not_none">apply_on_not_none</a></code></li>
+<li><code><a title="seplot.seplot.not_none" href="#seplot.seplot.not_none">not_none</a></code></li>
+<li><code><a title="seplot.seplot.version" href="#seplot.seplot.version">version</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="seplot.seplot.Splotter" href="#seplot.seplot.Splotter">Splotter</a></code></h4>
+<ul class="">
+<li><code><a title="seplot.seplot.Splotter.add_plot" href="#seplot.seplot.Splotter.add_plot">add_plot</a></code></li>
+<li><code><a title="seplot.seplot.Splotter.autolabel" href="#seplot.seplot.Splotter.autolabel">autolabel</a></code></li>
+<li><code><a title="seplot.seplot.Splotter.bgcolor" href="#seplot.seplot.Splotter.bgcolor">bgcolor</a></code></li>
+<li><code><a title="seplot.seplot.Splotter.canvas" href="#seplot.seplot.Splotter.canvas">canvas</a></code></li>
+<li><code><a title="seplot.seplot.Splotter.equalaxis" href="#seplot.seplot.Splotter.equalaxis">equalaxis</a></code></li>
+<li><code><a title="seplot.seplot.Splotter.future_plots" href="#seplot.seplot.Splotter.future_plots">future_plots</a></code></li>
+<li><code><a title="seplot.seplot.Splotter.get_data_extrema" href="#seplot.seplot.Splotter.get_data_extrema">get_data_extrema</a></code></li>
+<li><code><a title="seplot.seplot.Splotter.graphs" href="#seplot.seplot.Splotter.graphs">graphs</a></code></li>
+<li><code><a title="seplot.seplot.Splotter.height" href="#seplot.seplot.Splotter.height">height</a></code></li>
+<li><code><a title="seplot.seplot.Splotter.kdist" href="#seplot.seplot.Splotter.kdist">kdist</a></code></li>
+<li><code><a title="seplot.seplot.Splotter.key" href="#seplot.seplot.Splotter.key">key</a></code></li>
+<li><code><a title="seplot.seplot.Splotter.make_and_save" href="#seplot.seplot.Splotter.make_and_save">make_and_save</a></code></li>
+<li><code><a title="seplot.seplot.Splotter.make_equal_axis_range" href="#seplot.seplot.Splotter.make_equal_axis_range">make_equal_axis_range</a></code></li>
+<li><code><a title="seplot.seplot.Splotter.make_plot" href="#seplot.seplot.Splotter.make_plot">make_plot</a></code></li>
+<li><code><a title="seplot.seplot.Splotter.out" href="#seplot.seplot.Splotter.out">out</a></code></li>
+<li><code><a title="seplot.seplot.Splotter.plot" href="#seplot.seplot.Splotter.plot">plot</a></code></li>
+<li><code><a title="seplot.seplot.Splotter.read_args" href="#seplot.seplot.Splotter.read_args">read_args</a></code></li>
+<li><code><a title="seplot.seplot.Splotter.save_plot" href="#seplot.seplot.Splotter.save_plot">save_plot</a></code></li>
+<li><code><a title="seplot.seplot.Splotter.usage" href="#seplot.seplot.Splotter.usage">usage</a></code></li>
+<li><code><a title="seplot.seplot.Splotter.width" href="#seplot.seplot.Splotter.width">width</a></code></li>
+<li><code><a title="seplot.seplot.Splotter.xlabel" href="#seplot.seplot.Splotter.xlabel">xlabel</a></code></li>
+<li><code><a title="seplot.seplot.Splotter.xlog" href="#seplot.seplot.Splotter.xlog">xlog</a></code></li>
+<li><code><a title="seplot.seplot.Splotter.xmax" href="#seplot.seplot.Splotter.xmax">xmax</a></code></li>
+<li><code><a title="seplot.seplot.Splotter.xmin" href="#seplot.seplot.Splotter.xmin">xmin</a></code></li>
+<li><code><a title="seplot.seplot.Splotter.ylabel" href="#seplot.seplot.Splotter.ylabel">ylabel</a></code></li>
+<li><code><a title="seplot.seplot.Splotter.ylog" href="#seplot.seplot.Splotter.ylog">ylog</a></code></li>
+<li><code><a title="seplot.seplot.Splotter.ymax" href="#seplot.seplot.Splotter.ymax">ymax</a></code></li>
+<li><code><a title="seplot.seplot.Splotter.ymin" href="#seplot.seplot.Splotter.ymin">ymin</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="seplot.seplot.Toplot" href="#seplot.seplot.Toplot">Toplot</a></code></h4>
+<ul class="">
+<li><code><a title="seplot.seplot.Toplot.arguments" href="#seplot.seplot.Toplot.arguments">arguments</a></code></li>
+<li><code><a title="seplot.seplot.Toplot.check_split" href="#seplot.seplot.Toplot.check_split">check_split</a></code></li>
+<li><code><a title="seplot.seplot.Toplot.data" href="#seplot.seplot.Toplot.data">data</a></code></li>
+<li><code><a title="seplot.seplot.Toplot.fname" href="#seplot.seplot.Toplot.fname">fname</a></code></li>
+<li><code><a title="seplot.seplot.Toplot.unpack_arguments" href="#seplot.seplot.Toplot.unpack_arguments">unpack_arguments</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>
