@@ -1,22 +1,9 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
 # Copyright Serge Dmitrieff
 # www.biophysics.fr
 #
 # Based on Python Pyx
-from pyx import *
-from numpy import *
-from pyx.graph import axis
-import sys
-import sio_tools as sio
-
-import seplot.kw_dictionaries as kd
-import seplot.style_dictionaries as sd
-from seplot.grapher import Graph
-
-__VERSION__ = "2.1.8"
-
 """
 ## SYNOPSIS
 
@@ -35,8 +22,8 @@ __VERSION__ = "2.1.8"
 ## SYNTAX (from python)
 
     import seplot.seplot as sp
-    plot=sp.Splotter([*args],[**kwargs])         
-    plot.add_plot([*args],[data=DATA],[file=FILENAME],[**kwargs])  
+    plot=sp.Splotter([*args],[**kwargs])
+    plot.add_plot([*args],[data=DATA],[file=FILENAME],[**kwargs])
     plot.make_and_save()
     # From a notebook :
     plot
@@ -44,8 +31,23 @@ __VERSION__ = "2.1.8"
 ## OPTIONS AND EXAMPLES
 
     See README.md and documentation
-    
+
 """
+
+from pyx import *
+from numpy import *
+from pyx.graph import axis
+import sys
+import sio_tools as sio
+
+
+import seplot.kw_dictionaries as kd
+import seplot.style_dictionaries as sd
+from seplot.grapher import Graph
+
+__VERSION__ = "2.1.8"
+
+
 
 
 

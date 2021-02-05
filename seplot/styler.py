@@ -1,3 +1,6 @@
+"""
+A sub-module to deal with plot styles
+"""
 from numpy import *
 from pyx import *
 import sio_tools as sio
@@ -23,9 +26,7 @@ grad_dict=dicos['gradients']
 kw_dict=kd.get_keywords()
 
 
-"""
-A sub-module to deal with plot styles
-"""
+
 
 
 

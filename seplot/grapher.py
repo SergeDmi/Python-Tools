@@ -1,3 +1,8 @@
+"""
+Grapher is a sub-module defining the class Graph.
+"""
+
+
 from numpy import *
 import sys
 import sio_tools as sio
@@ -8,10 +13,6 @@ from seplot.styler import Style
 import seplot.kw_dictionaries as kd
 import seplot.style_dictionaries as sd
 
-
-"""
-Grapher is a sub-module defining the class Graph.
-"""
 
 
 # Basic set of colours, symbols, and lines

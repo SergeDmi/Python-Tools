@@ -1,3 +1,4 @@
+""" A dictionary of keywords to be translated """
 def get_keywords():
 
     kw_dict={

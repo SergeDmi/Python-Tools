@@ -1,5 +1,5 @@
+""" Dictionaries of styles """
 from pyx import *
-from pyx.graph import axis
 
 def get_colors_symbols_lines():
     colour_strings=['black','dark','medium','light','blue','red','green']

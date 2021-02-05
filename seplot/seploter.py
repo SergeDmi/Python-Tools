@@ -5,14 +5,13 @@
 # www.biophysics.fr
 #
 # Based on Python Pyx
-import sys
+""" Just a script to bridge the module and the executable """
 
+import sys
 from seplot.seplot import Splotter
 
-
-
 if __name__ == "__main__":
-    """ Just a script to bridge the module and the executable """
+
     nargs=len(sys.argv)
     dargs=sys.argv[1:]
 
