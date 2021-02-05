@@ -1,5 +1,31 @@
 Module seplot.seplot
 ====================
+## SYNOPSIS
+
+   seplot is a shorthand command-line/python tool to plot graphs using PyX. PyX is good.
+
+## DESCRIPTION
+
+   seplot plots a graph from text/csv files
+   it is meant to be fast and dirty (but uses PyX to be beautiful)
+   Can be used from the terminal (mostly) but also from a python script and notebook
+
+## SYNTAX (from bash)
+
+   python seplot FILE [OPTIONS] [ADDITIONAL_TEXT_FILES] [ADDITIONAL_OPTIONS]
+
+## SYNTAX (from python)
+
+    import seplot.seplot as sp
+    plot=sp.Splotter([*args],[**kwargs])
+    plot.add_plot([*args],[data=DATA],[file=FILENAME],[**kwargs])
+    plot.make_and_save()
+    # From a notebook :
+    plot
+
+## OPTIONS AND EXAMPLES
+
+    See README.md and documentation
 
 Functions
 ---------

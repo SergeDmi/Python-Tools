@@ -1,12 +1,6 @@
 Module seplot.styler
 ====================
-
-Variables
----------
-
-    
-`kw_dict`
-:   A sub-module to deal with plot styles
+A sub-module to deal with plot styles
 
 Classes
 -------

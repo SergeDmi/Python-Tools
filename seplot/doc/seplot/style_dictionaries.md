@@ -1,5 +1,6 @@
 Module seplot.style_dictionaries
 ================================
+Dictionaries of styles
 
 Functions
 ---------

@@ -1,5 +1,6 @@
 Module seplot.grapher
 =====================
+Grapher is a sub-module defining the class Graph.
 
 Functions
 ---------
