@@ -15,7 +15,7 @@ import seplot.kw_dictionaries as kd
 import seplot.style_dictionaries as sd
 from seplot.grapher import Graph
 
-__VERSION__ = "2.1.7"
+__VERSION__ = "2.1.8"
 
 """
 ## SYNOPSIS
@@ -28,113 +28,25 @@ __VERSION__ = "2.1.7"
    it is meant to be fast and dirty (but uses PyX to be beautiful)
    Can be used from the terminal (mostly) but also from a python script and notebook
 
-## SYNTAX
+## SYNTAX (from bash)
 
-   python seplot.py TEXT_FILE [OPTIONS] [ADDITIONAL_TEXT_FILES] [ADDITIONAL_OPTIONS]
+   python seplot FILE [OPTIONS] [ADDITIONAL_TEXT_FILES] [ADDITIONAL_OPTIONS]
 
-## OPTIONS
+## SYNTAX (from python)
 
-    seplot has two kinds of options : global (for the whole figure) and local (for a particular file)
-    All options should be written as option_name=option_value
+    import seplot.seplot as sp
+    plot=sp.Splotter([*args],[**kwargs])         
+    plot.add_plot([*args],[data=DATA],[file=FILENAME],[**kwargs])  
+    plot.make_and_save()
+    # From a notebook :
+    plot
 
-    Global options :
-        xlabel        : label of x axis
-        ylabel        : label of y axis
-        width         : width of figure
-        height        : height of figure
-        xmin          : min x value
-        xmax          : max x value
-        ymin          : min y value
-        ymax          : max y value
-        key           : position of figure legend (tr,br,tl,bl)
-        out           : name of output file
-        -ylog         : y axis is logarithmic
-        -xlog         : x axis is logarithmic
-        -keep         : keep options for subsequent plots, until -discard
-        -discard      : discard options for next plot
-        -equal        : equal x-y axis range
-        -autolabel    : tries to automatically find labels from data file
+## OPTIONS AND EXAMPLES
 
-    Local options :
-        x        : index of column or row to be used as x axis values (e.g. x=0 for the first column)
-                        also can specify a label read from file header : x=column_label
-                        also can specify an operation : x='A[:,0]*A[:,1]' or x='column_label*column_label'
-                        can also be automatic, i.e. index : x=auto
-        y        : index of column or row to be used as y axis values, same possibilities as x=
-        dy       : index of column or row to be used as dy values , same possibilities as x=
-        mode     : h for horizontal (rows), v for vertical (column) (default)
-
-        color    : color of lines or symbol ; can be either red, green, blue, dark, medium, light, black
-                        or color.cmyk.*  or color.rgb.*
-                        or an operation, e.g. color=A[:,2] or color=columns_label*5
-
-        and      : add another graph (possibly with different options)
-
-        style    : style of plot : - or _ for a line, -- for dashed, .- for dashdotted
-                                    o for circles  x , * for crosses  + for plus   > , <     for triangles
-                                    b for a bar graph , B for a filled bar graph (histogram)
-
-        if / cond : condition to keep the rows or columns
-
-        andif     :  add another graph with different conditions
-
-        range    : range of rows / columns to plot
-
-        size     : size of symbol used
-
-        line     : thickness of line, from 0 to 5
-
-        title (or legend) : title of the graph
-
-        -hist    : makes a histogram out of the data
-
-## EXAMPLES :
-
-            seplot.py file.txt
-                        plots the second column of file.txt as a function of the first column
-            seplot.py file.txt x=3 y=7
-                        plots the 4th (3+1) column of file.txt as a function of the eigth column (7+1)
-            seplot.py file.txt x=3 y=7 and x=3 y=10
-                        plots the 4th (3+1) column of file.txt as a function of the eigth column (7+1),
-                        and another plot of 4th column as a function of 11th column
-            seplot.py file.txt color=red file2.txt out=plot.pdf
-                        plots in red the second column of file.txt as a function of the first column
-                        plots the second column of file2.txt as a function of the first column in the same graph
-            seplot.py file.txt 'y=sqrt(A[:,1]^2+A[:,2]^2)' dy=3 color=1 grad=gray xlabel='$t$ in minutes' ylabel='$\bar{z}$'
-                        A[:,1] and A[:,2] are the second and third columns of file.txt
-                        the deviation is set from the fourth column of file.txt
-                        the color is set from the second column of file.txt, based on a gray-level gradient
-                        labels and titles use the Latex interpreter
-            seplot.py file.txt if='x>1'
-                        plots the second column as a function of the first if elements of the first are greater than 1
-            seplot.py file.txt mode='h' if='A[0,:]>1' -xlog
-                        plots the second row as a function of the first row if elements of the first row are greater than 1
-                        the x axis is logarithmic
-            seplot.py file.txt mode='h' if='x>1' andif='x<=1'
-                        plots the second row as a function of the first row if elements of the first row are greater than 1
-                        and (with a different style) if the elements of the first row are smaller than 1
-            seplot.py range=3 -keep data_0*.txt
-                        plots data from only the third line of the files data_0*.txt
-            seplot.py file.txt range=0:4
-                        plots data from only the first to 4th line of file.txt
-            seplot.py data.txt x=1 y=2 and y=3
-                        plots the third and fourth column as a function of the second
-
-## Use seplot from python :
-            # Single plot :
-            import seplot.seplot as sp
-            plot=sp.Splotter(*args,data=A)           
-            # A is a data array (numpy or pandas dataframe) , args is a list of argument
-            plot.make_and_save(*args)
-            # Several plots :
-            plot=sp.Splotter('-autolabel',key='tl')
-            plot.add_plot(data=A,color='blue')
-            plot.add_plot(data=B,color='red')
-            plot.make_and_save()
+    See README.md and documentation
+    
 """
 
-#@TODO :    yaml config file
-#@TODO :    separate script from module !
 
 
 # Basic set of colours, symbols, and lines
@@ -252,6 +164,9 @@ class Splotter:
 
         self.canvas = canvas.canvas()
         """ The canvas (see PyX) """
+
+        self.graph = None
+        """ The graph itself, an instance of PyX.graph.graphxy """
 
         self.out = 'plot'
         """ The name of the output file """
@@ -517,10 +432,10 @@ class Splotter:
                 except:
                     sio.custom_warn("Cound not understand background color from %s" %self.bgcolor)
 
-        self.graph=graph.graphxy(width=self.width,height=self.height,key=self.key,
+        self.graph = graph.graphxy(width=self.width,height=self.height,key=self.key,
                                  backgroundattrs=backgroundattrs,
-                x=xaxis,
-                y=yaxis )
+                                 x=xaxis,
+                                 y=yaxis )
 
         ## Here we do the plotting itlsef
         for graf in self.graphs:
@@ -537,7 +452,7 @@ class Splotter:
                     self.canvas.stroke(plot.path,graf.stroke_style)
                     print(graf.stroke_style)
         self.canvas.insert(self.graph)
-        #self.canvas.insert(self.graph)
+
 
 
 
