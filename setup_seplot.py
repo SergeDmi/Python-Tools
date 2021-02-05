@@ -15,23 +15,24 @@ with open("seplot/README.md", "r") as handle:
 version=find_version("seplot/seplot.py")
 
 setup(
-     name='seplot',
-     version=version,
+    name='seplot',
+    version=version,
 
 
 
-     author="Serge Dmitrieff",
-     description="A front-end for Python PyX",
-     long_description=splot_description,
-     long_description_content_type='text/markdown',
-     url="https://github.com/SergeDmi/Python-Tools/",
-     install_requires=[
-          'pyx',
-          'numpy',
-          'sio_tools',
-          'pandas'
-      ],
-     packages=['seplot'],
-     package_dir={'seplot': 'seplot'},
-     scripts=['seplot/bin/seplot','seplot/seploter.py']
+    author="Serge Dmitrieff",
+    description="A front-end for Python PyX",
+    long_description=splot_description,
+    long_description_content_type='text/markdown',
+    url="https://github.com/SergeDmi/Python-Tools/",
+    install_requires=[
+      'pyx',
+      'numpy',
+      'sio_tools',
+      'pandas'
+    ],
+    packages=['seplot'],
+    package_dir={'seplot': 'seplot'},
+    scripts=['seplot/bin/seplot','seplot/seploter.py'],
+    package_data={'seplot': ['README.md']}
  )
