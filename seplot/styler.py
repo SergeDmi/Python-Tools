@@ -2,14 +2,9 @@ from numpy import *
 from pyx import *
 import sio_tools as sio
 
-if __package__:
-    import seplot.kw_dictionaries as kd
-    import seplot.style_dictionaries as sd
 
-else:
-    import kw_dictionaries as kd
-    import style_dictionaries as sd
-
+import seplot.kw_dictionaries as kd
+import seplot.style_dictionaries as sd
 
 
 # Basic set of colours, symbols, and lines
@@ -28,24 +23,40 @@ grad_dict=dicos['gradients']
 kw_dict=kd.get_keywords()
 
 
+"""
+A sub-module to deal with plot styles
+"""
+
+
 
 class Style:
-    # A class containing the style to make a graph
+    """
+      A class containing the style to make a graph
+
+    Input :
+    -*args
+    -numr : a plot number for automatic style selection
+    -
+    """
     def __init__(self, *args,numr=0,
-                dx=[],dy=[],
+                dx=None,dy=None,
                 **kwargs):
 
         self.style=[]
+        """ A style array """
         self.dxy=[]
+        """ Style for error barys"""
         self.stroke_style=[]
+        """ Actual stroke style """
         if numr:
             kwargs['numr']=numr
         self.goodstyle=Goodstyle(*args,**kwargs)
+        """ Style attributes """
 
         if self.goodstyle.kind=='histogram':
             self.is_histogram=1
-        #print(self.goodstyle.setcolor)
-        if len(dx)>0 or len(dy)>0:
+
+        if dx is not None or dy is not None:
             if self.goodstyle.setcolor:
                 self.dxy=[self.goodstyle.linew,self.goodstyle.setcolor]
             else:
@@ -73,7 +84,9 @@ class Style:
 
 
 class Goodstyle:
-    # A class containing the style attributes to pass to python PyX
+    """
+    A class containing the style attributes to pass to python PyX
+    """
     def __init__(self,*args,
                 numr=0,
                 col='',siz='',line='',stil='',gradient='',
@@ -81,13 +94,21 @@ class Goodstyle:
                 **kwargs):
 
         self.kind='symbol'
+        """ kind of plot : symbol, line, etc."""
         self.setcolor=colours[int(ceil(numr/4)) %4]
+        """ color set to be plotted"""
         self.symbol=symbols[numr %4]
+        """ what kind of symbol to plot"""
         self.setsize=0.5
+        """ size of the symbol"""
         self.linew=style.linewidth.thin
+        """ linewidth"""
         self.linest=linests[numr %4]
+        """ linestyle """
         self.gradient=color.gradient.Rainbow;
+        """ gradient colors"""
         self.stroke_style=[]
+        """ stroke style"""
 
         # By default, function should be a line
         if is_function:
@@ -183,7 +204,9 @@ class Goodstyle:
                 self.stroke_style=[deco.filled([self.setcolor])]
 
 class changesymbol(graph.style.symbol):
-    # A flexible symbol class derived from PyX's very own changesymbol class
+    """
+     A flexible symbol class derived from PyX's very own changesymbol class
+     """
     def __init__(self,
                        sizecolumnname="size", colorcolumnname="color",
                        gradient=color.gradient.Rainbow,
@@ -203,7 +226,7 @@ class changesymbol(graph.style.symbol):
         graph.style.symbol.__init__(self, symbol=symbol, symbolattrs=symbolattrs, **kwargs)
 
     def columnnames(self, privatedata, sharedata, agraph, columnnames, dataaxisnames):
-        # register the new column names
+        """ register the new column names"""
         if self.sizecolumnname not in columnnames:
             raise ValueError("column '%s' missing" % self.sizecolumnname)
         if self.colorcolumnname not in columnnames:
@@ -213,7 +236,7 @@ class changesymbol(graph.style.symbol):
                                                columnnames, dataaxisnames))
 
     def drawpoint(self, privatedata, sharedata, graph, point):
-        # replace the original drawpoint method by a slightly revised one
+        """ replace the original drawpoint method by a slightly revised one"""
         if sharedata.vposvalid and privatedata.symbolattrs is not None:
             x_pt, y_pt = graph.vpos_pt(*sharedata.vpos)
             if self.setsize<0:

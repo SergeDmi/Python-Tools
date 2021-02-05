@@ -9,6 +9,11 @@ import seplot.kw_dictionaries as kd
 import seplot.style_dictionaries as sd
 
 
+"""
+Grapher is a sub-module defining the class Graph.
+"""
+
+
 # Basic set of colours, symbols, and lines
 csl=sd.get_colors_symbols_lines()
 colours=csl['colours']
@@ -26,7 +31,9 @@ kw_dict=kd.get_keywords()
 
 
 class Graph:
-    # Graph is a class containing a single line/set of points and their style, created from class Toplot
+    """
+    Graph is a class containing a single line/set of points and their style, created from class Toplot.
+    """
     def __init__(self,*args,
                 x=0,y=1,dx=[],dy=[],col='',siz='',stil='',labels=[],
                 cond=[],range=[],
@@ -34,7 +41,7 @@ class Graph:
                 fname='',data=None,numr=0,mode='v',
                 n_points='200',
                 **kwargs):
-
+        """ Instance initialization """
 
 
         self.fname=fname ; self.function_string=function_string
@@ -251,6 +258,7 @@ class Graph:
              #self.stroke_style=Style(*args,**kwargs.style)
 
     def make_auto_legend(self,legend):
+        """ A function to automatically make a legend """
         if legend=='None' or legend=='none':
             self.legend=None
         elif legend:
@@ -266,6 +274,7 @@ class Graph:
                 self.legend=None
 
     def set_init_XY(self,A):
+        """ Initial values of X and Y, usefull to later apply conditions """
         try:
             if self.mode=='h':
                 self.X=A[0,:]
@@ -284,8 +293,8 @@ class Graph:
         except:
             raise ValueError('Did not understand npoints from input %s'  %arg)
 
-    # set a label for coordinate x or y
     def set_label(self,label,coord):
+        """ sets a label for coordinate x or y """
         if coord=='x':
             self.xlabel=label
         elif coord=='y':
@@ -293,6 +302,7 @@ class Graph:
         return
 
     def set_from_input(self,A,input,coord):
+        """ Tries to compute a variable of name coord from an input, usually a string or number, using the data A"""
         # We first check if axis defined by a row/column number
         X=self.X;x=X
         Y=self.Y;y=Y
@@ -336,6 +346,7 @@ class Graph:
                 return []
 
     def substitute_label(self,input,A,label):
+        """ Substitutes names by values"""
         i=self.label_dict[label]
         if self.mode=='h':
             replace='A[%s,:]' %i
@@ -344,6 +355,7 @@ class Graph:
         return input.replace(label,replace)
 
     def set_A_range(self,A,in_range):
+        """ Selects only a range of data """
         # first we need to make data horizontal for the range operation
         if self.mode=='h':
             B=A.transpose()
@@ -374,6 +386,7 @@ class Graph:
 
 
     def set_A_condition(self,A,cond):
+        """ Selects data by condition """
         if self.mode=='h':
             B=A.transpose()
         else:
@@ -397,6 +410,7 @@ class Graph:
 
 
 def get_histogram(Y,bins='auto'):
+    """ A wrapper for numpy's histogram """
     (Y,X)=histogram(Y,bins)
     nx=len(X)
     if nx:

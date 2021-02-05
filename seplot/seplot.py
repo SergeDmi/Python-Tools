@@ -18,20 +18,21 @@ from seplot.grapher import Graph
 __VERSION__ = "2.1.6"
 
 """
-# SYNOPSIS
+## SYNOPSIS
 
-   seplot is a shorthand command-line tool draw graphs using PyX. PyX is good.
+   seplot is a shorthand command-line/python tool to plot graphs using PyX. PyX is good.
 
-# DESCRIPTION
+## DESCRIPTION
 
-   seplot plots a graph from a text file (should I add excel support ?)
+   seplot plots a graph from text/csv files
    it is meant to be fast and dirty (but uses PyX to be beautiful)
+   Can be used from the terminal (mostly) but also from a python script and notebook
 
-# SYNTAX
+## SYNTAX
 
    python seplot.py TEXT_FILE [OPTIONS] [ADDITIONAL_TEXT_FILES] [ADDITIONAL_OPTIONS]
 
-# OPTIONS
+## OPTIONS
 
     seplot has two kinds of options : global (for the whole figure) and local (for a particular file)
     All options should be written as option_name=option_value
@@ -87,7 +88,7 @@ __VERSION__ = "2.1.6"
 
         -hist    : makes a histogram out of the data
 
-# EXAMPLES :
+## EXAMPLES :
 
             seplot.py file.txt
                         plots the second column of file.txt as a function of the first column
@@ -119,17 +120,17 @@ __VERSION__ = "2.1.6"
             seplot.py data.txt x=1 y=2 and y=3
                         plots the third and fourth column as a function of the second
 
-# USE seplot from python :
+## Use seplot from python :
             # Single plot :
-            import seplot
-            plot=seplot.Splotter('-xlog',key='tr',data=A)           # A is a data array, arguments is a list of argument
-            plot.make_and_save()                           # e.g. : arguments=['color=red','-xlog']
+            import seplot.seplot as sp
+            plot=sp.Splotter(*args,data=A)           
+            # A is a data array (numpy or pandas dataframe) , args is a list of argument
+            plot.make_and_save(*args)
             # Several plots :
-            plot=seplot.Splotter('-autolabel',key='tl')
+            plot=sp.Splotter('-autolabel',key='tl')
             plot.add_plot(data=A,color='blue')
-            plot.add_plot(data=B,color=red)
+            plot.add_plot(data=B,color='red')
             plot.make_and_save()
-
 """
 
 #@TODO :    yaml config file
@@ -157,24 +158,32 @@ def version():
     return __VERSION__
 
 class Toplot:
-    # Toplot is a class containing the options for plotting
-    #   it also contains a method to split into two
-    # here we need to support a keyword argument having to values, until we split
-    # therefore we don't convert everything to *args,**kwargs for now
-    # @TODO : toplot should have a kwarg member ! -> No need to translate
-    def __init__(self,*args,arguments=None,data=None,fname="",**kwargs):
+    """
+    Toplot is a class containing the options for plotting
+    it also contains a method to split into two
+    here we need to support a keyword argument having to values, until we split
+    therefore we don't convert everything to *args and **kwargs,
+    rather we pass *argument*, a list of arguments and kw arguments
+
+    """
+    def __init__(self, *args, arguments=None, data=None, fname="", **kwargs):
+        """ Initialization"""
         self.fname=fname
+        """ filename to read data from """
         self.data=data
+        """ data to plot from """
         self.arguments=[]
+        """ actual arguments"""
         if arguments is not None:
             self.arguments=arguments
-        #self.arguments=[arg for arg in arguments]
+
         for arg in args:
             self.arguments.append(arg)
         for key, value in kwargs.items():
             self.arguments.append('%s=%s' %(key,value))
 
     def check_split(self):
+        """ Checking if we need to split the graph into several graphs when implied from arguments"""
         na=len(self.arguments)
         do_split=0
         for i,arg in enumerate(self.arguments):
@@ -201,7 +210,7 @@ class Toplot:
             return [0,1]
 
     def unpack_arguments(self):
-        # We convert our stupid list of arguments as a list of strnigs to a better arg / kwargs format
+        """ We convert our coarse list of arguments as a list of strings to a better arg / kwargs format"""
         args=self.arguments
         kwargs={}
         keys=kw_dict.keys()
@@ -226,35 +235,62 @@ class Toplot:
 
 
 class Splotter:
-    # seplot is the global plotter class
-    # It mostly sorts arguments and prepares global plot options
+    """
+    Splotter is the global plotter class
+    It mostly sorts arguments and prepares global plot options
+
+    Arguments passed :
+    - arguments=: a list of arguments and kw arguments (those include "=")
+    - data= : an array/dataframe containing data to be plotted
+    - *args : additional arguments
+    - **kwargs : additional keyword arguments
+    """
     def __init__(self,*args,arguments=None,data=None,**kwargs):
-
+        """ Initiation  from arguments and keyword arguments"""
         if arguments is None:
-            arguments=[]
+            arguments = []
 
-        ## First we initialize class members
-        self.canvas=canvas.canvas()
-        #if not args and not data:
-        #    self.usage()
-        self.out='plot'
-        self.xlabel=None
-        self.ylabel=None
-        self.xmin=None
-        self.xmax=None
-        self.ymin=None
-        self.ymax=None
-        self.key=None
-        self.bgcolor=None
-        self.width=8
-        self.height=5
-        self.kdist=0.1
-        self.xlog=0
-        self.ylog=0
-        self.autolabel=0
-        self.equalaxis=0
+        self.canvas = canvas.canvas()
+        """ The canvas (see PyX) """
+
+        self.out = 'plot'
+        """ The name of the output file """
+
+        self.xlabel = None
+        """ xlabel """
+        self.ylabel = None
+        """ ylabel """
+        self.xmin = None
+        """ min value of x axis """
+        self.xmax = None
+        """ mas value of x axis """
+        self.ymin = None
+        """ min value of y axis """
+        self.ymax = None
+        """ max value of y axis """
+        self.key = None
+        """ position of the legend (string, cf PyX) """
+        self.bgcolor = None
+        """ background color """
+        self.width = 8
+        """ graph width """
+        self.height = 5
+        """ graph height"""
+        self.kdist = 0.1
+        """ distance of the legend"""
+        self.xlog = 0
+        """ if x axis in log scale """
+        self.ylog = 0
+        """ if y axis in log scale """
+        self.autolabel = 0
+        """ if we auto label axes """
+        self.equalaxis = 0
+        """ if axes are equal """
+
         self.future_plots=[]
+        """ the list items to be plotted, """
         self.graphs=[]
+        """ the list of created graphs """
 
         # Now we add extra arguments ; this is a bit weird but the simplest option to use both command line and python import
         for arg in args:
@@ -270,17 +306,27 @@ class Splotter:
 
     # Integration with IPython (jupyter notebook) : png representation
     def _repr_png_(self):
+        """ For ipython notebooks to display the graph """
         return self.canvas._repr_png_()
 
     # Integration with IPython (jupyter notebook) : svg representation
     def _repr_svg_(self):
+        """ For ipython notebooks to display the graph """
         return self.canvas._repr_svg_()
 
     # Just a wrapper
     def add_plot(self,*args,**kwargs):
+        """ a wrapper to add a plot to future_plots """
         self.future_plots.append(Toplot(*args,**kwargs))
 
-    def read_args(self,*args,arguments=None,**kwargs):
+    def read_args(self, *args, arguments=None, **kwargs):
+        """ Where actually we read arguments !
+        inputs :
+        - arguments= : a list of arguments or kwarguments
+        - *args : additional arguments
+        - *kwargs : additional keyword arguments
+        """
+
         if arguments is None:
             arguments = []
         ## Now we read arguments
@@ -397,7 +443,8 @@ class Splotter:
         self.make_plot(*args,**kwargs)
         self.save_plot(*args,**kwargs)
 
-    def make_plot(self,*args,backgroundattrs=None, **kwargs):
+    def make_plot(self,*args,**kwargs):
+        """ We do the plotting by dispatching the arguments to PyX. Arguments can be passed again ! """
         self.read_args(*args,**kwargs)
         # we check if the plots must be split by and / andif
         for i,toplot in enumerate(self.future_plots):
@@ -496,6 +543,7 @@ class Splotter:
 
 
     def plot(self,graf):
+        """ A wrapper for PyX.graph.plot """
         if graf.is_function==1:
             graf.ploted=self.graph.plot(graph.data.function(graf.function_string,points=graf.n_points,title=graf.legend),graf.style)
         elif graf.is_histogram==1:
@@ -504,6 +552,7 @@ class Splotter:
             graf.ploted=self.graph.plot([graph.data.points([(x,graf.Y[i],graf.dX[i],graf.dY[i],graf.S[i],graf.C[i]) for i, x in enumerate(graf.X[:])], x=1, y=2,dx=3,dy=4,size=5,color=6,title=graf.legend)],graf.style)
 
     def save_plot(self,*args,out=None,**kwargs):
+        """ Saving canvas to a file """
         if not out:
             out=self.out
         if self.graphs:

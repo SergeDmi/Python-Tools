@@ -6,7 +6,7 @@ https://www.biophysics.fr
 # Installation
 
 ## Installing with pip3 (recommended)
- ```shell
+```shell
  $ pip3 install seplot
 ```
 
@@ -31,18 +31,18 @@ When using a *.csv* file, or a *.txt* file with a header, we can use directly th
 $ seplot.py data.txt x=time y=distance
 ```
 Where *data.txt* looks like :
- ```
+```
 # time distance 
 0 1.0
 1 2.0
 ...
 ```
  For a csv file :  
- ```shell
+```shell
 $ seplot.py data.csv x=time y=distance
 ```
 Where *data.csv* looks like :
- ```
+```
 ,time,distance
 ,0,1.0
 ,1,2.0
@@ -86,7 +86,7 @@ Does a histogram of the first column (y=0) of data.txt, with 10 bins (x=10) and 
 
 ### Data manipulation and conditional expressions
  We can perform operations on the input data. For a csv file, or a text file with header, we can use directly the column names as if it was the values :
-  ```shell
+```shell
 $ seplot.py data.csv y='distance*distance'
 ```
 Any python/numpy operation on the data is permitted. If the data is not directly named (text file without header), it is still possible to perform operation on the data.  
@@ -211,18 +211,18 @@ plot.make_and_save()
                 also can specify an operation : y='A[:,1]*A[:,2]/A[:,3]'  
 **dy=**       : index of column or row to be used as dy values (e.g. x=0 for the first column)  
                 also can specify an operation : dy='A[:,2]/sqrt(A[:,3])'  
-**mode=**     : h for horizontal (rows), v for vertical (column) (default)  when reading data
+**mode=**     : h for horizontal (rows), v for vertical (column) (default)  when reading data  
 **color=**    : color of lines or symbol ; can be either red, green, blue, dark, medium, light, black  
-                or color.cmyk.*  or color.rgb.*  
+                or color.cmyk.*  or color.rgb.*,
                 or an operation, e.g. color=A[:,2]  
 **and=**      : add another graph (possibly with different options)  
 **style=**    : style of plot : - or _ for a line, -- for dashed, .- for dashdotted  
                             o for circles  x , * for crosses  + for plus   > , <     for triangles
-                            b for a bar graph, B for a filled bar graph
-**if= / cond=** : condition to keep the rows or columns  
-**andif=**     :  add another graph with different conditions  
+                            b for a bar graph, B for a filled bar graph  
+**if= / cond=** : condition to keep the rows or columns    
+**andif=**     :  add another graph with different conditions    
 **range=**    : range of rows / columns to plot  
 **size=**     : size of symbol used  
 **line=**     : thickness of line, from 0 to 5  
 **title= / legend=** : title of the graph  
-**-hist**     : makes a histogram
+**-hist**     : makes a histogram  
