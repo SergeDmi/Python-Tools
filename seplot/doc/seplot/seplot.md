@@ -48,6 +48,9 @@ Classes
     `future_plots`
     :   the list items to be plotted,
 
+    `graph`
+    :   The graph itself, an instance of PyX.graph.graphxy
+
     `graphs`
     :   the list of created graphs
 
