@@ -45,7 +45,7 @@ import seplot.kw_dictionaries as kd
 import seplot.style_dictionaries as sd
 from seplot.grapher import Graph
 
-__VERSION__ = "2.2.0"
+__VERSION__ = "2.2.1"
 
 
 

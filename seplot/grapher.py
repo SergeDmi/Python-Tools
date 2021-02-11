@@ -36,7 +36,7 @@ class Graph:
     Graph is a class containing a single line/set of points and their style, created from class Toplot.
     """
     def __init__(self,*args,
-                x=0,y=1,dx=None,dy=None,col=None,siz=None,stil='',labels=[],
+                x=None,y=None,dx=None,dy=None,col=None,siz=None,stil='',labels=[],
                 cond=[],range=[],
                 function_string='',legend='',
                 fname='',data=None,numr=0,mode='v',
@@ -66,6 +66,7 @@ class Graph:
         self.stroke_style=None
 
         self.make_auto_legend(legend)
+
 
 
         if self.function_string:
@@ -143,6 +144,11 @@ class Graph:
             if not self.make_histogram:
                 # This is if we are dealing with (hopefuly) numeric data
                 #if (len(self.range) or len(cond)):
+                if x is None:
+                    x = "__0__"
+                if y is None:
+                    y = "__1__"
+
                 if len(range):
                     A=self.set_A_range(A,range)
                 # Set X Y to start with
@@ -184,8 +190,11 @@ class Graph:
                 if len(cond):
                     A=self.set_A_condition(A,cond)
                 self.Y=self.set_from_input(A,y,'y')
-                bin_number=0
+                if x is None:
+                    x=0
+
                 try:
+
                     bin_number=int(x)
                     if not bin_number==0:
                         try:
@@ -209,8 +218,7 @@ class Graph:
                             (self.Y,self.X)=get_histogram(self.Y,bins=x)
                         except:
                             raise ValueError('Could not make histogram with data Y=%s and bins=%s (assumed text or other)'  %(y,x) )
-                #print(self.X)
-                #print(self.Y)
+
 
             try:
                 if not len(self.C):
