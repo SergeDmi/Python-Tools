@@ -36,7 +36,7 @@ class Graph:
     Graph is a class containing a single line/set of points and their style, created from class Toplot.
     """
     def __init__(self,*args,
-                x=0,y=1,dx=[],dy=[],col='',siz='',stil='',labels=[],
+                x=0,y=1,dx=None,dy=None,col=None,siz=None,stil='',labels=[],
                 cond=[],range=[],
                 function_string='',legend='',
                 fname='',data=None,numr=0,mode='v',
@@ -120,7 +120,13 @@ class Graph:
 
 
             for i,label in enumerate(self.labels):
-                self.label_dict[label]=i
+                #i = self.label_dict[label]
+                if self.mode == 'h':
+                    replace = 'A[%s,:]' % i
+                else:
+                    replace = 'A[:,%s]' % i
+
+                self.label_dict[label] = replace
 
         # Are we plotting a histogram ?
         for arg in args:
@@ -308,6 +314,8 @@ class Graph:
         X=self.X;x=X
         Y=self.Y;y=Y
 
+
+        """ 
         if input in self.labels:
             input=self.label_dict[input]
 
@@ -345,6 +353,34 @@ class Graph:
                     return []
             else:
                 return []
+                """
+        if input is not None:
+            if input.startswith('aut') and input.endswith("auto"):
+                if self.mode == 'h':
+                    return array(range(len(A[0, :])))
+                else:
+                    return array(range(len(A[:, 0])))
+            else:
+                input = sio.word_substitute_from_dict(input, self.label_dict)
+
+                #  columns can be written as __1__ -> A[:,1] (vertical) or A[1,:] (horizontal)
+                if self.mode == 'v':
+                    input = sio.template_wrapping_substitute(input, {"__": "A[:,__]"})
+                else:
+                    input = sio.template_wrapping_substitute(input, {"__": "A[__,:]"})
+
+
+
+                try:
+                    return eval(input)
+                except:
+                    if not coord == "color":
+                        raise ValueError('We could note evaluate %s from %s' % (coord, input))
+                    else:
+                        sio.custom_warn('We might not be able to evaluate %s from %s' % (coord, input))
+                    return []
+        else:
+            return []
 
     def substitute_label(self,input,A,label):
         """ Substitutes names by values"""

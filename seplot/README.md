@@ -18,17 +18,17 @@ seplot requires PyX, Numpy, pandas, and sio_tools. They will be downloaded when 
 ## Basic usage
 seplot is meant to be used from command line or from a python script. The typical command line instruction to plot from a file data.txt would be :
 ```shell
-$ seplot.py data.txt
+$ seplot data.txt
 ```
 By omitting further instructions, it is implied that the data in data.txt is a set of vertical columns, and we plot column 1 as a function of column 0. seplot uses Python's zero-indexing convention (column 0 is the first column). This could also be written :
 ```shell
-$ seplot.py data.txt mode=v x=0 y=1 out=plot.pdf
+$ seplot data.txt mode=v x=__0__ y=__1__ out=plot.pdf
 ```
 Where **mode**  is **v** (vertical) for columns of data and **h** for rows (horizontal), and plot.pdf is the output file.  
 
 When using a *.csv* file, or a *.txt* file with a header, we can use directly the column names :
 ```shell
-$ seplot.py data.txt x=time y=distance
+$ seplot data.txt x=time y=distance
 ```
 Where *data.txt* looks like :
 ```
@@ -39,7 +39,7 @@ Where *data.txt* looks like :
 ```
  For a csv file :  
 ```shell
-$ seplot.py data.csv x=time y=distance
+$ seplot data.csv x=time y=distance
 ```
 Where *data.csv* looks like :
 ```
@@ -51,16 +51,16 @@ Where *data.csv* looks like :
  
  Of course several files can be plotted with different colors :
 ```shell
-$ seplot.py data_1.txt color=red data_2.txt color=blue
+$ seplot data_1.txt color=red data_2.txt color=blue
 ```
 We can also plot several columns from the same file, use columns for errorbars dx and dy, and plot a function :
 ```shell
-$ seplot.py data_1.txt x=0 dx=1 y=2 dy=3 color=4 size=5 function='y(x)=x'
+$ seplot data_1.txt x=__0__ dx=__1__ y=__2__ dy=__3__ color=__4__ size=__5__ function='y(x)=x'
 ```
 Here, we even used data to assign a size and color to the plot symbols ! Note that seplot can easily be used from inside a python script :
 ```python
-import seplot
-plot=seplot.Splotter(file='data.txt')
+import seplot.seplot as sp
+plot=sp.Splotter(file='data.txt')
 # alternatively, with A an array containing the data
 plot.add_plot(data=A)
 plot.make_and_save()
@@ -69,80 +69,80 @@ This readme focuses on the command-line interface, but all instructions can also
 
 ### Ploting with several styles
 ```shell
-$ seplot.py data.txt x=0 y=1 dy=2 and x=0 y=1 line=1
+$ seplot data.txt x=__0__ y=__1__ dy=__2__ and x=__0__ y=__1__ line=1
 ```
 Does a scatter plot of the second column as a function of the first, using the third column for error bars. Then does a line plot of the secund column as a function of the first.
 
 ### Histograms
 ```shell
-$ seplot.py data.txt y=0 -hist
+$ seplot data.txt y=__0__ -hist
 ```
 Does a histogram of values of the first column (y=0) of data.txt
 
 ```shell
-$ seplot.py data.txt -hist x=10 y=0 style=b data.txt -hist x='[0,1,2,3,4]' style=B
+$ seplot data.txt -hist x=10 y=__0__ style=b data.txt -hist x='[0,1,2,3,4]' style=B
 ```
-Does a histogram of the first column (y=0) of data.txt, with 10 bins (x=10) and then with bins centered around 0,1,2,3,4 (and filled bars : style=B)
+Does a histogram of the first column (y= __0 __) of data.txt, with 10 bins (x=10) and then with bins centered around 0,1,2,3,4 (and filled bars : style=B)
 
 ### Data manipulation and conditional expressions
  We can perform operations on the input data. For a csv file, or a text file with header, we can use directly the column names as if it was the values :
 ```shell
-$ seplot.py data.csv y='distance*distance'
+$ seplot data.csv y='distance*distance'
 ```
 Any python/numpy operation on the data is permitted. If the data is not directly named (text file without header), it is still possible to perform operation on the data.  
 Data read from the data file (eg. data.txt) is stored in a numpy array called *A*. We can apply any numpy function on *A* in *seplot* through a simple syntax :
 ```shell
-$ seplot.py data.txt y='A[:,1]^2'
+$ seplot data.txt y='A[:,1]^2'
 ```
 Here *A[:,1]* is the *second* column of *A*.  
 
 We can use the same syntax for conditional expressions using the keyword **if** :
 ```shell
-$ seplot.py data.txt y='distance*distance' if='y>1'
+$ seplot data.txt y='distance*distance' if='y>1'
 ```
 We can now combine several features :
 ```shell
-$ seplot.py data.txt y='distance*distance' if='y>1' color=blue
+$ seplot data.txt y='distance*distance' if='y>1' color=blue
 		   and color=red if='y<1'
 ```
 We used the **and** keyword to re-use the data from *data.txt* into another plot element (note that the shorthand  **andif=**... is also supported).
 
 We can easily compute and plot complex functions of the input data :
 ```shell
-$ seplot.py data.txt y='sqrt(distance*distance)/time' color='sin(time)'
+$ seplot data.txt y='sqrt(distance*distance)/time' color='sin(time)'
 ```
 Similarly, the **if** keyword can be used for any function of the input data :
 ```shell
-$ seplot.py data.txt y='A[:,1]^2' if='sqrt(A[:,1])>10'
+$ seplot data.txt y='A[:,1]^2' if='sqrt(A[:,1])>10'
 ```
 Additionally, one can  select a sub-set of the data, both by *first* choosing a range of lines (resp. columns in horizontal mode), and *second* a conditional expression, e.g. :
 ```shell
-$ seplot.py data.txt range='0:10' if='A[:,1]>0'
+$ seplot data.txt range='0:10' if='A[:,1]>0'
 ```
 Here data from the first 10 lines (lines 0-9 according to Python's numbering convention) if the value of the second columns (*A[:,1]*) is larger than 0.
 
 ### Styles and propagation
 seplot allows for a wide variety of symbol and line styles and attributes. Some have shorthands, but any style from PyX can be used. For instance let us plot the same data as red dots, a blue solid line, and a thick black dashed line.
 ```shell
-$ seplot.py data.txt color=red style=o and color=blue style=_ and color=black style=-- line=4
+$ seplot data.txt color=red style=o and color=blue style=_ and color=black style=-- line=4
 ```
 Other symbols include "+" (vertical cross), "x" (cross), ">" or "<" (triangle), but any of PyX's  **graph.style.symbol** can be used.
 
 When using color-by-value, any of PyX's gradients can be used, and some have shorthands :
 ```shell
-$ seplot.py data.txt color=2 gradient=jet and gradient=gray
+$ seplot data.txt color=__2__ gradient=jet and gradient=gray
 ```
 
 To keep the same style between two files, and change style for another file, we can use the **-keep** and **-discard** keywords :
 ```shell
-$ seplot.py data_0.txt color=red -keep 'data_1.txt' -discard 'data_2.txt'
+$ seplot data_0.txt color=red -keep 'data_1.txt' -discard 'data_2.txt'
 ```
 Note than **-keep** and **-discard** keep or discard any option, including **y=**, **range=**, **if=** , etc.
 
 ### Labels and titles
 One of the main interest on using PyX as a backend is to have full *LaTeX* compatibility. Therefore we can happily write :
 ```shell
-$ seplot.py data.txt xlabel='time ($s$)' ylabel='$v$ ($m s^{-1}$)'
+$ seplot data.txt xlabel='time ($s$)' ylabel='$v$ ($m s^{-1}$)'
 ```
 seplot also can read directly the label from a text file using the keyword  **-autolabel**. For example for a file with a simple header  &#35; time position}:
 ```shell
@@ -155,19 +155,19 @@ $ cat data.txt
 ```
 We can use the instruction :
 ```shell
-$ seplot.py data.txt -autolabel
+$ seplot data.txt -autolabel
 ```
 Which will yield *xlabel=time* and  *ylabel=position*.
 
 We can also specify the position of the graph legend, e.g. with *key=tl* for the top left :
 ```shell
-$ seplot.py data.txt -autolabel key=tl
+$ seplot data.txt -autolabel key=tl
 ```
 ## Calling seplot from Python
 Calling seplot from a Python script offers many possibility, including appending progressively plots during analysis, etc.
 ```python
-import seplot
-plot=seplot.Splotter(key='tl')
+import seplot.seplot as sp
+plot=sp.Splotter(key='tl')
 for i,A in enumerate(list_of_data):
 		# A is an element of list_of_data
 		# i is its index
@@ -177,8 +177,8 @@ plot.make_and_save()
 
 Global options are passed when calling **seplot.Splotter** and local options are passed when calling **plot.add_plot**, following the same syntax as the command line. One exception, **if=** (from command line) becomes **cond=** to avoid confusion.
 ```python
-import seplot
-plot=seplot.Splotter(key='tl')
+import seplot.seplot as sp
+plot=sp.Splotter(key='tl')
 plot.add_plot(file='data.txt',cond='A[:,0]>0')
 plot.make_and_save()
 ```

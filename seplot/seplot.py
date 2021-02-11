@@ -17,7 +17,7 @@
 
 ## SYNTAX (from bash)
 
-   python seplot FILE [OPTIONS] [ADDITIONAL_TEXT_FILES] [ADDITIONAL_OPTIONS]
+   seplot FILE [OPTIONS] [ADDITIONAL_FILES] [ADDITIONAL_OPTIONS]
 
 ## SYNTAX (from python)
 
@@ -45,7 +45,7 @@ import seplot.kw_dictionaries as kd
 import seplot.style_dictionaries as sd
 from seplot.grapher import Graph
 
-__VERSION__ = "2.1.8"
+__VERSION__ = "2.2.0"
 
 
 

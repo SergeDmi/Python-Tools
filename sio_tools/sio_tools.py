@@ -10,7 +10,7 @@ import warnings
 import copy
 import yaml
 
-__VERSION__ = "0.1.9"
+__VERSION__ = "0.1.10"
 
 try:
 	import pandas as pd
@@ -174,6 +174,25 @@ def word_substitute_from_dict(line,dict):
 		#	words=line.split(key)
 		#	return ''.join([words[0],value,words[1]])
 	#return line
+
+def template_wrapping_substitute(line, dict):
+	""" substitutes in a line expressions from a dict
+		expressions are of the sort : wrapperKEYwrapper -> blaKEYblo
+		For instance :
+		dict = { "_" : "A[:,_]" }
+		line = "_1_ + _2_"
+		will return "A[:,1] + A[:,2]"
+	"""
+	# @todo : replace with regexp
+	for key, value in dict.items():
+		splits = line.split(key)
+		l = len(splits)
+		if l>1:
+			for i in range(1,l,2):
+				word=value.replace(key,splits[i])
+				splits[i] = word
+		line = "".join(splits)
+	return line
 
 # Cleanup a word ...
 # @TODO ; to be improved !!!!

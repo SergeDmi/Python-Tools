@@ -149,12 +149,21 @@ class Goodstyle:
                     sio.custom_warn('Could not understand gradient from %s' %gradient)
 
         if siz:
+            try:
+                sizi = float(siz)
+                self.setsize = sizi
+            except:
+                self.setsize = -1
+
+            """ 
             if siz.find('A[')>=0:
                 # Size depends on data
                 self.setsize=-1
+                
             else:
                 try:
                     sizi=float(siz)
+                    
                     if siz.find('.')<0:
                         # size is a data column
                         self.setsize=-1
@@ -163,6 +172,7 @@ class Goodstyle:
                         self.setsize=sizi
                 except:
                     sio.custom_warn('Could not understand size from %s' %siz)
+                    """
 
         if line:
             self.kind='line'
