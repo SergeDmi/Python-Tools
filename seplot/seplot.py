@@ -40,13 +40,12 @@ from pyx.graph import axis
 import sys
 import sio_tools as sio
 
-
 import seplot.kw_dictionaries as kd
 import seplot.style_dictionaries as sd
 from seplot.grapher import Graph
 
-__VERSION__ = "2.2.1"
 
+__VERSION__ = "2.2.2"
 
 
 
@@ -80,21 +79,23 @@ class Toplot:
     rather we pass *argument*, a list of arguments and kw arguments
 
     """
-    def __init__(self, *args, arguments=None, data=None, fname="", **kwargs):
+    def __init__(self, *args, arguments=None, data=None, fname=None, **kwargs):
         """ Initialization"""
         self.fname=fname
         """ filename to read data from """
         self.data=data
         """ data to plot from """
         self.arguments=[]
+        self.kwarguments={}
         """ actual arguments"""
         if arguments is not None:
             self.arguments=arguments
-
-        for arg in args:
-            self.arguments.append(arg)
-        for key, value in kwargs.items():
-            self.arguments.append('%s=%s' %(key,value))
+        self.arguments.extend((args))
+        #for arg in args:
+        #    self.arguments.append(arg)
+        self.kwarguments.update(**kwargs)
+        #for key, value in kwargs.items():
+        #    self.arguments.append('%s=%s' %(key,value))
 
     def check_split(self):
         """ Checking if we need to split the graph into several graphs when implied from arguments"""
@@ -107,6 +108,7 @@ class Toplot:
         if do_split:
             #print('splitting with %s' %self.arguments)
             future_args=self.arguments
+            future_kwargs=self.kwarguments
             self.arguments=self.arguments[0:n_split]
             future_args.pop(n_split)
             if len(future_args)>n_split:
@@ -118,6 +120,7 @@ class Toplot:
 
             new_dict={**self.__dict__}
             new_dict['arguments']=future_args
+            new_dict.update(future_kwargs)
             #print('new object with : %s ' %(new_dict))
             return [1,Toplot(**new_dict)]
         else:
@@ -125,9 +128,11 @@ class Toplot:
 
     def unpack_arguments(self):
         """ We convert our coarse list of arguments as a list of strings to a better arg / kwargs format"""
-        args=self.arguments
-        kwargs={}
-        keys=kw_dict.keys()
+        args = self.arguments
+        kwargs = self.kwarguments
+
+        # we may need to translate some arguments
+        keys = kw_dict.keys()
         for arg in list(args):
             if arg.find('=')>0:
                 args.remove(arg)
@@ -140,9 +145,21 @@ class Toplot:
                     kwargs[largs[0]]=val
                 except:
                     raise ValueError('Could not process argument %s' %arg)
+        godel=[]
+        for key, item in kwargs.items():
+            if key in keys:
+                godel.append(key)
+        # cleaning up
+        for key in godel:
+            kwargs[kw_dict[key]] = kwargs[key]
+            kwargs.pop(key)
+
         # let's not forget filename and/or data
-        kwargs['fname']=self.fname
-        kwargs['data']=self.data
+        if self.fname is not None:
+            kwargs['fname']=self.fname
+        if self.data is not None:
+            kwargs['data']=self.data
+        #print(kwargs)
         return args,kwargs
 
 
@@ -260,7 +277,7 @@ class Splotter:
         current_args=[]
         keep=0
         has_name=0
-        fname=''
+        fname=None
         # we iterate through arguments and assign them to global or local options
         for arg in arguments:
             # Global options
@@ -326,7 +343,7 @@ class Splotter:
                 else:
                     has_name=1
                 current_args.append(arg)
-                fname=''
+                fname=None
             elif arg.startswith('-') or arg.find('=')>=0:
                 current_args.append(arg)
             # If it's not an option, it's definitey a filename

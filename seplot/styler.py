@@ -90,10 +90,14 @@ class Goodstyle:
     """
     def __init__(self,*args,
                 numr=0,
-                col='',siz='',line='',stil='',gradient='',
+                col='',siz=None,line='',stil=None,gradient='',
                 is_function=0,color_from_data=False,
                 **kwargs):
 
+        if siz is None:
+            siz = ''
+        if stil is None:
+            stil = ''
         self.kind='symbol'
         """ kind of plot : symbol, line, etc."""
         self.setcolor=colours[int(ceil(numr/4)) %4]

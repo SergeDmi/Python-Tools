@@ -2,6 +2,7 @@
 Grapher is a sub-module defining the class Graph.
 """
 
+# @TODO : better support for entry of x and y directly, maybe get rid of mandatory data array A
 
 from numpy import *
 import sys
@@ -12,7 +13,7 @@ import pandas as pd
 from seplot.styler import Style
 import seplot.kw_dictionaries as kd
 import seplot.style_dictionaries as sd
-
+from collections.abc import Iterable
 
 
 # Basic set of colours, symbols, and lines
@@ -36,44 +37,53 @@ class Graph:
     Graph is a class containing a single line/set of points and their style, created from class Toplot.
     """
     def __init__(self,*args,
-                x=None,y=None,dx=None,dy=None,col=None,siz=None,stil='',labels=[],
+                x=None,y=None,dx=None,dy=None,col=None,siz=None,stil=None,labels=[],
                 cond=[],range=[],
                 function_string='',legend='',
-                fname='',data=None,numr=0,mode='v',
+                fname=None,data=None,numr=0,mode='v',
                 n_points='200',
                 **kwargs):
         """ Instance initialization """
 
+        if stil is None:
+            stil = ''
 
-        self.fname=fname ; self.function_string=function_string
-        #self.data=array(data)
-        #self.data=array([])
-        self.numr=numr
-        self.mode=mode ; self.numr=numr
-        self.dX=[] ; self.dY=[]
-        self.X=[] ; self.Y=[] ; self.S=[] ; self.C=[]
-        self.is_function=0
-        self.is_histogram=0
-        self.make_histogram=0
-        self.xlabel=None ; self.ylabel=None
+        self.fname = fname
+        self.function_string = function_string
+        # self.data=array(data)
+        # self.data=array([])
+        self.numr = numr
+        self.mode = mode
+        self.numr = numr
+        self.dX = []
+        self.dY = []
+        self.X = []
+        self.Y = []
+        self.S = []
+        self.C = []
+        self.is_function = 0
+        self.is_histogram = 0
+        self.make_histogram = 0
+        self.xlabel = None
+        self.ylabel = None
 
-        self.range=range
+        self.range = range
         self.set_n_points(n_points)
-        self.label_dict={}
-        self.color_from_data=False
-        self.legend=None
-        self.path=None
-        self.stroke_style=None
+        self.label_dict = {}
+        self.color_from_data = False
+        self.legend = None
+        self.path = None
+        self.stroke_style = None
 
         self.make_auto_legend(legend)
 
-
-
+        # Trying to figure out the input
         if self.function_string:
+            # EZ : if we plot a function
             self.is_function=1
         else:
             if data is not None:
-
+                # We have an array / dataframe of data
                 if isinstance(data, list):
                     data = ndarray(data)
                 if isinstance(data, ndarray):
@@ -81,7 +91,7 @@ class Graph:
                     s = data.shape
 
                     if len(s)<2:
-                        data = ndarray([data])
+                        data = array([data]).transpose()
                         s = data.shape
 
                     if not len(labels):
@@ -92,7 +102,35 @@ class Graph:
                     in_data = sio.import_array_from_frames(data)
 
             else:
-                in_data=sio.data_import_wrapper(self.fname)
+                if self.fname is not None:
+                    # We have a filename
+                    in_data = sio.data_import_wrapper(self.fname)
+                else:
+                    # Maybe we just got x (and/or y) as a list / array / ...
+                    if isinstance(x, Iterable) and not type(x)==str:
+                        if isinstance(y, Iterable) and not type(y)==str:
+                            data = array([x, y]).transpose()
+                            s = data.shape
+                            x = "__0__"
+                            y = "__1__"
+                            if not len(labels):
+                                labels = [None] * s[1]
+                            in_data = {"data": data, "size_x": s[0], "size_y": s[1], "labels": labels}
+                        else:
+                            data = array([x]).transpose()
+                            s = data.shape
+                            x = "__0__"
+                            if not len(labels):
+                                labels = [None]
+
+                            in_data = {"data": data, "size_x": s[0], "size_y": 1, "labels": labels}
+                    elif isinstance(y, Iterable) and not type(y)==str:
+                        data = array([y, ]).transpose()
+                        s = data.shape
+                        y = "__0__"
+                        if not len(labels):
+                            labels = [None]
+                        in_data = {"data": data, "size_x": s[0], "size_y": 1, "labels": labels}
 
             try:
                 A=in_data['data']
@@ -102,14 +140,16 @@ class Graph:
 
             # Dirty tricks for maximum compatibility
             if min(in_data['size_x'],in_data['size_y'])==1:
-                x='auto'
-                y=0
-                sio.custom_warn("Single data row/column : x is automatic")
+                if x is None:
+                    x='auto'
+                    sio.custom_warn("Single data row/column : x is automatic")
+                if y is None:
+                    y='__0__'
+
             if in_data['size_x']==1:
                 self.mode='h'
 
             # This is if we are dealing with (hopefuly) numeric data
-
             labels=in_data['labels']
             if self.mode=='v':
                 ncols=A.shape[1]
@@ -119,15 +159,14 @@ class Graph:
             if len(labels)<=ncols:
                 self.labels=in_data['labels']
 
-
+            # If we have labels, try to make a dictionary for substitutions
             for i,label in enumerate(self.labels):
-                #i = self.label_dict[label]
-                if self.mode == 'h':
-                    replace = 'A[%s,:]' % i
-                else:
-                    replace = 'A[:,%s]' % i
-
-                self.label_dict[label] = replace
+                if label is not None:
+                    if self.mode == 'h':
+                        replace = 'A[%s,:]' % i
+                    else:
+                        replace = 'A[:,%s]' % i
+                    self.label_dict[label] = replace
 
         # Are we plotting a histogram ?
         for arg in args:
@@ -143,7 +182,6 @@ class Graph:
         if not self.is_function:
             if not self.make_histogram:
                 # This is if we are dealing with (hopefuly) numeric data
-                #if (len(self.range) or len(cond)):
                 if x is None:
                     x = "__0__"
                 if y is None:
@@ -153,7 +191,7 @@ class Graph:
                     A=self.set_A_range(A,range)
                 # Set X Y to start with
                 self.set_init_XY(A)
-                # We perform a first extraction of X and Y to be able to evalyate conditions on X,Y
+                # We perform a first extraction of X and Y to be able to evaluate conditions on X,Y
                 self.X=self.set_from_input(A,x,'x')
                 self.Y=self.set_from_input(A,y,'y')
                 self.dX=self.set_from_input(A,dx,'dx')
@@ -162,7 +200,7 @@ class Graph:
                 #if (len(self.range) or len(cond)):
                 if len(cond):
                     A=self.set_A_condition(A,cond)
-                # Set X Y to start with
+                # Set X Y to start with... Is that really usefull ?
                 self.set_init_XY(A)
                 # Now we perform the definitive extraction of X,Y once A has been filtered
                 self.X=self.set_from_input(A,x,'x')
@@ -171,9 +209,7 @@ class Graph:
                 self.dY=self.set_from_input(A,dy,'dy')
 
                 # Now we assign colors and size if need be
-                #if siz.isdigit() or siz.find('A[')>=0:
                 self.S=self.set_from_input(A,siz,'size')
-                #if col.isdigit() or col.find('A[')>=0:
                 self.C=self.set_from_input(A,col,'color')
                 if len(self.C):
                     if not var(self.C)<sys.float_info.epsilon:
@@ -182,7 +218,6 @@ class Graph:
                         sio.custom_warn("No variance in color provided, using random color based on mean value !")
                         col=colour_strings[int(mean(self.C)) %7]
                         self.C=[]
-                    #print("Set color from data")
 
             else:
                 # We're making a histogram !
@@ -194,7 +229,6 @@ class Graph:
                     x=0
 
                 try:
-
                     bin_number=int(x)
                     if not bin_number==0:
                         try:
@@ -257,7 +291,6 @@ class Graph:
         kwargs['col']=col ; kwargs['siz']=siz ; kwargs['is_function']=self.is_function
         kwargs['numr']=self.numr ; kwargs['dx']=dx ; kwargs['dy']=dy ; kwargs['stil']=stil
         kwargs['color_from_data']=self.color_from_data
-        #kwargs['is_histogram']=self.is_histogram
 
         style=Style(*args,**kwargs)
         self.style=style.style
@@ -265,12 +298,6 @@ class Graph:
 
         if style.goodstyle.kind=='histogram':
             self.is_histogram=1
-
-        #if self.is_histogram:
-            #self.stroke=Style(*args,**kwargs).style
-            #self.stroke_style=style.stroke_style
-
-             #self.stroke_style=Style(*args,**kwargs.style)
 
     def make_auto_legend(self,legend):
         """ A function to automatically make a legend """
@@ -289,7 +316,7 @@ class Graph:
                 self.legend=None
 
     def set_init_XY(self,A):
-        """ Initial values of X and Y, usefull to later apply conditions """
+        """ Initial values of X and Y, useful to later apply conditions """
         try:
             if self.mode=='h':
                 self.X=A[0,:]
@@ -298,7 +325,8 @@ class Graph:
                 self.X=A[:,0]
                 self.Y=A[:,1]
         except:
-            sio.custom_warn('Could not set initial X Y values before reading arguments')
+            preset = 0
+            #sio.custom_warn('Could not set initial X Y values before reading arguments')
         return
 
     def set_n_points(self,arg):
@@ -322,46 +350,6 @@ class Graph:
         X=self.X;x=X
         Y=self.Y;y=Y
 
-
-        """ 
-        if input in self.labels:
-            input=self.label_dict[input]
-
-        try :
-            i=int(input)
-            if self.mode=='h':
-                # We try auto-setting the label if no label is defined
-                if i<len(self.labels):
-                    self.set_label(self.labels[i],coord)
-                return A[i,:]
-            else:
-                if i<len(self.labels):
-                    self.set_label(self.labels[i],coord)
-                return A[:,i]
-        except:
-            if input:
-                # Automatic axis value : 1 to length of array
-                if input.startswith('aut'):
-                    if self.mode=='h':
-                        return array(range(len(A[0,:])))
-                    else:
-                        return array(range(len(A[:,0])))
-                # Interpreting axis value
-                for label in self.labels:
-                    # trying to substitute label to array values
-                    if input.find(label)>=0:
-                        input=self.substitute_label(input,A,label)
-                try:
-                    return eval(input)
-                except:
-                    if not coord=="color":
-                        raise ValueError('We could note evaluate %s from %s' %(coord,input))
-                    else:
-                        sio.custom_warn('We might not be able to evaluate %s from %s' %(coord,input))
-                    return []
-            else:
-                return []
-                """
         if input is not None:
             if input.startswith('aut') and input.endswith("auto"):
                 if self.mode == 'h':
@@ -376,8 +364,6 @@ class Graph:
                     input = sio.template_wrapping_substitute(input, {"__": "A[:,__]"})
                 else:
                     input = sio.template_wrapping_substitute(input, {"__": "A[__,:]"})
-
-
 
                 try:
                     return eval(input)
@@ -437,9 +423,19 @@ class Graph:
         else:
             B=A.copy()
 
+
         if len(cond)>0:
             X=self.X;x=X
             Y=self.Y;y=Y
+
+            cond = sio.word_substitute_from_dict(cond, self.label_dict)
+
+            #  columns can be written as __1__ -> A[:,1] (vertical) or A[1,:] (horizontal)
+            if self.mode == 'v':
+                cond = sio.template_wrapping_substitute(cond, {"__": "A[:,__]"})
+            else:
+                cond = sio.template_wrapping_substitute(cond, {"__": "A[__,:]"})
+
             try:
                 kept=eval(cond)
                 if self.mode=='h':
