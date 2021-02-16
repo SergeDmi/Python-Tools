@@ -45,7 +45,7 @@ import seplot.style_dictionaries as sd
 from seplot.grapher import Graph
 
 
-__VERSION__ = "2.2.2"
+__VERSION__ = "2.2.3"
 
 
 
@@ -94,8 +94,7 @@ class Toplot:
         #for arg in args:
         #    self.arguments.append(arg)
         self.kwarguments.update(**kwargs)
-        #for key, value in kwargs.items():
-        #    self.arguments.append('%s=%s' %(key,value))
+
 
     def check_split(self):
         """ Checking if we need to split the graph into several graphs when implied from arguments"""
@@ -129,7 +128,8 @@ class Toplot:
     def unpack_arguments(self):
         """ We convert our coarse list of arguments as a list of strings to a better arg / kwargs format"""
         args = self.arguments
-        kwargs = self.kwarguments
+        nextkwargs = self.kwarguments
+        kwargs = {}
 
         # we may need to translate some arguments
         keys = kw_dict.keys()
@@ -145,6 +145,7 @@ class Toplot:
                     kwargs[largs[0]]=val
                 except:
                     raise ValueError('Could not process argument %s' %arg)
+        kwargs.update(nextkwargs)
         godel=[]
         for key, item in kwargs.items():
             if key in keys:
@@ -176,7 +177,7 @@ class Splotter:
     - *args : additional arguments
     - **kwargs : additional keyword arguments
     """
-    def __init__(self,*args,arguments=None,data=None,**kwargs):
+    def __init__(self,*args,arguments=None,data=None,fname=None, **kwargs):
         """ Initiation  from arguments and keyword arguments"""
         if arguments is None:
             arguments = []
@@ -229,14 +230,23 @@ class Splotter:
         # Now we add extra arguments ; this is a bit weird but the simplest option to use both command line and python import
         for arg in args:
             arguments.append(arg)
-        for key, value in kwargs.items():
-            arguments.append('%s=%s' %(key,value))
+        #for key, value in kwargs.items():
+        #    arguments.append('%s=%s' %(key,value))
 
+        xy_provided = False
         # Now we read arguments
-        current_args=self.read_args(arguments=arguments)
+        for key in kwargs.keys():
+            if key=="x" or key=="y":
+                xy_provided = True
         # and if we have data to plot we add it to future plots
+        current_args = self.read_args(arguments=arguments, **kwargs)
         if data is not None:
-            self.add_plot(data=data,arguments=current_args)
+            self.add_plot(data=data,arguments=current_args,  **kwargs)
+        elif fname is not None:
+            self.add_plot(fname=fname, arguments=current_args, **kwargs)
+        elif xy_provided:
+            self.add_plot(arguments=current_args,  **kwargs)
+
 
     # Integration with IPython (jupyter notebook) : png representation
     def _repr_png_(self):
@@ -469,7 +479,7 @@ class Splotter:
             if len(graf.stroke_style):
                 for plot in graf.ploted:
                     self.canvas.stroke(plot.path,graf.stroke_style)
-                    print(graf.stroke_style)
+
         self.canvas.insert(self.graph)
 
 

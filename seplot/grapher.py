@@ -8,7 +8,7 @@ from numpy import *
 import sys
 import sio_tools as sio
 import pandas as pd
-
+import numpy as np
 
 from seplot.styler import Style
 import seplot.kw_dictionaries as kd
@@ -74,8 +74,9 @@ class Graph:
         self.legend = None
         self.path = None
         self.stroke_style = None
-
         self.make_auto_legend(legend)
+
+        in_data = { "data" : np.array([[None]]) , "size_x" : 1 , "size_y" : 1 , "labels": [None] }
 
         # Trying to figure out the input
         if self.function_string:
@@ -131,9 +132,8 @@ class Graph:
                         if not len(labels):
                             labels = [None]
                         in_data = {"data": data, "size_x": s[0], "size_y": 1, "labels": labels}
-
             try:
-                A=in_data['data']
+                A =in_data['data']
                 self.data=A
             except:
                 raise ValueError("Error : no suitable data, nor function given")

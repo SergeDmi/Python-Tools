@@ -10,7 +10,7 @@ import warnings
 import copy
 import yaml
 
-__VERSION__ = "0.1.11"
+__VERSION__ = "0.1.12"
 
 try:
     import pandas as pd
@@ -580,7 +580,7 @@ def xls_import_wrapper(fname, *args, **kwargs):
 def import_array_from_frames(frames):
     cols = frames.columns.values
     labels = [word for word in cols]
-    data = frames.values
+    data = frames.to_numpy()
     sx, sy = data.shape
     return {'data': data, 'labels': labels, 'size_x': sx, 'size_y': sy, 'body': [], 'header': []}
 
