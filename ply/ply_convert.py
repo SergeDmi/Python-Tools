@@ -1,14 +1,15 @@
-#!/usr/bin/env python3
+#!/home/dmitrief/conda3/bin/python3
 # -*- coding: utf-8 -*-
 #
 # Copyright Serge Dmitrieff
 # www.biophysics.fr
 
+# @TODO : clear input. Maybe get rid of batch !
 # @TODO : different scales on different directions
 # @TODO : support for complex mesh (non triangular)
 # @TODO : Document and clarify submesh
 
-__VERSION__ = "0.0.2"
+__VERSION__ = "0.0.4"
 
 """
 # SYNOPSIS
@@ -68,7 +69,7 @@ __VERSION__ = "0.0.2"
                         converts a mesh file to a ply file, and computes the normal at each point
 
             ply_convert.py file_1.ply file_2.ply file_3.ply out=.mesh
-                        convers file_1.ply file_2.ply file_3.ply into mesh files
+                        converts file_1.ply file_2.ply file_3.ply into mesh files
 
 
             ply_convert.py file.ply -center -align -normals length=7 -verbose thickness=0.15 scale='1.0 1.0 2.0'
@@ -78,9 +79,9 @@ __VERSION__ = "0.0.2"
                         and adding an extra thickness of 0.15, then scaling the z axis with a factor 2
 
 
-            ply_convert.py batch=.ply path='/home/user/simulations/' out='.ply' scale=0.1 -recursive prefix=scaled_
+            ply_convert.py batch=.ply path=FOLDER out='.ply' scale=0.1 -recursive prefix=PREFIX_
                         Recursively find ply files in '/home/user/simulations/', scales them to a factor of 0.1, and
-                        saves them to FOLDER/suffix_NAME.ply with NAME the filename and FOLDER the folder name
+                        saves them to FOLDER/PREFIX_NAME.ply with NAME the filename and FOLDER the folder name
 
 
             ply_convert.py file.ply out=fixed_file.ply -fixuint
@@ -612,7 +613,7 @@ def write_mesh_file(plydata,fname_out,args):
     return 0
 
 # --------------------------------------------------------
-## Specific functions doing tha job for main
+## Specific functions doing that job for main
 # --------------------------------------------------------
 def main(args):
     options=[]
@@ -653,7 +654,7 @@ def do_mesh_conversion(args):
 ##  Batch conversion of mesh files
 def do_batch_conversion(args,files=[]):
     # First we check output
-    sout=""
+    sout=".ply"
     outs=[]
     # Then we check input
     batches=[]
@@ -682,15 +683,14 @@ def do_batch_conversion(args,files=[]):
         if arg.startswith('path='):
             pathes.append(arg[5:])
 
-
     if len(outs)>0:
         sout=outs[0]
         if not sout.startswith('.'):
             raise ValueError('Output argument should be a file format in batch mode')
         if len(outs)>1:
             print('Warning : several output specified, keeping %s ' %sout)
-    else:
-        print('Warning : replacing files')
+    #else:
+    #    print('Warning : replacing files')
 
     #if len(batch)>1:
     #    raise ValueError('Currently only a single batch job is supported !')
@@ -721,7 +721,7 @@ def do_batch_conversion(args,files=[]):
             name=path.basename(file)
             pathe=path.dirname(file)
             rename = "%s%s%s%s" % (prefix, name.split('.')[0], sout, suffix)
-            out=path.join(pathe,rename)
+            out = path.join(pathe,rename)
 
         # this is proper way to copy.
         newargs=args[:]
