@@ -74,6 +74,7 @@ class Graph:
         self.legend = None
         self.path = None
         self.stroke_style = None
+        self.labels=[]
         self.make_auto_legend(legend)
 
         in_data = { "data" : np.array([[None]]) , "size_x" : 1 , "size_y" : 1 , "labels": [None] }
@@ -151,6 +152,7 @@ class Graph:
 
             # This is if we are dealing with (hopefuly) numeric data
             labels=in_data['labels']
+            
             if self.mode=='v':
                 ncols=A.shape[1]
             else:

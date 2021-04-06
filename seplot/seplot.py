@@ -45,7 +45,7 @@ import seplot.style_dictionaries as sd
 from seplot.grapher import Graph
 
 
-__VERSION__ = "2.2.3"
+__VERSION__ = "2.2.5"
 
 
 
@@ -96,6 +96,8 @@ class Toplot:
         self.kwarguments.update(**kwargs)
 
 
+
+
     def check_split(self):
         """ Checking if we need to split the graph into several graphs when implied from arguments"""
         na=len(self.arguments)
@@ -127,41 +129,46 @@ class Toplot:
 
     def unpack_arguments(self):
         """ We convert our coarse list of arguments as a list of strings to a better arg / kwargs format"""
-        args = self.arguments
-        nextkwargs = self.kwarguments
-        kwargs = {}
+
+        _args = []
+        _args.extend(self.arguments)
+
+        _nextkwargs = {}
+        _nextkwargs.update(self.kwarguments)
+
+        _kwargs = {}
 
         # we may need to translate some arguments
         keys = kw_dict.keys()
-        for arg in list(args):
+        for arg in list(_args):
             if arg.find('=')>0:
-                args.remove(arg)
+                _args.remove(arg)
                 largs=arg.split('=')
                 # We fix weird /illegal syntax
                 if largs[0] in keys:
                     largs[0]=kw_dict[largs[0]]
                 try:
                     val='='.join(largs[1:])
-                    kwargs[largs[0]]=val
+                    _kwargs[largs[0]]=val
                 except:
                     raise ValueError('Could not process argument %s' %arg)
-        kwargs.update(nextkwargs)
-        godel=[]
-        for key, item in kwargs.items():
+        _kwargs.update(_nextkwargs)
+        godel = []
+        for key, item in _kwargs.items():
             if key in keys:
                 godel.append(key)
         # cleaning up
         for key in godel:
-            kwargs[kw_dict[key]] = kwargs[key]
-            kwargs.pop(key)
+            _kwargs[kw_dict[key]] = _kwargs[key]
+            _kwargs.pop(key)
 
         # let's not forget filename and/or data
         if self.fname is not None:
-            kwargs['fname']=self.fname
+            _kwargs['fname']=self.fname
         if self.data is not None:
-            kwargs['data']=self.data
-        #print(kwargs)
-        return args,kwargs
+            _kwargs['data']=self.data
+
+        return _args,_kwargs
 
 
 
@@ -391,6 +398,7 @@ class Splotter:
         """ We do the plotting by dispatching the arguments to PyX. Arguments can be passed again ! """
         self.read_args(*args,**kwargs)
         # we check if the plots must be split by and / andif
+
         for i,toplot in enumerate(self.future_plots):
             [is_split,new_plot]=toplot.check_split()
             if is_split:
