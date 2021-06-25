@@ -45,7 +45,7 @@ import seplot.style_dictionaries as sd
 from seplot.grapher import Graph
 
 
-__VERSION__ = "2.2.5"
+__VERSION__ = "2.2.6"
 
 
 
@@ -81,33 +81,28 @@ class Toplot:
     """
     def __init__(self, *args, arguments=None, data=None, fname=None, **kwargs):
         """ Initialization"""
-        self.fname=fname
+        self.fname = fname
         """ filename to read data from """
-        self.data=data
+        self.data = data
         """ data to plot from """
-        self.arguments=[]
-        self.kwarguments={}
+        self.arguments = []
+        self.kwarguments = {}
         """ actual arguments"""
         if arguments is not None:
-            self.arguments=arguments
-        self.arguments.extend((args))
+            self.arguments.extend(arguments)
+        self.arguments.extend(args)
         #for arg in args:
         #    self.arguments.append(arg)
         self.kwarguments.update(**kwargs)
 
-
-
-
     def check_split(self):
         """ Checking if we need to split the graph into several graphs when implied from arguments"""
-        na=len(self.arguments)
         do_split=0
-        for i,arg in enumerate(self.arguments):
-            if arg==__SPLIT_MARK__:
-                do_split=1
-                n_split=i
+        for i, arg in enumerate(self.arguments):
+            if arg == __SPLIT_MARK__:
+                do_split = 1
+                n_split = i
         if do_split:
-            #print('splitting with %s' %self.arguments)
             future_args=self.arguments
             future_kwargs=self.kwarguments
             self.arguments=self.arguments[0:n_split]
@@ -119,13 +114,14 @@ class Toplot:
                     else:
                         future_args=[]
 
-            new_dict={**self.__dict__}
+            #new_dict={**self.__dict__}
+            new_dict = {"data": self.data, "fname": self.fname, "arguments": self.arguments}
+            new_dict.update(self.kwarguments)
             new_dict['arguments']=future_args
             new_dict.update(future_kwargs)
-            #print('new object with : %s ' %(new_dict))
-            return [1,Toplot(**new_dict)]
+            return Toplot(**new_dict)
         else:
-            return [0,1]
+            return None
 
     def unpack_arguments(self):
         """ We convert our coarse list of arguments as a list of strings to a better arg / kwargs format"""
@@ -184,7 +180,7 @@ class Splotter:
     - *args : additional arguments
     - **kwargs : additional keyword arguments
     """
-    def __init__(self,*args,arguments=None,data=None,fname=None, **kwargs):
+    def __init__(self, *args, arguments=None, data=None, fname=None, **kwargs):
         """ Initiation  from arguments and keyword arguments"""
         if arguments is None:
             arguments = []
@@ -228,7 +224,6 @@ class Splotter:
         """ if we auto label axes """
         self.equalaxis = 0
         """ if axes are equal """
-
         self.future_plots=[]
         """ the list items to be plotted, """
         self.graphs=[]
@@ -343,7 +338,6 @@ class Splotter:
                 if has_name==0:
                     raise ValueError('Error : cannot use andif= before the first declared file')
                 else:
-                    #future_plots.append(Toplot(fname,current_args))
                     current_args.append(__SPLIT_MARK__)
                     current_args.append(arg)
 
@@ -354,7 +348,7 @@ class Splotter:
             elif arg.startswith('function='):
                 # If there is already a name for a future plot, we append the former to be created
                 if has_name:
-                    self.future_plots.append(Toplot(fname=fname,arguments=current_args))
+                    self.future_plots.append(Toplot(fname=fname, arguments=current_args))
                     if keep==0:
                         current_args=[]
                 else:
@@ -371,16 +365,18 @@ class Splotter:
             else:
                 # If there is already a name for a future plot
                 if has_name:
-                    self.future_plots.append(Toplot(fname=fname,arguments=current_args))
-                    if keep==0:
+                    self.future_plots.append(Toplot(fname=fname, arguments=current_args))
+                    if keep == 0:
                         current_args=[]
+                    else:
+                        current_args = clean_split(current_args)
                 else:
                     has_name=1
                 fname=arg
         # We still need add the last file to future_plots
         if has_name:
-            self.future_plots.append(Toplot(fname=fname,arguments=current_args))
-            has_name=0
+            top = Toplot(fname=fname, arguments=current_args)
+            self.future_plots.append(top)
         # also we check key position
         try:
             self.key=graph.key.key(pos="%s" %(keyz), dist=float(self.kdist))
@@ -398,11 +394,9 @@ class Splotter:
         """ We do the plotting by dispatching the arguments to PyX. Arguments can be passed again ! """
         self.read_args(*args,**kwargs)
         # we check if the plots must be split by and / andif
-
         for i,toplot in enumerate(self.future_plots):
-            [is_split,new_plot]=toplot.check_split()
-            if is_split:
-                #print('splitting  ******************************')
+            new_plot = toplot.check_split()
+            if new_plot is not None:
                 self.future_plots.append(new_plot)
 
         # We create the graphs
@@ -437,7 +431,6 @@ class Splotter:
         if self.equalaxis:
             self.height=self.width
             self.make_equal_axis_range()
-
 
         if self.xlog:
             xaxis=axis.log(title=self.xlabel,min=self.xmin,max=self.xmax);
@@ -490,11 +483,7 @@ class Splotter:
 
         self.canvas.insert(self.graph)
 
-
-
-
-
-    def plot(self,graf):
+    def plot(self, graf):
         """ A wrapper for PyX.graph.plot """
         if graf.is_function==1:
             graf.ploted=self.graph.plot(graph.data.function(graf.function_string,points=graf.n_points,title=graf.legend),graf.style)
@@ -503,7 +492,7 @@ class Splotter:
         else:
             graf.ploted=self.graph.plot([graph.data.points([(x,graf.Y[i],graf.dX[i],graf.dY[i],graf.S[i],graf.C[i]) for i, x in enumerate(graf.X[:])], x=1, y=2,dx=3,dy=4,size=5,color=6,title=graf.legend)],graf.style)
 
-    def save_plot(self,*args,out=None,**kwargs):
+    def save_plot(self, *args, out=None, **kwargs):
         """ Saving canvas to a file """
         if not out:
             out=self.out
@@ -558,3 +547,14 @@ def apply_on_not_none(*args,function=None):
 
 def not_none(*args):
     return [arg for arg in args if arg is not None]
+
+def clean_split(arguments):
+    """
+    Removes all the splits from a list of arguments
+    """
+    while True:
+        try:
+            arguments.remove(__SPLIT_MARK__)
+        except:
+            return arguments
+    return None
