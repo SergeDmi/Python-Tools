@@ -50,8 +50,6 @@ class Graph:
 
         self.fname = fname
         self.function_string = function_string
-        # self.data=array(data)
-        # self.data=array([])
         self.numr = numr
         self.mode = mode
         self.numr = numr
@@ -234,7 +232,7 @@ class Graph:
                     bin_number=int(x)
                     if not bin_number==0:
                         try:
-                            (self.Y,self.X)=get_histogram(self.Y,bins=bin_number)
+                            (self.Y, self.X)=get_histogram(self.Y, bins=bin_number)
                         except:
                             raise ValueError('Could not make histogram with data Y=%s and bins=%s (assumed bin number)'  %(y,x) )
                     else:
@@ -246,104 +244,104 @@ class Graph:
                         if len(bins):
                             try:
                                 #(self.Y,self.X)=get_histogram(self.Y,bins=bins)
-                                (self.Y,self.X)=histogram(self.Y,bins)
+                                (self.Y, self.X)=histogram(self.Y, bins)
                             except:
                                 raise ValueError('Could not make histogram with data Y=%s and bins=%s (assumed array)'  %(y,bins) )
                     except:
                         try:
-                            (self.Y,self.X)=get_histogram(self.Y,bins=x)
+                            (self.Y, self.X)=get_histogram(self.Y, bins=x)
                         except:
                             raise ValueError('Could not make histogram with data Y=%s and bins=%s (assumed text or other)'  %(y,x) )
 
 
             try:
                 if not len(self.C):
-                    self.C=self.X
+                    self.C = self.X
             except:
-                self.C=self.X
+                self.C = self.X
 
             try:
                 if not len(self.S):
-                    self.S=self.X
+                    self.S = self.X
             except:
-                self.S=self.X
+                self.S = self.X
 
             # We check size
-            lX=len(self.X)
-            lY=len(self.Y)
-            if lX>lY:
-                self.X=self.X[0:lY]
-                lX=lY
-            elif lY>lX:
-                self.Y=self.Y[0:lX]
-                lY=lX
+            lX = len(self.X)
+            lY = len(self.Y)
+            if lX > lY:
+                self.X = self.X[0:lY]
+                lX = lY
+            elif lY > lX:
+                self.Y = self.Y[0:lX]
+                lY = lX
             if not len(self.dY):
-                self.dY=zeros((lX,1))
+                self.dY = zeros((lX,1))
             if not len(self.dX):
-                self.dX=zeros((lX,1))
+                self.dX = zeros((lX,1))
 
             # we scale the color scale
-            self.C=(self.C-min(self.C))/(max(self.C)-min(self.C))
+            self.C = (self.C-min(self.C))/(max(self.C)-min(self.C))
 
             # we make sure no size is non-positive
-            if min(self.S)<=0:
-                self.S=(self.S-min(self.S))+0.001
+            if min(self.S) <= 0:
+                self.S = (self.S-min(self.S)) + 0.001
 
         # and now we can make the style !
         kwargs['col']=col ; kwargs['siz']=siz ; kwargs['is_function']=self.is_function
         kwargs['numr']=self.numr ; kwargs['dx']=dx ; kwargs['dy']=dy ; kwargs['stil']=stil
         kwargs['color_from_data']=self.color_from_data
 
-        style=Style(*args,**kwargs)
-        self.style=style.style
-        self.stroke_style=style.stroke_style
+        style=Style(*args, **kwargs)
+        self.style = style.style
+        self.stroke_style = style.stroke_style
 
-        if style.goodstyle.kind=='histogram':
-            self.is_histogram=1
+        if style.goodstyle.kind == 'histogram':
+            self.is_histogram = 1
 
     def make_auto_legend(self,legend):
         """ A function to automatically make a legend """
         if legend=='None' or legend=='none':
-            self.legend=None
+            self.legend = None
         elif legend:
-            self.legend=r"%s" %legend
+            self.legend = r"%s" %legend
         else:
             if self.function_string:
-                self.legend=self.function_string
+                self.legend = self.function_string
             elif self.fname:
-                lenf=len(self.fname)
-                if lenf<=16:
-                    self.legend=self.fname
+                lenf = len(self.fname)
+                if lenf <= 16:
+                    self.legend = self.fname
             else:
-                self.legend=None
+                self.legend = None
 
     def set_init_XY(self,A):
         """ Initial values of X and Y, useful to later apply conditions """
         try:
-            if self.mode=='h':
-                self.X=A[0,:]
-                self.Y=A[1,:]
+            if self.mode == 'h':
+                self.X = A[0,:]
+                self.Y = A[1,:]
             else:
-                self.X=A[:,0]
-                self.Y=A[:,1]
+                self.X = A[:,0]
+                self.Y = A[:,1]
         except:
             preset = 0
             #sio.custom_warn('Could not set initial X Y values before reading arguments')
         return
 
     def set_n_points(self,arg):
-        self.n_points=200
+        self.n_points = 200
         try:
-            self.n_points=int(arg)
+            self.n_points = int(arg)
         except:
             raise ValueError('Did not understand npoints from input %s'  %arg)
 
     def set_label(self,label,coord):
         """ sets a label for coordinate x or y """
-        if coord=='x':
-            self.xlabel=label
+        if coord == 'x':
+            self.xlabel = label
         elif coord=='y':
-            self.ylabel=label
+            self.ylabel = label
         return
 
     def set_from_input(self,A,input,coord):
